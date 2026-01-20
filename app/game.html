@@ -1,330 +1,85 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ian's Game Console</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700&display=swap');
-        
-        body { font-family: 'Nunito', sans-serif; background-color: #111827; user-select: none; }
-        .pixel-font { font-family: 'Press Start 2P', cursive; }
-        .view-section { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
-        .view-section.active { display: flex; opacity: 1; }
-        
-        /* Animations */
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-        .floating { animation: float 3s ease-in-out infinite; }
-        
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
-        .shake { animation: shake 0.5s; }
-        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ian's Game Console</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700&display=swap');
+body{font-family:'Nunito',sans-serif;background-color:#111827;user-select:none}.pixel-font{font-family:'Press Start 2P',cursive}.view-section{display:none;opacity:0;transition:opacity .3s ease-in-out}.view-section.active{display:flex;opacity:1}@keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}.floating{animation:float 3s ease-in-out infinite}.card-hover:hover{transform:translateY(-4px);box-shadow:0 10px 25px -5px rgba(0,0,0,.3)}.shake{animation:shake .5s}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style>
 </head>
 <body class="h-screen w-full text-white overflow-hidden bg-gray-900">
 
-    <!-- 1. LOGIN VIEW -->
-    <div id="login-view" class="view-section active flex-col items-center justify-center h-full w-full relative">
-        <div class="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80')] bg-cover opacity-20 z-0"></div>
-        
-        <div class="z-10 text-center space-y-8">
-            <h1 class="text-4xl md:text-6xl text-yellow-400 pixel-font mb-8 drop-shadow-lg floating">IAN'S CONSOLE</h1>
-            <p class="text-gray-300 text-xl mb-8">Who is playing?</p>
-            
-            <div id="user-list" class="flex flex-wrap gap-6 justify-center max-w-4xl px-4">
-                <!-- User Cards Injected Here -->
-            </div>
+<!-- 1. LOGIN -->
+<div id="login-view" class="view-section active flex-col items-center justify-center h-full w-full relative">
+<div class="z-10 text-center space-y-8">
+<h1 class="text-4xl md:text-6xl text-yellow-400 pixel-font mb-8 drop-shadow-lg floating">IAN'S CONSOLE</h1>
+<p class="text-gray-300 text-xl mb-8">Who is playing?</p>
+<div id="user-list" class="flex flex-wrap gap-6 justify-center max-w-4xl px-4"></div>
+<div class="mt-12"><button onclick="showAddUserModal()" class="text-gray-500 hover:text-white underline text-sm">+ Add New Player</button></div>
+</div>
+<div id="add-user-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+<div class="bg-gray-800 p-6 rounded-lg w-80 border border-gray-600">
+<h3 class="text-xl font-bold mb-4">New Hero</h3>
+<input type="text" id="new-username" placeholder="Name" class="w-full bg-gray-700 p-2 rounded mb-4 text-white">
+<div class="flex gap-2 justify-end"><button onclick="closeAddUserModal()" class="text-gray-400 px-4 py-2">Cancel</button><button onclick="createNewUser()" class="bg-blue-600 px-4 py-2 rounded text-white">Create</button></div>
+</div>
+</div>
+</div>
 
-            <div class="mt-12">
-                <button onclick="showAddUserModal()" class="text-gray-500 hover:text-white underline text-sm">
-                    + Add New Player
-                </button>
-            </div>
-        </div>
-        
-        <!-- Add User Modal -->
-        <div id="add-user-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-            <div class="bg-gray-800 p-6 rounded-lg w-80 border border-gray-600">
-                <h3 class="text-xl font-bold mb-4">New Hero</h3>
-                <input type="text" id="new-username" placeholder="Name" class="w-full bg-gray-700 p-2 rounded mb-4 text-white">
-                <div class="flex gap-2 justify-end">
-                    <button onclick="closeAddUserModal()" class="text-gray-400 px-4 py-2">Cancel</button>
-                    <button onclick="createNewUser()" class="bg-blue-600 px-4 py-2 rounded text-white">Create</button>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- 2. DASHBOARD -->
+<div id="dashboard-view" class="view-section flex-col h-full w-full">
+<div class="w-full bg-gray-800 p-4 shadow-lg flex justify-between items-center z-20 border-b border-gray-700">
+<div class="flex items-center gap-4"><button onclick="switchView('login-view')" class="text-gray-400 hover:text-white">← Logout</button>
+<div class="flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full border border-gray-600"><span id="dash-avatar" class="text-2xl">👦</span><div><div id="dash-name" class="font-bold text-sm leading-none">Ian</div><div class="text-xs text-yellow-400 pixel-font mt-1" id="dash-level">LV.1</div></div></div></div>
+<button onclick="switchView('admin-view')" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs">⚙️ Parent Zone</button>
+</div>
+<div class="flex-1 overflow-y-auto p-4 md:p-8">
+<h2 class="text-2xl font-bold mb-6 border-l-4 border-yellow-500 pl-4">Mission Select</h2>
+<div id="level-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+<div id="empty-levels-msg" class="hidden text-center text-gray-500 mt-20"><p>No missions available yet.</p><p class="text-sm">Go to Parent Zone to add missions!</p></div>
+</div>
+</div>
 
-    <!-- 2. DASHBOARD VIEW (Level Selection) -->
-    <div id="dashboard-view" class="view-section flex-col h-full w-full">
-        <!-- Top Bar -->
-        <div class="w-full bg-gray-800 p-4 shadow-lg flex justify-between items-center z-20 border-b border-gray-700">
-            <div class="flex items-center gap-4">
-                <button onclick="switchView('login-view')" class="text-gray-400 hover:text-white">← Logout</button>
-                <div class="flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full border border-gray-600">
-                    <span id="dash-avatar" class="text-2xl">👦</span>
-                    <div>
-                        <div id="dash-name" class="font-bold text-sm leading-none">Ian</div>
-                        <div class="text-xs text-yellow-400 pixel-font mt-1" id="dash-level">LV.1</div>
-                    </div>
-                </div>
-            </div>
-            <button onclick="switchView('admin-view')" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs">
-                ⚙️ Parent Zone
-            </button>
-        </div>
+<!-- 3. GAME -->
+<div id="game-view" class="view-section flex-col h-full w-full bg-gray-900">
+<div class="w-full bg-gray-800 p-2 flex justify-between items-center border-b border-gray-700">
+<button onclick="quitGame()" class="text-red-400 hover:text-red-300 font-bold px-3">EXIT 🏳️</button>
+<div class="flex-1 mx-4"><div class="h-3 bg-gray-700 rounded-full overflow-hidden border border-gray-600 relative"><div id="battle-progress" class="h-full bg-red-600 transition-all duration-300" style="width: 0%"></div></div></div>
+<div class="pixel-font text-yellow-400 text-sm"><span id="monsters-killed">0</span>/5</div>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+<div class="mb-4 relative"><div id="monster-emoji" class="text-8xl md:text-9xl filter drop-shadow-2xl transition-transform cursor-pointer hover:scale-105 active:scale-90">👾</div><div id="damage-text" class="absolute top-0 left-1/2 -translate-x-1/2 text-red-500 font-bold text-4xl opacity-0 transition-all pointer-events-none">-20</div></div>
+<div class="bg-gray-800/90 backdrop-blur p-6 rounded-xl border border-blue-500/30 shadow-2xl mb-6 w-full max-w-2xl text-center"><h3 id="q-word" class="text-4xl font-bold text-white mb-2">...</h3><p id="q-meaning" class="text-lg text-blue-300">...</p></div>
+<div id="drop-zone" class="w-full max-w-3xl bg-gray-800/50 min-h-[80px] rounded-lg border-2 border-dashed border-gray-600 flex flex-wrap gap-2 p-3 items-center justify-center mb-6 transition-colors"><span class="text-gray-500 italic text-sm pointer-events-none">Tap words to attack...</span></div>
+<div id="word-bank" class="w-full max-w-3xl flex flex-wrap justify-center gap-2"></div>
+</div>
+<div class="p-4 bg-gray-800 flex justify-center gap-4"><button onclick="resetBattleSentence()" class="bg-gray-600 px-6 py-3 rounded-lg font-bold">↺ Reset</button><button onclick="submitAttack()" class="bg-blue-600 px-10 py-3 rounded-lg font-bold text-lg shadow-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">ATTACK! ⚔️</button></div>
+</div>
 
-        <!-- Content -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-8">
-            <h2 class="text-2xl font-bold mb-6 border-l-4 border-yellow-500 pl-4">Mission Select</h2>
-            <div id="level-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Level Cards Injected Here -->
-            </div>
-            <div id="empty-levels-msg" class="hidden text-center text-gray-500 mt-20">
-                <p>No missions available yet.</p>
-                <p class="text-sm">Go to Parent Zone to add missions!</p>
-            </div>
-        </div>
-    </div>
+<!-- 4. ADMIN -->
+<div id="admin-view" class="view-section flex-col h-full w-full bg-slate-900 p-8 overflow-y-auto">
+<div class="max-w-4xl mx-auto w-full">
+<div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-white">Parent Zone</h2><button onclick="switchView('dashboard-view')" class="bg-gray-700 px-4 py-2 rounded">← Back to Dashboard</button></div>
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mb-8">
+<h3 class="text-xl font-bold mb-4 text-blue-400">Add New Mission (Excel Upload)</h3>
+<form id="upload-form" class="space-y-4">
+<div><label class="block text-sm text-gray-400 mb-1">Mission Title</label><input type="text" name="title" placeholder="e.g. Chapter 1" class="w-full bg-slate-700 p-2 rounded text-white border border-slate-600" required></div>
+<div><label class="block text-sm text-gray-400 mb-1">Difficulty</label><select name="difficulty" class="w-full bg-slate-700 p-2 rounded text-white border border-slate-600"><option value="Easy">Easy</option><option value="Normal">Normal</option><option value="Hard">Hard</option></select></div>
+<div><label class="block text-sm text-gray-400 mb-1">Excel File</label><input type="file" name="file" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700" required></div>
+<button type="submit" id="upload-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors">Upload Mission</button>
+<p id="upload-status" class="text-center text-sm mt-2"></p>
+</form>
+</div>
+<h3 class="text-xl font-bold mb-4">Existing Missions</h3>
+<div id="admin-level-list" class="space-y-4"></div>
+</div>
+</div>
 
-    <!-- 3. GAME VIEW (The Battle) -->
-    <div id="game-view" class="view-section flex-col h-full w-full bg-gray-900">
-        <!-- Battle HUD -->
-        <div class="w-full bg-gray-800 p-2 flex justify-between items-center border-b border-gray-700">
-            <button onclick="quitGame()" class="text-red-400 hover:text-red-300 font-bold px-3">EXIT 🏳️</button>
-            <div class="flex-1 mx-4">
-                <div class="h-3 bg-gray-700 rounded-full overflow-hidden border border-gray-600 relative">
-                    <div id="battle-progress" class="h-full bg-red-600 transition-all duration-300" style="width: 0%"></div>
-                </div>
-            </div>
-            <div class="pixel-font text-yellow-400 text-sm"><span id="monsters-killed">0</span>/5</div>
-        </div>
-
-        <!-- Arena -->
-        <div class="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            <!-- Monster -->
-            <div class="mb-4 relative">
-                <div id="monster-emoji" class="text-8xl md:text-9xl filter drop-shadow-2xl transition-transform cursor-pointer hover:scale-105 active:scale-90">👾</div>
-                <div id="damage-text" class="absolute top-0 left-1/2 -translate-x-1/2 text-red-500 font-bold text-4xl opacity-0 transition-all pointer-events-none">-20</div>
-            </div>
-
-            <!-- Question -->
-            <div class="bg-gray-800/90 backdrop-blur p-6 rounded-xl border border-blue-500/30 shadow-2xl mb-6 w-full max-w-2xl text-center">
-                <h3 id="q-word" class="text-4xl font-bold text-white mb-2">...</h3>
-                <p id="q-meaning" class="text-lg text-blue-300">...</p>
-            </div>
-
-            <!-- Sentence Builder -->
-            <div id="drop-zone" class="w-full max-w-3xl bg-gray-800/50 min-h-[80px] rounded-lg border-2 border-dashed border-gray-600 flex flex-wrap gap-2 p-3 items-center justify-center mb-6 transition-colors">
-                <span class="text-gray-500 italic text-sm pointer-events-none">Tap words to attack...</span>
-            </div>
-
-            <!-- Word Bank -->
-            <div id="word-bank" class="w-full max-w-3xl flex flex-wrap justify-center gap-2">
-                <!-- Buttons -->
-            </div>
-        </div>
-
-        <!-- Controls -->
-        <div class="p-4 bg-gray-800 flex justify-center gap-4">
-            <button onclick="resetBattleSentence()" class="bg-gray-600 px-6 py-3 rounded-lg font-bold">↺ Reset</button>
-            <button onclick="submitAttack()" class="bg-blue-600 px-10 py-3 rounded-lg font-bold text-lg shadow-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">ATTACK! ⚔️</button>
-        </div>
-    </div>
-
-    <!-- 4. ADMIN VIEW -->
-    <div id="admin-view" class="view-section flex-col h-full w-full bg-slate-900 p-8 overflow-y-auto">
-        <div class="max-w-4xl mx-auto w-full">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-bold text-white">Parent Zone</h2>
-                <button onclick="switchView('dashboard-view')" class="bg-gray-700 px-4 py-2 rounded">← Back to Dashboard</button>
-            </div>
-
-            <!-- Upload Card -->
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mb-8">
-                <h3 class="text-xl font-bold mb-4 text-blue-400">
-
-    <!-- JS LOGIC -->
-    <script>
-        // --- STATE ---
-        let currentUser = null;
-        let currentLevel = null;
-        let battleWords = [];
-        let currentWordIndex = 0;
-        let playerSelection = [];
-        let defeatedCount = 0;
-        const GOAL_COUNT = 5;
-
-        // --- INIT ---
-        window.onload = () => {
-            fetchUsers();
-        };
-
-        // --- VIEWS ---
-        function switchView(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            
-            if(viewId === 'dashboard-view') fetchLevels();
-            if(viewId === 'admin-view') fetchAdminLevels();
-        }
-
-        // --- USER API ---
-        async function fetchUsers() {
-            try {
-                const res = await fetch('/api/users');
-                const users = await res.json();
-                const container = document.getElementById('user-list');
-                container.innerHTML = '';
-
-                users.forEach(u => {
-                    const card = document.createElement('div');
-                    card.className = 'card-hover bg-gray-800 p-6 rounded-xl border border-gray-600 cursor-pointer w-40 text-center transition-all hover:bg-gray-700 hover:border-blue-500';
-                    card.onclick = () => selectUser(u);
-                    card.innerHTML = `
-                        <div class="text-5xl mb-4">${u.avatar}</div>
-                        <div class="font-bold text-lg text-white">${u.name}</div>
-                        <div class="text-xs text-yellow-500 pixel-font mt-2">LV.${u.level}</div>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch(e) { console.error(e); }
-        }
-
-        async function createNewUser() {
-            const name = document.getElementById('new-username').value;
-            if(!name) return;
-            
-            await fetch('/api/users', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name: name, avatar: ["👦","👧","🐶","🐱","🤖"][Math.floor(Math.random()*5)] })
-            });
-            closeAddUserModal();
-            fetchUsers();
-        }
-
-        function selectUser(user) {
-            currentUser = user;
-            document.getElementById('dash-avatar').textContent = user.avatar;
-            document.getElementById('dash-name').textContent = user.name;
-            document.getElementById('dash-level').textContent = 'LV.' + user.level;
-            switchView('dashboard-view');
-        }
-
-        function showAddUserModal() { document.getElementById('add-user-modal').classList.remove('hidden'); }
-        function closeAddUserModal() { document.getElementById('add-user-modal').classList.add('hidden'); }
-
-        // --- LEVEL API ---
-        async function fetchLevels() {
-            const res = await fetch('/api/levels');
-            const levels = await res.json();
-            const container = document.getElementById('level-list');
-            container.innerHTML = '';
-            
-            if(levels.length === 0) {
-                document.getElementById('empty-levels-msg').classList.remove('hidden');
-                return;
-            } else {
-                document.getElementById('empty-levels-msg').classList.add('hidden');
-            }
-
-            levels.forEach(l => {
-                const card = document.createElement('div');
-                const colors = { 'Easy': 'border-green-500', 'Normal': 'border-blue-500', 'Hard': 'border-red-500' };
-                const color = colors[l.difficulty] || 'border-gray-500';
-                
-                card.className = `card-hover bg-gray-800 p-6 rounded-xl border-l-4 ${color} cursor-pointer shadow-lg`;
-                card.onclick = () => startLevel(l);
-                card.innerHTML = `
-                    <h3 class="font-bold text-xl text-white mb-2">${l.title}</h3>
-                    <div class="flex justify-between items-center text-sm text-gray-400">
-                        <span>${l.difficulty}</span>
-                        <span>${l.word_count} Words</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        async function fetchAdminLevels() {
-            const res = await fetch('/api/levels');
-            const levels = await res.json();
-            const container = document.getElementById('admin-level-list');
-            container.innerHTML = '';
-            
-            levels.forEach(l => {
-                const item = document.createElement('div');
-                item.className = "flex justify-between items-center bg-slate-700 p-4 rounded";
-                item.innerHTML = `
-                    <div><span class="font-bold text-white">${l.title}</span> <span class="text-xs text-gray-400">(${l.word_count} words)</span></div>
-                    <button onclick="deleteLevel(${l.id})" class="text-red-400 text-sm hover:text-red-300">Delete</button>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        async function deleteLevel(id) {
-            if(!confirm('Delete this mission?')) return;
-            await fetch(`/api/admin/levels/${id}`, { method: 'DELETE' });
-            fetchAdminLevels();
-        }
-
-        // --- GAMEPLAY ---
-        async function startLevel(level) {
-            currentLevel = level;
-            // Fetch words
-            const res = await fetch(`/api/game/start/${level.id}?count=${GOAL_COUNT}`);
-            battleWords = await res.json();
-            
-            if(battleWords.length === 0) {
-                alert("This mission has no words!");
-                return;
-            }
-
-            currentWordIndex = 0;
-            defeatedCount = 0;
-            updateBattleStats();
-            switchView('game-view');
-            loadBattleWord(0);
-        }
-
-        function loadBattleWord(idx) {
-            if(idx >= battleWords.length) {
-                finishBattle();
-                return;
-            }
-            const w = battleWords[idx];
-            document.getElementById('q-word').textContent = w.word;
-            document.getElementById('q-meaning').textContent = w.meaning;
-            
-            // Sentence logic
-            document.getElementById('drop-zone').innerHTML = '<span class="text-gray-500 italic text-sm pointer-events-none">Tap words...</span>';
-            playerSelection = [];
-            
-            const parts = w.sentence.trim().split(/\s+/);
-            const shuffled = [...parts].sort(() => Math.random() - 0.5);
-            
-            const bank = document.getElementById('word-bank');
-            bank.innerHTML = '';
-            shuffled.forEach((word) => {
-                const btn = document.createElement('button');
-                btn.className = "bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded shadow text-white font-bold transition-all";
-                btn.textContent = word;
-                btn.onclick = () => {
-                    // Move to zone
-                    const span = document.createElement('span');
-                    span.className = "bg-yellow-500 text-black px-2 py-1 rounded font-bold cursor-pointer hover:bg-red-400";
-                    span.textContent = word;
-                    span.onclick = () => {
-                        span.remove();
-                        playerSelection.splice(playerSelection.indexOf(word), 1);
-                        btn.classList.remove('opacity-20', 'pointer-events-none');
-                        if(playerSelection.length===0) document.getElementById('drop-zone').innerHTML = '<span class="text-gray-500 italic text-sm pointer-events-none">Tap words...</span>';
-                    };
-                    
-                    // Clear placeholder
-                    if(playerSelection.length === 0) document.getElementById('drop-zone').innerHTML = '';
-                    
-                    document.getElementById('drop-zone').appendChild(
+<script>
+let currentUser=null,currentLevel=null,battleWords=[],currentWordIndex=0,playerSelection=[],defeatedCount=0,GOAL_COUNT=5;
+window.onload=()=>{fetchUsers()};
+function switchView(e){document.querySelectorAll(".view-section").forEach(e=>e.classList.remove("active")),document.getElementById(e).classList.add("active"),"dashboard-view"===e&&fetchLevels(),"admin-view"===e&&fetchAdminLevels()}
+async function fetchUsers(){try{let e=await fetch("/api/users"),t=await e.json(),n=document.getElementById("user-list");n.innerHTML="",t.forEach(e=>{let t=document.createElement("div");t.className="card-hover bg-gray-800 p-6 rounded-xl border border-gray-600 cursor-pointer w-40 text-center transition-all hover:bg-gray-700 hover:border-blue-500",t.onclick=()=>selectUser(e),t.innerHTML=`<div class="text-5xl mb-4">${e.avatar}</div><div class="font-bold
