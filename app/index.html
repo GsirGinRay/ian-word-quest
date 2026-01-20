@@ -4,107 +4,313 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ians Game Console</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <style>
-@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700&display=swap");
-body{font-family:"Nunito",sans-serif;background-color:#111827;user-select:none}.pixel-font{font-family:"Press Start 2P",cursive}.view-section{display:none;opacity:0;transition:opacity .3s ease-in-out}.view-section.active{display:flex;opacity:1}@keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}.floating{animation:float 3s ease-in-out infinite}.card-hover:hover{transform:translateY(-4px);box-shadow:0 10px 25px -5px rgba(0,0,0,.3)}.shake{animation:shake .5s}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* CSS Reset & Basic */
+body { background-color: #111827; color: white; font-family: sans-serif; margin: 0; overflow: hidden; }
+.hidden { display: none !important; }
+.btn { padding: 15px 30px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+.btn-primary { background-color: #2563eb; color: white; }
+.btn-secondary { background-color: #4b5563; color: white; border: 1px solid #9ca3af; }
+
+/* Modal Styles (No Tailwind dependency) */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 50; display: flex; justify-content: center; align-items: center; }
+.modal-box { background: #1f2937; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #374151; }
+.input-field { width: 100%; padding: 10px; margin: 15px 0; border-radius: 6px; border: none; background: #374151; color: white; box-sizing: border-box;}
+
+/* Views */
+.view-section { display: none; height: 100vh; width: 100%; flex-direction: column; }
+.view-section.active { display: flex; }
+.center-content { align-items: center; justify-content: center; text-align: center; }
+
+/* Status Bar */
+#sys-status { position: fixed; top: 0; width: 100%; text-align: center; padding: 5px; font-size: 12px; z-index: 100; font-weight: bold;}
+.status-red { background: #dc2626; color: white; }
+.status-green { background: #16a34a; color: white; }
 </style>
+<script>
+// GLOBAL FUNCTIONS (Defined immediately)
+function showModal() { 
+    // alert("DEBUG: Opening Modal"); // Uncomment if needed
+    document.getElementById("add-user-modal").classList.remove("hidden"); 
+}
+function closeModal() { 
+    document.getElementById("add-user-modal").classList.add("hidden"); 
+}
+function setStatus(msg, type) {
+    const el = document.getElementById("sys-status");
+    el.textContent = msg;
+    el.className = type;
+    if(type === "status-green") setTimeout(() => el.style.display = "none", 3000);
+}
+</script>
 </head>
 <body class="h-screen w-full text-white overflow-hidden bg-gray-900">
-<div id="sys-status" class="fixed top-0 left-0 w-full bg-blue-600 text-white text-xs font-bold p-1 z-50 text-center shadow-lg">🔵 System Initializing...</div>
+<div id="sys-status" class="status-red">🔴 Connecting...</div>
 
-<div id="login-view" class="view-section active flex-col items-center justify-center h-full w-full relative">
-<div class="z-10 text-center space-y-8">
-<h1 class="text-4xl md:text-6xl text-yellow-400 pixel-font mb-8 drop-shadow-lg floating">IANS CONSOLE</h1>
-<p class="text-gray-300 text-xl mb-8">Who is playing?</p>
-<div id="user-list" class="flex flex-wrap gap-6 justify-center max-w-4xl px-4"><p class="text-gray-500">Loading players...</p></div>
-<div class="mt-12"><button id="btn-add-user" class="text-gray-500 hover:text-white underline text-sm border p-2 rounded border-gray-600">+ Add New Player</button></div>
-</div>
-<div id="add-user-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-<div class="bg-gray-800 p-6 rounded-lg w-80 border border-gray-600">
-<h3 class="text-xl font-bold mb-4">New Hero</h3>
-<input type="text" id="new-username" placeholder="Name" class="w-full bg-gray-700 p-2 rounded mb-4 text-white">
-<div class="flex gap-2 justify-end"><button id="btn-cancel-user" class="text-gray-400 px-4 py-2">Cancel</button><button id="btn-create-user" class="bg-blue-600 px-4 py-2 rounded text-white">Create</button></div>
-</div>
-</div>
-</div>
+<!-- 1. LOGIN -->
+<div id="login-view" class="view-section active center-content">
+    <h1 style="font-size: 40px; color: #facc15; margin-bottom: 20px;">IANS CONSOLE</h1>
+    <p style="color: #d1d5db; font-size: 20px;">Who is playing?</p>
+    
+    <div id="user-list" style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 20px;">
+        <p style="color: gray">Loading...</p>
+    </div>
 
-<div id="dashboard-view" class="view-section flex-col h-full w-full">
-<div class="w-full bg-gray-800 p-4 shadow-lg flex justify-between items-center z-20 border-b border-gray-700">
-<div class="flex items-center gap-4"><button id="btn-logout" class="text-gray-400 hover:text-white">← Logout</button>
-<div class="flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full border border-gray-600"><span id="dash-avatar" class="text-2xl">👦</span><div><div id="dash-name" class="font-bold text-sm leading-none">Ian</div><div class="text-xs text-yellow-400 pixel-font mt-1" id="dash-level">LV.1</div></div></div></div>
-<button id="btn-admin" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs">⚙️ Parent Zone</button>
-</div>
-<div class="flex-1 overflow-y-auto p-4 md:p-8">
-<h2 class="text-2xl font-bold mb-6 border-l-4 border-yellow-500 pl-4">Mission Select</h2>
-<div id="level-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-<div id="empty-levels-msg" class="hidden text-center text-gray-500 mt-20"><p>No missions available yet.</p><p class="text-sm">Go to Parent Zone to add missions!</p></div>
-</div>
+    <div style="margin-top: 40px;">
+        <button onclick="showModal()" class="btn btn-secondary">
+            + Add New Player
+        </button>
+    </div>
 </div>
 
-<div id="game-view" class="view-section flex-col h-full w-full bg-gray-900">
-<div class="w-full bg-gray-800 p-2 flex justify-between items-center border-b border-gray-700">
-<button id="btn-quit" class="text-red-400 hover:text-red-300 font-bold px-3">EXIT 🏳️</button>
-<div class="flex-1 mx-4"><div class="h-3 bg-gray-700 rounded-full overflow-hidden border border-gray-600 relative"><div id="battle-progress" class="h-full bg-red-600 transition-all duration-300" style="width: 0%"></div></div></div>
-<div class="pixel-font text-yellow-400 text-sm"><span id="monsters-killed">0</span>/5</div>
-</div>
-<div class="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-<div class="mb-4 relative"><div id="monster-emoji" class="text-8xl md:text-9xl filter drop-shadow-2xl transition-transform cursor-pointer hover:scale-105 active:scale-90">👾</div><div id="damage-text" class="absolute top-0 left-1/2 -translate-x-1/2 text-red-500 font-bold text-4xl opacity-0 transition-all pointer-events-none">-20</div></div>
-<div class="bg-gray-800/90 backdrop-blur p-6 rounded-xl border border-blue-500/30 shadow-2xl mb-6 w-full max-w-2xl text-center"><h3 id="q-word" class="text-4xl font-bold text-white mb-2">...</h3><p id="q-meaning" class="text-lg text-blue-300">...</p></div>
-<div id="drop-zone" class="w-full max-w-3xl bg-gray-800/50 min-h-[80px] rounded-lg border-2 border-dashed border-gray-600 flex flex-wrap gap-2 p-3 items-center justify-center mb-6 transition-colors"><span class="text-gray-500 italic text-sm pointer-events-none">Tap words to attack...</span></div>
-<div id="word-bank" class="w-full max-w-3xl flex flex-wrap justify-center gap-2"></div>
-</div>
-<div class="p-4 bg-gray-800 flex justify-center gap-4"><button id="btn-reset" class="bg-gray-600 px-6 py-3 rounded-lg font-bold">↺ Reset</button><button id="btn-attack" class="bg-blue-600 px-10 py-3 rounded-lg font-bold text-lg shadow-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">ATTACK! ⚔️</button></div>
+<!-- MODAL (Manually styled) -->
+<div id="add-user-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <h3 style="margin: 0 0 15px 0; font-size: 24px;">New Hero</h3>
+        <input type="text" id="new-username" placeholder="Enter Name" class="input-field">
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="closeModal()" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</button>
+            <button onclick="createNewUser()" class="btn btn-primary" style="padding: 10px 20px;">Create</button>
+        </div>
+    </div>
 </div>
 
-<div id="admin-view" class="view-section flex-col h-full w-full bg-slate-900 p-8 overflow-y-auto">
-<div class="max-w-4xl mx-auto w-full">
-<div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-white">Parent Zone</h2><button id="btn-back-dash" class="bg-gray-700 px-4 py-2 rounded">← Back to Dashboard</button></div>
-<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mb-8">
-<h3 class="text-xl font-bold mb-4 text-blue-400">Add New Mission (Excel Upload)</h3>
-<form id="upload-form" class="space-y-4">
-<div><label class="block text-sm text-gray-400 mb-1">Mission Title</label><input type="text" name="title" placeholder="e.g. Chapter 1" class="w-full bg-slate-700 p-2 rounded text-white border border-slate-600" required></div>
-<div><label class="block text-sm text-gray-400 mb-1">Difficulty</label><select name="difficulty" class="w-full bg-slate-700 p-2 rounded text-white border border-slate-600"><option value="Easy">Easy</option><option value="Normal">Normal</option><option value="Hard">Hard</option></select></div>
-<div><label class="block text-sm text-gray-400 mb-1">Excel File</label><input type="file" name="file" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700" required></div>
-<button type="submit" id="upload-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors">Upload Mission</button>
-<p id="upload-status" class="text-center text-sm mt-2"></p>
-</form>
+<!-- 2. DASHBOARD -->
+<div id="dashboard-view" class="view-section">
+    <div style="background: #1f2937; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button onclick="switchView('login-view')" style="background:none; border:none; color: #9ca3af; cursor: pointer;">← Logout</button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="dash-avatar" style="font-size: 24px;">👦</span>
+                <div>
+                    <div id="dash-name" style="font-weight: bold;">Ian</div>
+                    <div id="dash-level" style="font-size: 12px; color: #facc15;">LV.1</div>
+                </div>
+            </div>
+        </div>
+        <button onclick="switchView('admin-view')" style="background: #374151; border: none; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">⚙️ Parent Zone</button>
+    </div>
+    <div style="padding: 20px; overflow-y: auto; flex: 1;">
+        <h2 style="border-left: 4px solid #eab308; padding-left: 15px; margin-bottom: 20px;">Mission Select</h2>
+        <div id="level-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;"></div>
+        <div id="empty-levels-msg" class="hidden" style="text-align: center; color: gray; margin-top: 50px;">
+            <p>No missions available yet.</p>
+            <p>Go to Parent Zone to add missions!</p>
+        </div>
+    </div>
 </div>
-<h3 class="text-xl font-bold mb-4">Existing Missions</h3>
-<div id="admin-level-list" class="space-y-4"></div>
+
+<!-- 3. GAME (Placeholder for structure) -->
+<div id="game-view" class="view-section" style="background: #111827;">
+    <div style="padding: 10px; background: #1f2937; display: flex; justify-content: space-between;">
+        <button onclick="quitGame()" style="color: #f87171; background: none; border: none; font-weight: bold;">EXIT 🏳️</button>
+        <span style="color: #facc15">Battle</span>
+    </div>
+    <div class="center-content" style="flex: 1;">
+        <div id="monster-emoji" style="font-size: 80px; cursor: pointer;">👾</div>
+        <div style="background: #1f2937; padding: 20px; border-radius: 12px; margin: 20px; border: 1px solid #2563eb;">
+            <h3 id="q-word" style="font-size: 32px; margin: 0;">...</h3>
+            <p id="q-meaning" style="color: #93c5fd; font-size: 18px;">...</p>
+        </div>
+        <div id="drop-zone" style="min-height: 60px; border: 2px dashed #4b5563; margin: 20px; border-radius: 8px; padding: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+            Tap words...
+        </div>
+        <div id="word-bank" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px;"></div>
+    </div>
+    <div style="padding: 20px; display: flex; justify-content: center; gap: 20px;">
+        <button onclick="resetBattleSentence()" class="btn btn-secondary">Reset</button>
+        <button onclick="submitAttack()" class="btn btn-primary">ATTACK!</button>
+    </div>
 </div>
+
+<!-- 4. ADMIN -->
+<div id="admin-view" class="view-section">
+    <div style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <h2>Parent Zone</h2>
+            <button onclick="switchView('dashboard-view')" class="btn btn-secondary" style="padding: 5px 15px;">Back</button>
+        </div>
+        <div style="background: #1f2937; padding: 20px; border-radius: 12px;">
+            <h3>Upload Mission (Excel)</h3>
+            <form id="upload-form">
+                <input type="text" name="title" placeholder="Mission Title" class="input-field" required>
+                <select name="difficulty" class="input-field"><option value="Normal">Normal</option></select>
+                <input type="file" name="file" accept=".xlsx" class="input-field" required>
+                <button type="submit" id="upload-btn" class="btn btn-primary" style="width: 100%;">Upload</button>
+                <p id="upload-status" style="text-align: center; margin-top: 10px; font-size: 14px;"></p>
+            </form>
+        </div>
+        <h3 style="margin-top: 30px;">Existing Missions</h3>
+        <div id="admin-level-list"></div>
+    </div>
 </div>
 
 <script>
-function setStatus(msg, color) { const el = document.getElementById("sys-status"); el.textContent = msg; el.className = `fixed top-0 left-0 w-full text-white text-xs font-bold p-1 z-50 text-center shadow-lg ${color}`; if(color.includes("green")) setTimeout(()=>el.style.display="none", 3000); }
+// --- LOGIC ---
 let currentUser=null,currentLevel=null,battleWords=[],currentWordIndex=0,playerSelection=[],defeatedCount=0,GOAL_COUNT=5;
-window.onload=function(){fetchUsers();};
-function switchView(e){document.querySelectorAll(".view-section").forEach(e=>e.classList.remove("active")),document.getElementById(e).classList.add("active"),"dashboard-view"===e&&fetchLevels(),"admin-view"===e&&fetchAdminLevels()}
-function showAddUserModal(){document.getElementById("add-user-modal").classList.remove("hidden")}
-function closeAddUserModal(){document.getElementById("add-user-modal").classList.add("hidden")}
-async function fetchUsers(){
-    setStatus("🔴 Connecting to Server...", "bg-red-600");
-    try{
-        let e=await fetch("/api/users");
-        if(!e.ok) throw new Error("API Error");
-        let t=await e.json(),n=document.getElementById("user-list");
-        n.innerHTML="",t.length===0 ? n.innerHTML='<p class="text-gray-500">No players yet. Add one!</p>' : t.forEach(e=>{let t=document.createElement("div");t.className="card-hover bg-gray-800 p-6 rounded-xl border border-gray-600 cursor-pointer w-40 text-center transition-all hover:bg-gray-700 hover:border-blue-500",t.onclick=()=>selectUser(e),t.innerHTML=`<div class="text-5xl mb-4">${e.avatar}</div><div class="font-bold text-lg text-white">${e.name}</div><div class="text-xs text-yellow-500 pixel-font mt-2">LV.${e.level}</div>`,n.appendChild(t)});
-        setStatus("🟢 Online", "bg-green-600");
-    }catch(e){ setStatus("⚠️ Offline: " + e.message, "bg-red-600"); }
+
+window.onload = function() {
+    console.log("System V7 Loaded");
+    fetchUsers();
+    
+    // Admin Upload Logic
+    document.getElementById("upload-form").onsubmit=async e=>{e.preventDefault();let t=document.getElementById("upload-btn"),n=document.getElementById("upload-status"),l=new FormData(e.target);t.disabled=!0,t.textContent="Uploading...",n.textContent="";try{let a=await fetch("/api/admin/upload",{method:"POST",body:l});if(a.ok){n.textContent="Success!",n.style.color="#4ade80",e.target.reset(),fetchAdminLevels()}else{let o=await a.json();throw new Error(o.detail)}}catch(r){n.textContent="Error: "+r.message,n.style.color="#f87171"}finally{t.disabled=!1,t.textContent="Upload"}};
+};
+
+function switchView(id){
+    document.querySelectorAll(".view-section").forEach(e=>e.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    if(id==="dashboard-view") fetchLevels();
+    if(id==="admin-view") fetchAdminLevels();
 }
-async function createNewUser(){let e=document.getElementById("new-username").value;e&&(await fetch("/api/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:e,avatar:["👦","👧","🐶","🐱","🤖"][Math.floor(5*Math.random())]})}),closeAddUserModal(),fetchUsers())}
-function selectUser(e){currentUser=e,document.getElementById("dash-avatar").textContent=e.avatar,document.getElementById("dash-name").textContent=e.name,document.getElementById("dash-level").textContent="LV."+e.level,switchView("dashboard-view")}
-async function fetchLevels(){let e=await fetch("/api/levels"),t=await e.json(),n=document.getElementById("level-list");n.innerHTML="",0===t.length?document.getElementById("empty-levels-msg").classList.remove("hidden"):(document.getElementById("empty-levels-msg").classList.add("hidden"),t.forEach(e=>{let t=document.createElement("div"),l={"Easy":"border-green-500","Normal":"border-blue-500","Hard":"border-red-500"}[e.difficulty]||"border-gray-500";t.className=`card-hover bg-gray-800 p-6 rounded-xl border-l-4 ${l} cursor-pointer shadow-lg`,t.onclick=()=>startLevel(e),t.innerHTML=`<h3 class="font-bold text-xl text-white mb-2">${e.title}</h3><div class="flex justify-between items-center text-sm text-gray-400"><span>${e.difficulty}</span><span>${e.word_count} Words</span></div>`,n.appendChild(t)}))}
-async function fetchAdminLevels(){let e=await fetch("/api/levels"),t=await e.json(),n=document.getElementById("admin-level-list");n.innerHTML="",t.forEach(e=>{let t=document.createElement("div");t.className="flex justify-between items-center bg-slate-700 p-4 rounded",t.innerHTML=`<div><span class="font-bold text-white">${e.title}</span> <span class="text-xs text-gray-400">(${e.word_count} words)</span></div><button onclick="deleteLevel(${e.id})" class="text-red-400 text-sm hover:text-red-300">Delete</button>`,n.appendChild(t)})}
-async function deleteLevel(e){confirm("Delete this mission?")&&(await fetch(`/api/admin/levels/${e}`,{method:"DELETE"}),fetchAdminLevels())}
-async function startLevel(e){currentLevel=e;let t=await fetch(`/api/game/start/${e.id}?count=${GOAL_COUNT}`);if(battleWords=await t.json(),0===battleWords.length){alert("This mission has no words!");return}currentWordIndex=0,defeatedCount=0,updateBattleStats(),switchView("game-view"),loadBattleWord(0)}
-function loadBattleWord(e){if(e>=battleWords.length){finishBattle();return}let t=battleWords[e];document.getElementById("q-word").textContent=t.word,document.getElementById("q-meaning").textContent=t.meaning,document.getElementById("drop-zone").innerHTML='<span class="text-gray-500 italic text-sm pointer-events-none">Tap words...</span>',playerSelection=[];let n=t.sentence.trim().split(/\s+/),l=[...n].sort(()=>Math.random()-.5),a=document.getElementById("word-bank");a.innerHTML="",l.forEach(e=>{let t=document.createElement("button");t.className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded shadow text-white font-bold transition-all",t.textContent=e,t.onclick=()=>{let n=document.createElement("span");n.className="bg-yellow-500 text-black px-2 py-1 rounded font-bold cursor-pointer hover:bg-red-400",n.textContent=e,n.onclick=()=>{n.remove(),playerSelection.splice(playerSelection.indexOf(e),1),t.classList.remove("opacity-20","pointer-events-none"),0===playerSelection.length&&(document.getElementById("drop-zone").innerHTML='<span class="text-gray-500 italic text-sm pointer-events-none">Tap words...</span>')},0===playerSelection.length&&(document.getElementById("drop-zone").innerHTML=""),document.getElementById("drop-zone").appendChild(n),playerSelection.push(e),t.classList.add("opacity-20","pointer-events-none")},a.appendChild(t)})}
-function resetBattleSentence(){loadBattleWord(currentWordIndex)}
-function submitAttack(){let e=battleWords[currentWordIndex].sentence.replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,""),t=playerSelection.join("").replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");if(e===t){let n=document.getElementById("monster-emoji");n.classList.add("shake"),document.getElementById("damage-text").style.opacity="1",document.getElementById("damage-text").style.top="-50px",setTimeout(()=>{n.classList.remove("shake"),document.getElementById("damage-text").style.opacity="0",document.getElementById("damage-text").style.top="0",defeatedCount++,currentWordIndex++,updateBattleStats(),loadBattleWord(currentWordIndex)},800)}else document.getElementById("drop-zone").classList.add("bg-red-900","shake"),setTimeout(()=>document.getElementById("drop-zone").classList.remove("bg-red-900","shake"),500)}
-async function finishBattle(){alert("MISSION COMPLETE! Victory!");let e=100;await fetch(`/api/users/${currentUser.id}/progress?xp_gained=${e}`,{method:"POST"}),currentUser.xp+=e,switchView("dashboard-view")}
-function updateBattleStats(){document.getElementById("monsters-killed").textContent=defeatedCount;let e=defeatedCount/GOAL_COUNT*100;document.getElementById("battle-progress").style.width=Math.min(e,100)+"%"}
-function quitGame(){confirm("Abandon mission?")&&switchView("dashboard-view")}
-document.getElementById("upload-form").onsubmit=async e=>{e.preventDefault();let t=document.getElementById("upload-btn"),n=document.getElementById("upload-status"),l=new FormData(e.target);t.disabled=!0,t.textContent="Uploading...",n.textContent="";try{let a=await fetch("/api/admin/upload",{method:"POST",body:l});if(a.ok){n.textContent="Success! Mission added.",n.className="text-center text-sm mt-2 text-green-400",e.target.reset(),fetchAdminLevels()}else{let o=await a.json();throw new Error(o.detail)}}catch(r){n.textContent="Error: "+r.message,n.className="text-center text-sm mt-2 text-red-400"}finally{t.disabled=!1,t.textContent="Upload Mission"}};
+
+async function fetchUsers(){
+    setStatus("Connecting...", "status-red");
+    try {
+        let res = await fetch("/api/users");
+        if(!res.ok) throw new Error("API Error");
+        let users = await res.json();
+        let container = document.getElementById("user-list");
+        container.innerHTML = "";
+        
+        if(users.length === 0) container.innerHTML = '<p style="color:gray">No players yet. Click Add New Player!</p>';
+        
+        users.forEach(u => {
+            let div = document.createElement("div");
+            div.style.cssText = "background: #1f2937; padding: 20px; border-radius: 12px; cursor: pointer; border: 1px solid #374151; min-width: 100px;";
+            div.onclick = () => selectUser(u);
+            div.innerHTML = `<div style="font-size: 40px; margin-bottom: 10px;">${u.avatar}</div><div style="font-weight: bold;">${u.name}</div><div style="font-size: 12px; color: #facc15;">LV.${u.level}</div>`;
+            container.appendChild(div);
+        });
+        setStatus("System Online", "status-green");
+    } catch(e) {
+        setStatus("Offline: " + e.message, "status-red");
+    }
+}
+
+async function createNewUser(){
+    let name = document.getElementById("new-username").value;
+    if(!name) return alert("Please enter a name");
+    
+    try {
+        await fetch("/api/users", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ name: name })
+        });
+        closeModal();
+        fetchUsers();
+    } catch(e) { alert("Create Failed: " + e.message); }
+}
+
+function selectUser(u){ currentUser=u; document.getElementById("dash-avatar").textContent=u.avatar; document.getElementById("dash-name").textContent=u.name; document.getElementById("dash-level").textContent="LV."+u.level; switchView("dashboard-view"); }
+
+async function fetchLevels(){
+    let res = await fetch("/api/levels");
+    let levels = await res.json();
+    let container = document.getElementById("level-list");
+    container.innerHTML = "";
+    if(levels.length===0) document.getElementById("empty-levels-msg").classList.remove("hidden");
+    else {
+        document.getElementById("empty-levels-msg").classList.add("hidden");
+        levels.forEach(l => {
+            let div = document.createElement("div");
+            div.style.cssText = "background: #1f2937; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; cursor: pointer;";
+            div.onclick = () => startLevel(l);
+            div.innerHTML = `<h3 style="margin:0 0 10px 0;">${l.title}</h3><div style="color:gray; font-size:14px;">${l.word_count} Words</div>`;
+            container.appendChild(div);
+        });
+    }
+}
+
+async function fetchAdminLevels(){
+    let res = await fetch("/api/levels");
+    let levels = await res.json();
+    let container = document.getElementById("admin-level-list");
+    container.innerHTML = "";
+    levels.forEach(l => {
+        let div = document.createElement("div");
+        div.style.cssText = "display: flex; justify-content: space-between; padding: 10px; background: #374151; margin-bottom: 10px; border-radius: 6px;";
+        div.innerHTML = `<span>${l.title}</span> <button onclick="deleteLevel(${l.id})" style="color: #f87171; background: none; border: none; cursor: pointer;">Delete</button>`;
+        container.appendChild(div);
+    });
+}
+
+async function deleteLevel(id) { if(confirm("Delete?")) { await fetch(`/api/admin/levels/${id}`, {method:"DELETE"}); fetchAdminLevels(); } }
+
+async function startLevel(l) {
+    currentLevel = l;
+    let res = await fetch(`/api/game/start/${l.id}?count=${GOAL_COUNT}`);
+    battleWords = await res.json();
+    if(battleWords.length === 0) return alert("No words in this mission!");
+    
+    currentWordIndex = 0; defeatedCount = 0; playerSelection = [];
+    switchView("game-view");
+    loadBattleWord(0);
+}
+
+function loadBattleWord(idx) {
+    if(idx >= battleWords.length) return finishBattle();
+    let w = battleWords[idx];
+    document.getElementById("q-word").textContent = w.word;
+    document.getElementById("q-meaning").textContent = w.meaning;
+    
+    let parts = w.sentence.trim().split(/\s+/).sort(() => Math.random() - 0.5);
+    let bank = document.getElementById("word-bank");
+    bank.innerHTML = "";
+    document.getElementById("drop-zone").innerHTML = '<span style="color:gray">Tap words...</span>';
+    playerSelection = [];
+
+    parts.forEach(word => {
+        let btn = document.createElement("button");
+        btn.textContent = word;
+        btn.className = "btn btn-primary";
+        btn.style.padding = "10px 15px";
+        btn.onclick = () => {
+            let span = document.createElement("span");
+            span.textContent = word;
+            span.style.cssText = "background: #eab308; color: black; padding: 5px 10px; border-radius: 4px; cursor: pointer;";
+            span.onclick = () => {
+                span.remove();
+                playerSelection.splice(playerSelection.indexOf(word), 1);
+                btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
+                if(playerSelection.length===0) document.getElementById("drop-zone").innerHTML='<span style="color:gray">Tap words...</span>';
+            };
+            
+            if(playerSelection.length===0) document.getElementById("drop-zone").innerHTML="";
+            document.getElementById("drop-zone").appendChild(span);
+            playerSelection.push(word);
+            btn.style.opacity = "0.5"; btn.style.pointerEvents = "none";
+        };
+        bank.appendChild(btn);
+    });
+}
+
+function resetBattleSentence() { loadBattleWord(currentWordIndex); }
+
+function submitAttack() {
+    let target = battleWords[currentWordIndex].sentence.replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");
+    let player = playerSelection.join("").replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");
+    
+    if(player === target) {
+        alert("Correct! Attack!"); // Simple feedback
+        defeatedCount++;
+        currentWordIndex++;
+        loadBattleWord(currentWordIndex);
+    } else {
+        alert("Wrong! Try again.");
+        resetBattleSentence();
+    }
+}
+
+async function finishBattle() {
+    alert("Mission Complete! +100 XP");
+    await fetch(`/api/users/${currentUser.id}/progress?xp_gained=100`, {method:"POST"});
+    currentUser.xp += 100;
+    switchView("dashboard-view");
+}
+
+function quitGame() { if(confirm("Quit?")) switchView("dashboard-view"); }
 </script>
 </body>
 </html>
