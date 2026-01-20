@@ -1,3 +1,4 @@
+
 import os
 import random
 import uuid
@@ -11,88 +12,152 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boole
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 
-# --- HTML CONTENT (EMBEDDED) ---
-HTML_CONTENT = """
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ian's Game Console</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700&display=swap');
-body{font-family:'Nunito',sans-serif;background-color:#111827;user-select:none}.pixel-font{font-family:'Press Start 2P',cursive}.view-section{display:none;opacity:0;transition:opacity .3s ease-in-out}.view-section.active{display:flex;opacity:1}@keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}.floating{animation:float 3s ease-in-out infinite}.card-hover:hover{transform:translateY(-4px);box-shadow:0 10px 25px -5px rgba(0,0,0,.3)}.shake{animation:shake .5s}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-</style>
-</head>
-<body class="h-screen w-full text-white overflow-hidden bg-gray-900">
-<div id="sys-status" class="fixed top-0 left-0 w-full bg-blue-600 text-white text-xs font-bold p-1 z-50 text-center shadow-lg">🔵 System Initializing...</div>
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+os.makedirs(DATA_DIR, exist_ok=True)
 
-<!-- 1. LOGIN -->
-<div id="login-view" class="view-section active flex-col items-center justify-center h-full w-full relative">
-<div class="z-10 text-center space-y-8">
-<h1 class="text-4xl md:text-6xl text-yellow-400 pixel-font mb-8 drop-shadow-lg floating">IANS CONSOLE</h1>
-<p class="text-gray-300 text-xl mb-8">Who is playing?</p>
-<div id="user-list" class="flex flex-wrap gap-6 justify-center max-w-4xl px-4"><p class="text-gray-500">Loading players...</p></div>
-<div class="mt-12"><button onclick="showAddUserModal()" class="text-gray-500 hover:text-white underline text-sm border p-2 rounded border-gray-600">+ Add New Player</button></div>
-</div>
-<div id="add-user-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-<div class="bg-gray-800 p-6 rounded-lg w-80 border border-gray-600">
-<h3 class="text-xl font-bold mb-4">New Hero</h3>
-<input type="text" id="new-username" placeholder="Name" class="w-full bg-gray-700 p-2 rounded mb-4 text-white">
-<div class="flex gap-2 justify-end"><button onclick="closeAddUserModal()" class="text-gray-400 px-4 py-2">Cancel</button><button onclick="createNewUser()" class="bg-blue-600 px-4 py-2 rounded text-white">Create</button></div>
-</div>
-</div>
-</div>
+try:
+    DB_URL = f"sqlite:///{os.path.join(DATA_DIR, 'ian_quest.db')}"
+    engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base = declarative_base()
+except:
+    DB_URL = "sqlite:///:memory:"
+    engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base = declarative_base()
 
-<!-- 2. DASHBOARD -->
-<div id="dashboard-view" class="view-section flex-col h-full w-full">
-<div class="w-full bg-gray-800 p-4 shadow-lg flex justify-between items-center z-20 border-b border-gray-700">
-<div class="flex items-center gap-4"><button onclick="switchView('login-view')" class="text-gray-400 hover:text-white">← Logout</button>
-<div class="flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full border border-gray-600"><span id="dash-avatar" class="text-2xl">👦</span><div><div id="dash-name" class="font-bold text-sm leading-none">Ian</div><div class="text-xs text-yellow-400 pixel-font mt-1" id="dash-level">LV.1</div></div></div></div>
-<button onclick="switchView('admin-view')" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs">⚙️ Parent Zone</button>
-</div>
-<div class="flex-1 overflow-y-auto p-4 md:p-8">
-<h2 class="text-2xl font-bold mb-6 border-l-4 border-yellow-500 pl-4">Mission Select</h2>
-<div id="level-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-<div id="empty-levels-msg" class="hidden text-center text-gray-500 mt-20"><p>No missions available yet.</p><p class="text-sm">Go to Parent Zone to add missions!</p></div>
-</div>
-</div>
+app = FastAPI()
 
-<!-- 3. GAME -->
-<div id="game-view" class="view-section flex-col h-full w-full bg-gray-900">
-<div class="w-full bg-gray-800 p-2 flex justify-between items-center border-b border-gray-700">
-<button onclick="quitGame()" class="text-red-400 hover:text-red-300 font-bold px-3">EXIT 🏳️</button>
-<div class="flex-1 mx-4"><div class="h-3 bg-gray-700 rounded-full overflow-hidden border border-gray-600 relative"><div id="battle-progress" class="h-full bg-red-600 transition-all duration-300" style="width: 0%"></div></div></div>
-<div class="pixel-font text-yellow-400 text-sm"><span id="monsters-killed">0</span>/5</div>
-</div>
-<div class="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-<div class="mb-4 relative"><div id="monster-emoji" class="text-8xl md:text-9xl filter drop-shadow-2xl transition-transform cursor-pointer hover:scale-105 active:scale-90">👾</div><div id="damage-text" class="absolute top-0 left-1/2 -translate-x-1/2 text-red-500 font-bold text-4xl opacity-0 transition-all pointer-events-none">-20</div></div>
-<div class="bg-gray-800/90 backdrop-blur p-6 rounded-xl border border-blue-500/30 shadow-2xl mb-6 w-full max-w-2xl text-center"><h3 id="q-word" class="text-4xl font-bold text-white mb-2">...</h3><p id="q-meaning" class="text-lg text-blue-300">...</p></div>
-<div id="drop-zone" class="w-full max-w-3xl bg-gray-800/50 min-h-[80px] rounded-lg border-2 border-dashed border-gray-600 flex flex-wrap gap-2 p-3 items-center justify-center mb-6 transition-colors"><span class="text-gray-500 italic text-sm pointer-events-none">Tap words to attack...</span></div>
-<div id="word-bank" class="w-full max-w-3xl flex flex-wrap justify-center gap-2"></div>
-</div>
-<div class="p-4 bg-gray-800 flex justify-center gap-4"><button onclick="resetBattleSentence()" class="bg-gray-600 px-6 py-3 rounded-lg font-bold">↺ Reset</button><button onclick="submitAttack()" class="bg-blue-600 px-10 py-3 rounded-lg font-bold text-lg shadow-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">ATTACK! ⚔️</button></div>
-</div>
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    avatar = Column(String, default="👦")
+    xp = Column(Integer, default=0)
+    level = Column(Integer, default=1)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-<!-- 4. ADMIN -->
-<div id="admin-view" class="view-section flex-col h-full w-full bg-slate-900 p-8 overflow-y-auto">
-<div class="max-w-4xl mx-auto w-full">
-<div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-white">Parent Zone</h2><button onclick="switchView('dashboard-view')" class="bg-gray-700 px-4 py-2 rounded">← Back to Dashboard</button></div>
-<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mb-8">
-<h3 class="text-xl font-bold mb-4 text-blue-400">Add New Mission (Excel Upload)</h3>
-<form id="upload-form" class="space-y-4">
-<div><label class="block text-sm text-gray-400 mb-1">Mission Title</label><input type="text" name="title" placeholder="e.g. Chapter 1" class="w-full bg-slate-700 p-2 rounded text-white border border-slate-600" required></div>
-<div><label class="block text-sm text-gray-400 mb-1">Difficulty</label><select name="difficulty" class="w-full bg-slate-700 p-2 rounded text-white border border-slate-600"><option value="Easy">Easy</option><option value="Normal">Normal</option><option value="Hard">Hard</option></select></div>
-<div><label class="block text-sm text-gray-400 mb-1">Excel File</label><input type="file" name="file" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700" required></div>
-<button type="submit" id="upload-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors">Upload Mission</button>
-<p id="upload-status" class="text-center text-sm mt-2"></p>
-</form>
-</div>
-<h3 class="text-xl font-bold mb-4">Existing Missions</h3>
-<div id="admin-level-list" class="space-y-4"></div>
-</div>
-</div>
+class LevelPack(Base):
+    __tablename__ = "level_packs"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    difficulty = Column(String, default="Normal")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    words = relationship("Word", back_populates="pack", cascade="all, delete-orphan")
 
-<script>
-function setStatus(msg, color) { const el = document.getElementById(
+class Word(Base):
+    __tablename__ = "words"
+    id = Column(Integer, primary_key=True, index=True)
+    pack_id = Column(Integer, ForeignKey("level_packs.id"))
+    word = Column(String, index=True)
+    meaning = Column(String)
+    sentence = Column(Text)
+    pack = relationship("LevelPack", back_populates="words")
+
+Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+class UserCreate(BaseModel):
+    name: str
+    avatar: str = "👦"
+
+class UserOut(BaseModel):
+    id: int
+    name: str
+    avatar: str
+    xp: int
+    level: int
+    class Config:
+        from_attributes = True
+
+class LevelOut(BaseModel):
+    id: int
+    title: str
+    difficulty: str
+    word_count: int
+    class Config:
+        from_attributes = True
+
+@app.get("/")
+async def get_index():
+    with open(os.path.join(BASE_DIR, "index.html"), "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/api/users", response_model=List[UserOut])
+def get_users(db: Session = Depends(get_db)):
+    return db.query(User).all()
+
+@app.post("/api/users", response_model=UserOut)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.name == user.name).first()
+    if db_user: return db_user
+    new_user = User(name=user.name, avatar=user.avatar)
+    db.add(new_user); db.commit(); db.refresh(new_user)
+    return new_user
+
+@app.post("/api/users/{user_id}/progress")
+def update_progress(user_id: int, xp_gained: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user: raise HTTPException(status_code=404, detail="User not found")
+    user.xp += xp_gained
+    user.level = (user.xp // 100) + 1
+    db.commit()
+    return {"xp": user.xp, "level": user.level}
+
+@app.get("/api/levels", response_model=List[LevelOut])
+def get_levels(db: Session = Depends(get_db)):
+    packs = db.query(LevelPack).filter(LevelPack.is_active == True).order_by(LevelPack.created_at.desc()).all()
+    results = []
+    for p in packs:
+        results.append({"id": p.id, "title": p.title, "difficulty": p.difficulty, "word_count": len(p.words)})
+    return results
+
+@app.post("/api/admin/upload")
+async def upload_level(file: UploadFile = File(...), title: str = Form(...), difficulty: str = Form("Normal"), db: Session = Depends(get_db)):
+    try: import pandas as pd
+    except ImportError: raise HTTPException(status_code=500, detail="Pandas not installed")
+    temp_path = os.path.join(DATA_DIR, f"temp_{uuid.uuid4()}.xlsx")
+    with open(temp_path, "wb") as buffer: shutil.copyfileobj(file.file, buffer)
+    try:
+        df = pd.read_excel(temp_path)
+        df.columns = [str(c).lower().strip() for c in df.columns]
+        word_col = next((c for c in df.columns if 'word' in c or '單字' in c), None)
+        mean_col = next((c for c in df.columns if 'mean' in c or '中文' in c or 'def' in c), None)
+        sent_col = next((c for c in df.columns if 'sent' in c or '例句' in c or 'ex' in c), None)
+        if not word_col: raise HTTPException(status_code=400, detail="Cannot find 'word' column in Excel")
+        new_pack = LevelPack(title=title, difficulty=difficulty)
+        db.add(new_pack); db.commit(); db.refresh(new_pack)
+        count = 0
+        for _, row in df.iterrows():
+            if pd.isna(row[word_col]): continue
+            w_str = str(row[word_col]).strip()
+            if not w_str: continue
+            w = Word(pack_id=new_pack.id, word=w_str, meaning=str(row[mean_col]).strip() if mean_col and not pd.isna(row[mean_col]) else "???", sentence=str(row[sent_col]).strip() if sent_col and not pd.isna(row[sent_col]) else f"Sentence about {w_str}.")
+            db.add(w); count += 1
+        db.commit()
+        return {"status": "success", "pack_id": new_pack.id, "words_added": count}
+    except Exception as e: db.rollback(); raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if os.path.exists(temp_path): os.remove(temp_path)
+
+@app.delete("/api/admin/levels/{level_id}")
+def delete_level(level_id: int, db: Session = Depends(get_db)):
+    pack = db.query(LevelPack).filter(LevelPack.id == level_id).first()
+    if pack: db.delete(pack); db.commit()
+    return {"status": "deleted"}
+
+@app.get("/api/game/start/{level_id}")
+def start_game(level_id: int, count: int = 5, db: Session = Depends(get_db)):
+    pack = db.query(LevelPack).filter(LevelPack.id == level_id).first()
+    if not pack: raise HTTPException(status_code=404, detail="Level not found")
+    words = pack.words
+    selected = random.sample(words, min(len(words), count))
+    return [{"id": w.id, "word": w.word, "meaning": w.meaning, "sentence": w.sentence} for w in selected]
