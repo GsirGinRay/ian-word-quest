@@ -11,15 +11,24 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boole
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 
-print("Starting V9 with pre-loaded levels...")
+print("Starting V10 Monster Battle Edition...")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
+# Delete old database to force re-import with correct encoding
+DB_PATH = os.path.join(DATA_DIR, "ian_quest.db")
+if os.path.exists(DB_PATH):
+    try:
+        os.remove(DB_PATH)
+        print("Removed old database for fresh start")
+    except:
+        pass
+
 # Database Setup
 try:
-    DB_URL = f"sqlite:///{os.path.join(DATA_DIR, 'ian_quest.db')}"
+    DB_URL = f"sqlite:///{DB_PATH}"
     engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base = declarative_base()
@@ -268,3 +277,9 @@ def start_game(level_id: int, count: int = 5, db: Session = Depends(get_db)):
     words = pack.words
     selected = random.sample(words, min(len(words), count))
     return [{"id": w.id, "word": w.word, "meaning": w.meaning, "sentence": w.sentence} for w in selected]
+
+@app.get("/api/words/all")
+def get_all_words(db: Session = Depends(get_db)):
+    """Get all words for generating wrong choices"""
+    words = db.query(Word).all()
+    return [{"id": w.id, "word": w.word, "meaning": w.meaning} for w in words]
