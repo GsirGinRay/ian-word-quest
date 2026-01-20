@@ -3,136 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ian's Word Quest V2</title>
+    <title>Ian's Game Console</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700&display=swap');
         
-        body { font-family: 'Segoe UI', sans-serif; background-color: #1a202c; user-select: none; }
+        body { font-family: 'Nunito', sans-serif; background-color: #111827; user-select: none; }
         .pixel-font { font-family: 'Press Start 2P', cursive; }
-        .shake { animation: shake 0.5s; }
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        .pop-in { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .view-section { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .view-section.active { display: flex; opacity: 1; }
         
-        /* Progress Bar Striped Animation */
-        .progress-striped {
-            background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
-            background-size: 1rem 1rem;
-            animation: progress-bar-stripes 1s linear infinite;
-        }
-        @keyframes progress-bar-stripes { from { background-position: 1rem 0; } to { background-position: 0 0; } }
+        /* Animations */
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .floating { animation: float 3s ease-in-out infinite; }
+        
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
     </style>
 </head>
-<body class="h-screen flex items-center justify-center text-white overflow-hidden bg-gray-900">
+<body class="h-screen w-full text-white overflow-hidden bg-gray-900">
 
-    <!-- START SCREEN -->
-    <div id="start-screen" class="text-center w-full max-w-lg p-4">
-        <h1 class="text-4xl md:text-5xl text-yellow-400 pixel-font mb-4 leading-relaxed tracking-wider shadow-yellow-500">IAN'S QUEST</h1>
+    <!-- 1. LOGIN VIEW -->
+    <div id="login-view" class="view-section active flex-col items-center justify-center h-full w-full relative">
+        <div class="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80')] bg-cover opacity-20 z-0"></div>
         
-        <div class="bg-gray-800 p-6 rounded-xl border-4 border-blue-600 shadow-2xl relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-blue-400"></div>
+        <div class="z-10 text-center space-y-8">
+            <h1 class="text-4xl md:text-6xl text-yellow-400 pixel-font mb-8 drop-shadow-lg floating">IAN'S CONSOLE</h1>
+            <p class="text-gray-300 text-xl mb-8">Who is playing?</p>
             
-            <div class="flex justify-between items-end mb-6 border-b border-gray-700 pb-4">
-                <div class="text-left">
-                    <p class="text-gray-400 text-xs pixel-font mb-1">HERO LEVEL</p>
-                    <p class="text-3xl font-bold text-white pixel-font" id="hero-level-display">LV.1</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-gray-400 text-xs pixel-font mb-1">TOTAL XP</p>
-                    <p class="text-xl text-yellow-400 pixel-font" id="hero-xp-display">0</p>
-                </div>
+            <div id="user-list" class="flex flex-wrap gap-6 justify-center max-w-4xl px-4">
+                <!-- User Cards Injected Here -->
             </div>
 
-            <div class="mb-6 bg-gray-900 rounded p-4 text-left">
-                <h3 class="text-red-400 font-bold mb-2 text-sm pixel-font">⚠️ REVIEW LIST</h3>
-                <p id="review-count" class="text-gray-300 text-sm">There are <span class="text-white font-bold">0</span> words waiting for revenge.</p>
+            <div class="mt-12">
+                <button onclick="showAddUserModal()" class="text-gray-500 hover:text-white underline text-sm">
+                    + Add New Player
+                </button>
             </div>
-
-            <button onclick="startGame()" class="group relative w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-lg text-xl shadow-[0_6px_0_rgb(29,78,216)] active:shadow-[0_0px_0_rgb(29,78,216)] active:translate-y-1.5 transition-all">
-                <span class="pixel-font">START BATTLE</span>
-                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-2xl group-hover:translate-x-1 transition-transform">⚔️</span>
-            </button>
         </div>
-        <p id="loading" class="hidden text-yellow-400 mt-4 animate-pulse pixel-font text-xs">SUMMONING MONSTERS...</p>
+        
+        <!-- Add User Modal -->
+        <div id="add-user-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+            <div class="bg-gray-800 p-6 rounded-lg w-80 border border-gray-600">
+                <h3 class="text-xl font-bold mb-4">New Hero</h3>
+                <input type="text" id="new-username" placeholder="Name" class="w-full bg-gray-700 p-2 rounded mb-4 text-white">
+                <div class="flex gap-2 justify-end">
+                    <button onclick="closeAddUserModal()" class="text-gray-400 px-4 py-2">Cancel</button>
+                    <button onclick="createNewUser()" class="bg-blue-600 px-4 py-2 rounded text-white">Create</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- GAME SCREEN -->
-    <div id="game-screen" class="hidden w-full max-w-4xl p-2 flex flex-col h-full max-h-[95vh]">
-        
-        <!-- HUD -->
-        <div class="flex justify-between items-center mb-2 bg-gray-800 p-2 rounded-lg border border-gray-600 shadow-lg z-10">
-            <div class="flex items-center space-x-3">
-                <div class="bg-gray-900 p-2 rounded pixel-font text-yellow-400 text-sm border border-gray-700" id="game-level">LV.1</div>
-                <div class="w-24 md:w-48 h-3 bg-gray-700 rounded-full overflow-hidden border border-gray-600 relative">
-                    <div id="xp-bar" class="h-full bg-yellow-500 transition-all duration-500" style="width: 0%"></div>
+    <!-- 2. DASHBOARD VIEW (Level Selection) -->
+    <div id="dashboard-view" class="view-section flex-col h-full w-full">
+        <!-- Top Bar -->
+        <div class="w-full bg-gray-800 p-4 shadow-lg flex justify-between items-center z-20 border-b border-gray-700">
+            <div class="flex items-center gap-4">
+                <button onclick="switchView('login-view')" class="text-gray-400 hover:text-white">← Logout</button>
+                <div class="flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full border border-gray-600">
+                    <span id="dash-avatar" class="text-2xl">👦</span>
+                    <div>
+                        <div id="dash-name" class="font-bold text-sm leading-none">Ian</div>
+                        <div class="text-xs text-yellow-400 pixel-font mt-1" id="dash-level">LV.1</div>
+                    </div>
                 </div>
             </div>
-            <div class="pixel-font text-green-400 text-xs md:text-sm">MONSTERS: <span id="progress-count">0</span>/5</div>
-        </div>
-
-        <!-- BATTLE FIELD -->
-        <div class="flex-1 flex flex-col items-center justify-start relative">
-            
-            <!-- Monster Area -->
-            <div class="relative w-full flex flex-col items-center mb-4">
-                <div id="monster-container" class="relative z-10 transition-transform duration-100">
-                    <div id="monster" class="text-8xl md:text-9xl filter drop-shadow-2xl cursor-pointer" onclick="pokeMonster()">👾</div>
-                </div>
-                
-                <!-- HP Bar -->
-                <div class="mt-2 w-48 h-5 bg-gray-900 rounded-full border-2 border-red-900 overflow-hidden shadow-inner">
-                    <div id="monster-hp" class="h-full bg-red-600 transition-all duration-300 progress-striped" style="width: 100%"></div>
-                </div>
-            </div>
-
-            <!-- Word Info (The Weapon) -->
-            <div class="w-full text-center mb-4 z-20">
-                <div class="inline-block bg-gray-800/90 backdrop-blur px-6 py-3 rounded-xl border border-blue-500/30 shadow-lg">
-                    <h2 id="current-word" class="text-3xl md:text-4xl font-bold text-white tracking-wide mb-1 drop-shadow-md">...</h2>
-                    <p id="current-meaning" class="text-lg text-blue-300 font-medium">...</p>
-                </div>
-            </div>
-
-            <!-- Hint Button -->
-            <button onclick="useHint()" id="hint-btn" class="mb-2 text-xs text-gray-400 hover:text-white underline decoration-dotted">
-                Need a hint? (-5 XP)
-            </button>
-
-            <!-- Target Zone (Lego Plate) -->
-            <div id="target-zone" class="w-full bg-gray-800/50 rounded-xl p-4 min-h-[80px] border-2 border-dashed border-gray-600 flex flex-wrap gap-2 items-center justify-center transition-all mb-4">
-                <p class="text-gray-500 italic text-sm pointer-events-none animate-pulse" id="placeholder-text">Tap words to build the sentence...</p>
-            </div>
-
-            <!-- Word Bank (Pieces) -->
-            <div id="word-bank" class="flex flex-wrap justify-center gap-2 w-full px-2 pb-20 overflow-y-auto">
-                <!-- Buttons injected here -->
-            </div>
-        </div>
-        
-        <!-- Action Bar -->
-        <div class="fixed bottom-4 left-0 w-full px-4 flex justify-center space-x-3 z-30">
-             <button onclick="resetSentence()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg">
-                ↺
-            </button>
-             <button onclick="checkAnswer()" class="flex-1 max-w-sm bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-lg transform transition active:scale-95 border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">
-                ATTACK! ⚔️
+            <button onclick="switchView('admin-view')" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs">
+                ⚙️ Parent Zone
             </button>
         </div>
 
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <h2 class="text-2xl font-bold mb-6 border-l-4 border-yellow-500 pl-4">Mission Select</h2>
+            <div id="level-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Level Cards Injected Here -->
+            </div>
+            <div id="empty-levels-msg" class="hidden text-center text-gray-500 mt-20">
+                <p>No missions available yet.</p>
+                <p class="text-sm">Go to Parent Zone to add missions!</p>
+            </div>
+        </div>
     </div>
 
-    <!-- VICTORY OVERLAY -->
-    <div id="victory-screen" class="hidden fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-50 p-4 text-center">
-        <div class="text-6xl mb-4 animate-bounce">🏆</div>
-        <h2 class="text-3xl md:text-4xl font-bold text-yellow-400 mb-2 pixel-font">MISSION CLEAR!</h2>
-        <p class="text-gray-400 mb-8">The monsters have retreated... for now.</p>
-        
-        <div class="bg-gray-800 rounded-lg w-full max-w-md mb-8 overflow-hidden border border-gray-700">
-            <div class="bg-gray-700 p-3 text-sm font-bold text-gray-300 uppercase tracking-wider">Battle Log</div>
-            <ul id="mastered-list" class="text-left p-4 space-y-3
+    <!-- 3. GAME VIEW (The Battle) -->
+    <div id="game-view" class="view-section flex-col h-full w-full bg-gray-900">
+        <!-- Battle HUD -->
+        <div class="w-full bg-gray-800 p-2 flex justify-between items-center border-b border-gray-700">
+            <button onclick="quitGame()" class="text-red-400 hover:text-red-300 font-bold px-3">EXIT 🏳️</button>
+            <div class="flex-1 mx-4">
+                <div class="h-3 bg-gray-700 rounded-full overflow-hidden border border-gray-600 relative">
+                    <div id="battle-progress" class="h-full bg-red-600 transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="pixel-font text-yellow-400 text-sm"><span id="monsters-killed">0</span>/5</div>
+        </div>
+
+        <!-- Arena -->
+        <div class="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+            <!-- Monster -->
+            <div class="mb-4 relative">
+                <div id="monster-emoji" class="text-8xl md:text-9xl filter drop-shadow-2xl transition-transform cursor-pointer hover:scale-105 active:scale-90">👾</div>
+                <div id="damage-text" class="absolute top-0 left-1/2 -translate-x-1/2 text-red-500 font-bold text-4xl opacity-0 transition-all pointer-events-none">-20</div>
+            </div>
+
+            <!-- Question -->
+            <div class="bg-gray-800/90 backdrop-blur p-6 rounded-xl border border-blue-500/30 shadow-2xl mb-6 w-full max-w-2xl text-center">
+                <h3 id="q-word" class="text-4xl font-bold text-white mb-2">...</h3>
+                <p id="q-meaning" class="text-lg text-blue-300">...</p>
+            </div>
+
+            <!-- Sentence Builder -->
+            <div id="drop-zone" class="w-full max-w-3xl bg-gray-800/50 min-h-[80px] rounded-lg border-2 border-dashed border-gray-600 flex flex-wrap gap-2 p-3 items-center justify-center mb-6 transition-colors">
+                <span class="text-gray-500 italic text-sm pointer-events-none">Tap words to attack...</span>
+            </div>
+
+            <!-- Word Bank -->
+            <div id="word-bank" class="w-full max-w-3xl flex flex-wrap justify-center gap-2">
+                <!-- Buttons -->
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="p-4 bg-gray-800 flex justify-center gap-4">
+            <button onclick="resetBattleSentence()" class="bg-gray-600 px-6 py-3 rounded-lg font-bold">↺ Reset</button>
+            <button onclick="submitAttack()" class="bg-blue-600 px-10 py-3 rounded-lg font-bold text-lg shadow-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">ATTACK! ⚔️</button>
+        </div>
+    </div>
+
+    <!-- 4. ADMIN VIEW -->
+    <div id="admin-view" class="view-section flex-col h-full w-full bg-slate-900 p-8 overflow-y-auto">
+        <div class="max-w-4xl mx-auto w-full">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white">Parent Zone</h2>
+                <button onclick="switchView('dashboard-view')" class="bg-gray-700 px-4 py-2 rounded">← Back to Dashboard</button>
+            </div>
+
+            <!-- Upload Card -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mb-8">
+                <h3 class="text-xl font-bold mb-4 text-blue-400">

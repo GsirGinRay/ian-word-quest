@@ -3,3 +3,6 @@ uvicorn
 pandas
 openpyxl
 python-multipart
+sqlalchemy
+pydantic
+aiofiles
