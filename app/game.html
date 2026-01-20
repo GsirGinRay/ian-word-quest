@@ -83,3 +83,4 @@ let currentUser=null,currentLevel=null,battleWords=[],currentWordIndex=0,playerS
 window.onload=()=>{fetchUsers()};
 function switchView(e){document.querySelectorAll(".view-section").forEach(e=>e.classList.remove("active")),document.getElementById(e).classList.add("active"),"dashboard-view"===e&&fetchLevels(),"admin-view"===e&&fetchAdminLevels()}
 async function fetchUsers(){try{let e=await fetch("/api/users"),t=await e.json(),n=document.getElementById("user-list");n.innerHTML="",t.forEach(e=>{let t=document.createElement("div");t.className="card-hover bg-gray-800 p-6 rounded-xl border border-gray-600 cursor-pointer w-40 text-center transition-all hover:bg-gray-700 hover:border-blue-500",t.onclick=()=>selectUser(e),t.innerHTML=`<div class="text-5xl mb-4">${e.avatar}</div><div class="font-bold
+<!-- Version: 1768899729 -->
