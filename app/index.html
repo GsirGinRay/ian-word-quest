@@ -27,24 +27,8 @@ body { background-color: #111827; color: white; font-family: sans-serif; margin:
 .status-red { background: #dc2626; color: white; }
 .status-green { background: #16a34a; color: white; }
 </style>
-<script>
-// GLOBAL FUNCTIONS (Defined immediately)
-function showModal() { 
-    // alert("DEBUG: Opening Modal"); // Uncomment if needed
-    document.getElementById("add-user-modal").classList.remove("hidden"); 
-}
-function closeModal() { 
-    document.getElementById("add-user-modal").classList.add("hidden"); 
-}
-function setStatus(msg, type) {
-    const el = document.getElementById("sys-status");
-    el.textContent = msg;
-    el.className = type;
-    if(type === "status-green") setTimeout(() => el.style.display = "none", 3000);
-}
-</script>
 </head>
-<body class="h-screen w-full text-white overflow-hidden bg-gray-900">
+<body>
 <div id="sys-status" class="status-red">🔴 Connecting...</div>
 
 <!-- 1. LOGIN -->
@@ -57,7 +41,7 @@ function setStatus(msg, type) {
     </div>
 
     <div style="margin-top: 40px;">
-        <button onclick="showModal()" class="btn btn-secondary">
+        <button id="btn-add-player" class="btn btn-secondary">
             + Add New Player
         </button>
     </div>
@@ -69,8 +53,8 @@ function setStatus(msg, type) {
         <h3 style="margin: 0 0 15px 0; font-size: 24px;">New Hero</h3>
         <input type="text" id="new-username" placeholder="Enter Name" class="input-field">
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
-            <button onclick="closeModal()" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</button>
-            <button onclick="createNewUser()" class="btn btn-primary" style="padding: 10px 20px;">Create</button>
+            <button id="btn-cancel-modal" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</button>
+            <button id="btn-create-user" class="btn btn-primary" style="padding: 10px 20px;">Create</button>
         </div>
     </div>
 </div>
@@ -79,7 +63,7 @@ function setStatus(msg, type) {
 <div id="dashboard-view" class="view-section">
     <div style="background: #1f2937; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 15px;">
-            <button onclick="switchView('login-view')" style="background:none; border:none; color: #9ca3af; cursor: pointer;">← Logout</button>
+            <button id="btn-logout" style="background:none; border:none; color: #9ca3af; cursor: pointer;">← Logout</button>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="dash-avatar" style="font-size: 24px;">👦</span>
                 <div>
@@ -88,7 +72,7 @@ function setStatus(msg, type) {
                 </div>
             </div>
         </div>
-        <button onclick="switchView('admin-view')" style="background: #374151; border: none; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">⚙️ Parent Zone</button>
+        <button id="btn-admin" style="background: #374151; border: none; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">⚙️ Parent Zone</button>
     </div>
     <div style="padding: 20px; overflow-y: auto; flex: 1;">
         <h2 style="border-left: 4px solid #eab308; padding-left: 15px; margin-bottom: 20px;">Mission Select</h2>
@@ -103,7 +87,7 @@ function setStatus(msg, type) {
 <!-- 3. GAME (Placeholder for structure) -->
 <div id="game-view" class="view-section" style="background: #111827;">
     <div style="padding: 10px; background: #1f2937; display: flex; justify-content: space-between;">
-        <button onclick="quitGame()" style="color: #f87171; background: none; border: none; font-weight: bold;">EXIT 🏳️</button>
+        <button id="btn-quit-game" style="color: #f87171; background: none; border: none; font-weight: bold;">EXIT 🏳️</button>
         <span style="color: #facc15">Battle</span>
     </div>
     <div class="center-content" style="flex: 1;">
@@ -118,8 +102,8 @@ function setStatus(msg, type) {
         <div id="word-bank" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px;"></div>
     </div>
     <div style="padding: 20px; display: flex; justify-content: center; gap: 20px;">
-        <button onclick="resetBattleSentence()" class="btn btn-secondary">Reset</button>
-        <button onclick="submitAttack()" class="btn btn-primary">ATTACK!</button>
+        <button id="btn-reset" class="btn btn-secondary">Reset</button>
+        <button id="btn-attack" class="btn btn-primary">ATTACK!</button>
     </div>
 </div>
 
@@ -128,7 +112,7 @@ function setStatus(msg, type) {
     <div style="padding: 20px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
             <h2>Parent Zone</h2>
-            <button onclick="switchView('dashboard-view')" class="btn btn-secondary" style="padding: 5px 15px;">Back</button>
+            <button id="btn-back-dashboard" class="btn btn-secondary" style="padding: 5px 15px;">Back</button>
         </div>
         <div style="background: #1f2937; padding: 20px; border-radius: 12px;">
             <h3>Upload Mission (Excel)</h3>
@@ -149,16 +133,23 @@ function setStatus(msg, type) {
 // --- LOGIC ---
 let currentUser=null,currentLevel=null,battleWords=[],currentWordIndex=0,playerSelection=[],defeatedCount=0,GOAL_COUNT=5;
 
-window.onload = function() {
-    console.log("System V7 Loaded");
-    fetchUsers();
-    
-    // Admin Upload Logic
-    document.getElementById("upload-form").onsubmit=async e=>{e.preventDefault();let t=document.getElementById("upload-btn"),n=document.getElementById("upload-status"),l=new FormData(e.target);t.disabled=!0,t.textContent="Uploading...",n.textContent="";try{let a=await fetch("/api/admin/upload",{method:"POST",body:l});if(a.ok){n.textContent="Success!",n.style.color="#4ade80",e.target.reset(),fetchAdminLevels()}else{let o=await a.json();throw new Error(o.detail)}}catch(r){n.textContent="Error: "+r.message,n.style.color="#f87171"}finally{t.disabled=!1,t.textContent="Upload"}};
-};
+function setStatus(msg, type) {
+    var el = document.getElementById("sys-status");
+    el.textContent = msg;
+    el.className = type;
+    if(type === "status-green") setTimeout(function() { el.style.display = "none"; }, 3000);
+}
+
+function showModal() {
+    document.getElementById("add-user-modal").classList.remove("hidden");
+}
+
+function closeModal() {
+    document.getElementById("add-user-modal").classList.add("hidden");
+}
 
 function switchView(id){
-    document.querySelectorAll(".view-section").forEach(e=>e.classList.remove("active"));
+    document.querySelectorAll(".view-section").forEach(function(e) { e.classList.remove("active"); });
     document.getElementById(id).classList.add("active");
     if(id==="dashboard-view") fetchLevels();
     if(id==="admin-view") fetchAdminLevels();
@@ -167,19 +158,19 @@ function switchView(id){
 async function fetchUsers(){
     setStatus("Connecting...", "status-red");
     try {
-        let res = await fetch("/api/users");
+        var res = await fetch("/api/users");
         if(!res.ok) throw new Error("API Error");
-        let users = await res.json();
-        let container = document.getElementById("user-list");
+        var users = await res.json();
+        var container = document.getElementById("user-list");
         container.innerHTML = "";
-        
+
         if(users.length === 0) container.innerHTML = '<p style="color:gray">No players yet. Click Add New Player!</p>';
-        
-        users.forEach(u => {
-            let div = document.createElement("div");
+
+        users.forEach(function(u) {
+            var div = document.createElement("div");
             div.style.cssText = "background: #1f2937; padding: 20px; border-radius: 12px; cursor: pointer; border: 1px solid #374151; min-width: 100px;";
-            div.onclick = () => selectUser(u);
-            div.innerHTML = `<div style="font-size: 40px; margin-bottom: 10px;">${u.avatar}</div><div style="font-weight: bold;">${u.name}</div><div style="font-size: 12px; color: #facc15;">LV.${u.level}</div>`;
+            div.addEventListener("click", function() { selectUser(u); });
+            div.innerHTML = '<div style="font-size: 40px; margin-bottom: 10px;">'+u.avatar+'</div><div style="font-weight: bold;">'+u.name+'</div><div style="font-size: 12px; color: #facc15;">LV.'+u.level+'</div>';
             container.appendChild(div);
         });
         setStatus("System Online", "status-green");
@@ -189,61 +180,83 @@ async function fetchUsers(){
 }
 
 async function createNewUser(){
-    let name = document.getElementById("new-username").value;
+    var name = document.getElementById("new-username").value;
     if(!name) return alert("Please enter a name");
-    
+
     try {
         await fetch("/api/users", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ name: name })
         });
+        document.getElementById("new-username").value = "";
         closeModal();
         fetchUsers();
     } catch(e) { alert("Create Failed: " + e.message); }
 }
 
-function selectUser(u){ currentUser=u; document.getElementById("dash-avatar").textContent=u.avatar; document.getElementById("dash-name").textContent=u.name; document.getElementById("dash-level").textContent="LV."+u.level; switchView("dashboard-view"); }
+function selectUser(u){
+    currentUser=u;
+    document.getElementById("dash-avatar").textContent=u.avatar;
+    document.getElementById("dash-name").textContent=u.name;
+    document.getElementById("dash-level").textContent="LV."+u.level;
+    switchView("dashboard-view");
+}
 
 async function fetchLevels(){
-    let res = await fetch("/api/levels");
-    let levels = await res.json();
-    let container = document.getElementById("level-list");
+    var res = await fetch("/api/levels");
+    var levels = await res.json();
+    var container = document.getElementById("level-list");
     container.innerHTML = "";
     if(levels.length===0) document.getElementById("empty-levels-msg").classList.remove("hidden");
     else {
         document.getElementById("empty-levels-msg").classList.add("hidden");
-        levels.forEach(l => {
-            let div = document.createElement("div");
+        levels.forEach(function(l) {
+            var div = document.createElement("div");
             div.style.cssText = "background: #1f2937; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; cursor: pointer;";
-            div.onclick = () => startLevel(l);
-            div.innerHTML = `<h3 style="margin:0 0 10px 0;">${l.title}</h3><div style="color:gray; font-size:14px;">${l.word_count} Words</div>`;
+            div.addEventListener("click", function() { startLevel(l); });
+            div.innerHTML = '<h3 style="margin:0 0 10px 0;">'+l.title+'</h3><div style="color:gray; font-size:14px;">'+l.word_count+' Words</div>';
             container.appendChild(div);
         });
     }
 }
 
 async function fetchAdminLevels(){
-    let res = await fetch("/api/levels");
-    let levels = await res.json();
-    let container = document.getElementById("admin-level-list");
+    var res = await fetch("/api/levels");
+    var levels = await res.json();
+    var container = document.getElementById("admin-level-list");
     container.innerHTML = "";
-    levels.forEach(l => {
-        let div = document.createElement("div");
+    levels.forEach(function(l) {
+        var div = document.createElement("div");
         div.style.cssText = "display: flex; justify-content: space-between; padding: 10px; background: #374151; margin-bottom: 10px; border-radius: 6px;";
-        div.innerHTML = `<span>${l.title}</span> <button onclick="deleteLevel(${l.id})" style="color: #f87171; background: none; border: none; cursor: pointer;">Delete</button>`;
+
+        var span = document.createElement("span");
+        span.textContent = l.title;
+
+        var btn = document.createElement("button");
+        btn.textContent = "Delete";
+        btn.style.cssText = "color: #f87171; background: none; border: none; cursor: pointer;";
+        btn.addEventListener("click", function() { deleteLevel(l.id); });
+
+        div.appendChild(span);
+        div.appendChild(btn);
         container.appendChild(div);
     });
 }
 
-async function deleteLevel(id) { if(confirm("Delete?")) { await fetch(`/api/admin/levels/${id}`, {method:"DELETE"}); fetchAdminLevels(); } }
+async function deleteLevel(id) {
+    if(confirm("Delete?")) {
+        await fetch("/api/admin/levels/"+id, {method:"DELETE"});
+        fetchAdminLevels();
+    }
+}
 
 async function startLevel(l) {
     currentLevel = l;
-    let res = await fetch(`/api/game/start/${l.id}?count=${GOAL_COUNT}`);
+    var res = await fetch("/api/game/start/"+l.id+"?count="+GOAL_COUNT);
     battleWords = await res.json();
     if(battleWords.length === 0) return alert("No words in this mission!");
-    
+
     currentWordIndex = 0; defeatedCount = 0; playerSelection = [];
     switchView("game-view");
     loadBattleWord(0);
@@ -251,37 +264,37 @@ async function startLevel(l) {
 
 function loadBattleWord(idx) {
     if(idx >= battleWords.length) return finishBattle();
-    let w = battleWords[idx];
+    var w = battleWords[idx];
     document.getElementById("q-word").textContent = w.word;
     document.getElementById("q-meaning").textContent = w.meaning;
-    
-    let parts = w.sentence.trim().split(/\s+/).sort(() => Math.random() - 0.5);
-    let bank = document.getElementById("word-bank");
+
+    var parts = w.sentence.trim().split(/\s+/).sort(function() { return Math.random() - 0.5; });
+    var bank = document.getElementById("word-bank");
     bank.innerHTML = "";
     document.getElementById("drop-zone").innerHTML = '<span style="color:gray">Tap words...</span>';
     playerSelection = [];
 
-    parts.forEach(word => {
-        let btn = document.createElement("button");
+    parts.forEach(function(word) {
+        var btn = document.createElement("button");
         btn.textContent = word;
         btn.className = "btn btn-primary";
         btn.style.padding = "10px 15px";
-        btn.onclick = () => {
-            let span = document.createElement("span");
+        btn.addEventListener("click", function() {
+            var span = document.createElement("span");
             span.textContent = word;
             span.style.cssText = "background: #eab308; color: black; padding: 5px 10px; border-radius: 4px; cursor: pointer;";
-            span.onclick = () => {
+            span.addEventListener("click", function() {
                 span.remove();
                 playerSelection.splice(playerSelection.indexOf(word), 1);
                 btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
                 if(playerSelection.length===0) document.getElementById("drop-zone").innerHTML='<span style="color:gray">Tap words...</span>';
-            };
-            
+            });
+
             if(playerSelection.length===0) document.getElementById("drop-zone").innerHTML="";
             document.getElementById("drop-zone").appendChild(span);
             playerSelection.push(word);
             btn.style.opacity = "0.5"; btn.style.pointerEvents = "none";
-        };
+        });
         bank.appendChild(btn);
     });
 }
@@ -289,11 +302,11 @@ function loadBattleWord(idx) {
 function resetBattleSentence() { loadBattleWord(currentWordIndex); }
 
 function submitAttack() {
-    let target = battleWords[currentWordIndex].sentence.replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");
-    let player = playerSelection.join("").replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");
-    
+    var target = battleWords[currentWordIndex].sentence.replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");
+    var player = playerSelection.join("").replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");
+
     if(player === target) {
-        alert("Correct! Attack!"); // Simple feedback
+        alert("Correct! Attack!");
         defeatedCount++;
         currentWordIndex++;
         loadBattleWord(currentWordIndex);
@@ -305,12 +318,62 @@ function submitAttack() {
 
 async function finishBattle() {
     alert("Mission Complete! +100 XP");
-    await fetch(`/api/users/${currentUser.id}/progress?xp_gained=100`, {method:"POST"});
+    await fetch("/api/users/"+currentUser.id+"/progress?xp_gained=100", {method:"POST"});
     currentUser.xp += 100;
     switchView("dashboard-view");
 }
 
 function quitGame() { if(confirm("Quit?")) switchView("dashboard-view"); }
+
+// Initialize when DOM is ready
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("System V8 Loaded - Using addEventListener");
+
+    // Bind all button events
+    document.getElementById("btn-add-player").addEventListener("click", showModal);
+    document.getElementById("btn-cancel-modal").addEventListener("click", closeModal);
+    document.getElementById("btn-create-user").addEventListener("click", createNewUser);
+    document.getElementById("btn-logout").addEventListener("click", function() { switchView("login-view"); });
+    document.getElementById("btn-admin").addEventListener("click", function() { switchView("admin-view"); });
+    document.getElementById("btn-quit-game").addEventListener("click", quitGame);
+    document.getElementById("btn-reset").addEventListener("click", resetBattleSentence);
+    document.getElementById("btn-attack").addEventListener("click", submitAttack);
+    document.getElementById("btn-back-dashboard").addEventListener("click", function() { switchView("dashboard-view"); });
+
+    // Admin Upload Form
+    document.getElementById("upload-form").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        var btn = document.getElementById("upload-btn");
+        var status = document.getElementById("upload-status");
+        var formData = new FormData(e.target);
+
+        btn.disabled = true;
+        btn.textContent = "Uploading...";
+        status.textContent = "";
+
+        try {
+            var res = await fetch("/api/admin/upload", {method: "POST", body: formData});
+            if(res.ok) {
+                status.textContent = "Success!";
+                status.style.color = "#4ade80";
+                e.target.reset();
+                fetchAdminLevels();
+            } else {
+                var data = await res.json();
+                throw new Error(data.detail);
+            }
+        } catch(err) {
+            status.textContent = "Error: " + err.message;
+            status.style.color = "#f87171";
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Upload";
+        }
+    });
+
+    // Initial fetch
+    fetchUsers();
+});
 </script>
 </body>
 </html>
