@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boole
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 
-print("Starting V10 Monster Battle Edition...")
+print("Starting V11 - 2042 Words from 英檢.apkg...")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -78,7 +78,7 @@ def get_db():
     finally:
         db.close()
 
-# Pre-load default levels from Excel on startup
+# Pre-load default levels from JSON on startup
 def init_default_levels():
     db = SessionLocal()
     try:
@@ -88,41 +88,26 @@ def init_default_levels():
             print(f"Levels already exist, skipping init")
             return
 
-        # Try to load from Excel file
-        excel_path = os.path.join(DATA_DIR, "Ian's English Words-4.xlsx")
-        if not os.path.exists(excel_path):
-            print(f"Excel file not found at {excel_path}, creating sample data")
+        # Try to load from JSON file (extracted from 英檢.apkg)
+        json_path = os.path.join(DATA_DIR, "words_data.json")
+        if not os.path.exists(json_path):
+            print(f"JSON file not found at {json_path}, creating sample data")
             create_sample_levels(db)
             return
 
         try:
-            import pandas as pd
-            df = pd.read_excel(excel_path)
+            import json
+            with open(json_path, 'r', encoding='utf-8') as f:
+                words_data = json.load(f)
 
-            # Get columns (handle encoding issues)
-            cols = list(df.columns)
-            word_col = cols[0] if len(cols) > 0 else None
-            mean_col = cols[1] if len(cols) > 1 else None
+            print(f"Loaded {len(words_data)} words from JSON")
 
-            if not word_col:
-                print("Cannot find word column")
-                create_sample_levels(db)
-                return
-
-            # Split into chunks of 20 words per level
-            words_data = []
-            for _, row in df.iterrows():
-                word = str(row[word_col]).strip() if pd.notna(row[word_col]) else ""
-                meaning = str(row[mean_col]).strip() if mean_col and pd.notna(row[mean_col]) else "???"
-                if word and word != "nan":
-                    words_data.append({"word": word, "meaning": meaning})
-
-            # Create level packs (chunks of 20)
-            chunk_size = 20
+            # Split into chunks of 50 words per level
+            chunk_size = 50
             for i in range(0, len(words_data), chunk_size):
                 chunk = words_data[i:i+chunk_size]
                 level_num = (i // chunk_size) + 1
-                difficulty = "Easy" if level_num <= 10 else ("Normal" if level_num <= 20 else "Hard")
+                difficulty = "Easy" if level_num <= 14 else ("Normal" if level_num <= 28 else "Hard")
 
                 pack = LevelPack(title=f"Level {level_num}", difficulty=difficulty)
                 db.add(pack)
@@ -130,18 +115,23 @@ def init_default_levels():
                 db.refresh(pack)
 
                 for w in chunk:
-                    word = Word(pack_id=pack.id, word=w["word"], meaning=w["meaning"], sentence="")
+                    word = Word(
+                        pack_id=pack.id,
+                        word=w.get("word", ""),
+                        meaning=w.get("meaning", "???"),
+                        sentence=w.get("sentence", "")
+                    )
                     db.add(word)
 
                 db.commit()
 
-            print(f"Loaded {len(words_data)} words into {(len(words_data) + chunk_size - 1) // chunk_size} levels")
+            total_levels = (len(words_data) + chunk_size - 1) // chunk_size
+            print(f"Created {total_levels} levels with {len(words_data)} words")
 
-        except ImportError:
-            print("Pandas not available, creating sample data")
-            create_sample_levels(db)
         except Exception as e:
-            print(f"Error loading Excel: {e}")
+            print(f"Error loading JSON: {e}")
+            import traceback
+            traceback.print_exc()
             create_sample_levels(db)
 
     finally:

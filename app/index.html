@@ -183,6 +183,25 @@ body {
 .word-english { font-size: 36px; font-weight: bold; }
 .word-hint { color: rgba(255,255,255,0.7); font-size: 14px; margin-top: 8px; }
 
+/* Sentence display */
+.sentence-display {
+    background: rgba(0,0,0,0.3);
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: left;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s;
+}
+.sentence-display.show {
+    max-height: 200px;
+    opacity: 1;
+}
+
 .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .choice-btn {
     padding: 18px 12px;
@@ -345,6 +364,7 @@ body {
             <div class="word-display">
                 <div id="word-english" class="word-english">apple</div>
                 <div class="word-hint">選擇正確的中文意思來攻擊！</div>
+                <div id="sentence-display" class="sentence-display"></div>
             </div>
 
             <div id="choices" class="choices-grid"></div>
@@ -536,6 +556,10 @@ function nextRound() {
     document.getElementById("word-english").textContent = word.word;
     document.getElementById("round-display").textContent = (currentRound + 1) + "/" + gameWords.length;
 
+    // Hide sentence display for new question
+    document.getElementById("sentence-display").classList.remove("show");
+    document.getElementById("sentence-display").textContent = "";
+
     // Update combo display
     var comboEl = document.getElementById("combo-display");
     if (combo >= 2) {
@@ -611,6 +635,14 @@ function handleAnswer(btn, correct, correctAnswer) {
         });
     }
 
+    // Show example sentence
+    var word = gameWords[currentRound];
+    if (word.sentence) {
+        var sentenceEl = document.getElementById("sentence-display");
+        sentenceEl.innerHTML = "📖 " + word.sentence;
+        sentenceEl.classList.add("show");
+    }
+
     var monsterEl = document.getElementById("monster-emoji");
 
     if (correct) {
@@ -651,11 +683,11 @@ function handleAnswer(btn, correct, correctAnswer) {
         document.getElementById("player-hp-text").textContent = playerHP + "/100";
     }
 
-    // Next round after delay
+    // Next round after delay (longer to read sentence)
     setTimeout(function() {
         currentRound++;
         nextRound();
-    }, 1200);
+    }, 2000);
 }
 
 async function endBattle() {
