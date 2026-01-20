@@ -39,6 +39,7 @@ docker run -p 8080:8080 ian-word-quest
 Single-file FastAPI application containing:
 - **Database Models**: `User`, `LevelPack`, `Word` (SQLAlchemy)
 - **Pydantic Schemas**: `UserCreate`, `UserOut`, `LevelOut`
+- **Auto-init**: On startup, loads words from `app/data/Ian's English Words-4.xlsx` and creates 30 levels (20 words each)
 - **API Endpoints**:
   - `GET /` - Serves index.html
   - `GET/POST /api/users` - User management
@@ -50,29 +51,28 @@ Single-file FastAPI application containing:
 
 ### Frontend (`app/index.html`)
 
-Single HTML file with embedded CSS and JavaScript. Four view sections controlled by `switchView()`:
+Single HTML file with embedded CSS and JavaScript (Chinese UI). Views controlled by `switchView()`:
 1. **Login View** - User selection/creation
-2. **Dashboard View** - Mission/level selection
-3. **Game View** - Word scramble gameplay
-4. **Admin View** - Parent zone for uploading Excel missions
+2. **Dashboard View** - Level grid selection
+3. **Game View** - Multiple-choice quiz (show English word, pick Chinese meaning)
+4. **Admin View** - Upload Excel, manage levels
+
+### Game Mechanics
+
+- Multiple-choice format: Display English word, 4 Chinese options (1 correct, 3 random wrong)
+- 5 questions per round, 20 XP per correct answer
+- Progress bar shows completion
+- Results screen with emoji feedback based on score
 
 ### Data Flow
 
-1. Excel files (columns: word/meaning/sentence) are uploaded via admin panel
-2. Parsed with pandas into `LevelPack` + `Word` records
-3. Game fetches random subset of words from selected pack
-4. Player arranges scrambled sentence words; correct answer grants XP
-
-### Excel Format for Missions
-
-Columns auto-detected by keywords:
-- Word column: contains "word" or "單字"
-- Meaning column: contains "mean", "中文", or "def"
-- Sentence column: contains "sent", "例句", or "ex"
+1. On first startup, Excel file auto-loads into 30 level packs
+2. Player selects user → selects level → plays 5-question quiz
+3. XP updates after each round, level = XP / 100 + 1
 
 ## Key Patterns
 
-- HTML templates are served as files from `app/` directory (not embedded strings)
-- Database auto-creates tables on startup via `Base.metadata.create_all()`
-- In-memory DB fallback if file DB fails to initialize
-- Frontend uses vanilla JS with inline onclick handlers for simplicity
+- Uses `addEventListener` instead of inline onclick (CSP compatibility)
+- Database auto-creates tables and pre-loads data on startup
+- In-memory DB fallback if file DB fails
+- Tablet-optimized: large touch targets, responsive grid layout
