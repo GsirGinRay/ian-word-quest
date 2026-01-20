@@ -2,376 +2,827 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ians Game Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ian's Word Quest</title>
 <style>
-/* CSS Reset & Basic */
-body { background-color: #111827; color: white; font-family: sans-serif; margin: 0; overflow: hidden; }
-.hidden { display: none !important; }
-.btn { padding: 15px 30px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
-.btn-primary { background-color: #2563eb; color: white; }
-.btn-secondary { background-color: #4b5563; color: white; border: 1px solid #9ca3af; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
 
-/* Modal Styles (No Tailwind dependency) */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 50; display: flex; justify-content: center; align-items: center; }
-.modal-box { background: #1f2937; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #374151; }
-.input-field { width: 100%; padding: 10px; margin: 15px 0; border-radius: 6px; border: none; background: #374151; color: white; box-sizing: border-box;}
+/* Utility */
+.hidden { display: none !important; }
 
 /* Views */
-.view-section { display: none; height: 100vh; width: 100%; flex-direction: column; }
-.view-section.active { display: flex; }
-.center-content { align-items: center; justify-content: center; text-align: center; }
+.view { display: none; min-height: 100vh; padding: 20px; }
+.view.active { display: flex; flex-direction: column; }
 
-/* Status Bar */
-#sys-status { position: fixed; top: 0; width: 100%; text-align: center; padding: 5px; font-size: 12px; z-index: 100; font-weight: bold;}
-.status-red { background: #dc2626; color: white; }
-.status-green { background: #16a34a; color: white; }
+/* Buttons */
+.btn {
+    padding: 18px 36px;
+    border-radius: 16px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 18px;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.95); }
+.btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+.btn-secondary { background: #374151; color: white; border: 2px solid #4b5563; }
+.btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
+.btn-danger { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; }
+.btn-large {
+    width: 100%;
+    padding: 24px;
+    font-size: 20px;
+    margin-bottom: 16px;
+    text-align: left;
+    border-radius: 20px;
+}
+
+/* Cards */
+.card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 20px;
+}
+
+/* Status */
+#status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 1000;
+    transition: all 0.3s;
+}
+.status-connecting { background: #dc2626; }
+.status-online { background: #16a34a; }
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+.modal-box {
+    background: #1f2937;
+    padding: 30px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #374151;
+}
+.modal-box h2 { margin-bottom: 20px; font-size: 24px; }
+.modal-box input {
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    border: 2px solid #374151;
+    background: #374151;
+    color: white;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+.modal-box input:focus { outline: none; border-color: #667eea; }
+
+/* Login View */
+#login-view {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.logo { font-size: 48px; margin-bottom: 10px; }
+.title { font-size: 32px; color: #fbbf24; margin-bottom: 10px; }
+.subtitle { color: #9ca3af; margin-bottom: 40px; font-size: 18px; }
+
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 30px;
+}
+.user-card {
+    background: rgba(255,255,255,0.1);
+    padding: 24px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+.user-card:hover, .user-card:active {
+    background: rgba(255,255,255,0.2);
+    border-color: #667eea;
+    transform: scale(1.02);
+}
+.user-avatar { font-size: 48px; margin-bottom: 8px; }
+.user-name { font-weight: bold; font-size: 16px; }
+.user-level { color: #fbbf24; font-size: 14px; margin-top: 4px; }
+
+/* Dashboard */
+.dash-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 30px;
+}
+.dash-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.1);
+    padding: 12px 20px;
+    border-radius: 50px;
+}
+.dash-avatar { font-size: 32px; }
+.dash-info h3 { font-size: 16px; }
+.dash-info span { color: #fbbf24; font-size: 14px; }
+
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+}
+.level-card {
+    background: linear-gradient(135deg, rgba(102,126,234,0.3) 0%, rgba(118,75,162,0.3) 100%);
+    padding: 24px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    text-align: center;
+}
+.level-card:hover, .level-card:active {
+    border-color: #667eea;
+    transform: scale(1.02);
+}
+.level-num { font-size: 36px; font-weight: bold; color: #fbbf24; }
+.level-words { color: #9ca3af; font-size: 14px; margin-top: 8px; }
+.level-difficulty { font-size: 12px; margin-top: 4px; padding: 4px 8px; border-radius: 8px; display: inline-block; }
+.diff-Easy { background: #22c55e; }
+.diff-Normal { background: #eab308; }
+.diff-Hard { background: #ef4444; }
+
+/* Game View */
+#game-view { padding: 0; }
+.game-header {
+    background: rgba(0,0,0,0.3);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.progress-bar {
+    flex: 1;
+    margin: 0 20px;
+    height: 12px;
+    background: #374151;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s;
+}
+.progress-text { color: #fbbf24; font-weight: bold; }
+
+.game-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.word-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 60px;
+    border-radius: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.word-english {
+    font-size: 42px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.word-hint {
+    color: rgba(255,255,255,0.7);
+    font-size: 16px;
+}
+
+.choices {
+    width: 100%;
+    max-width: 500px;
+}
+.choice-btn {
+    width: 100%;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.choice-btn:hover, .choice-btn:active {
+    background: rgba(255,255,255,0.2);
+    border-color: #667eea;
+}
+.choice-btn.correct {
+    background: #22c55e !important;
+    border-color: #22c55e !important;
+}
+.choice-btn.wrong {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+}
+.choice-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Result overlay */
+.result-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+}
+.result-box {
+    background: #1f2937;
+    padding: 40px;
+    border-radius: 30px;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+.result-emoji { font-size: 80px; margin-bottom: 20px; }
+.result-title { font-size: 28px; margin-bottom: 10px; }
+.result-score { color: #fbbf24; font-size: 20px; margin-bottom: 30px; }
+
+/* Admin */
+.admin-section {
+    background: rgba(255,255,255,0.05);
+    padding: 24px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+.admin-section h3 { margin-bottom: 16px; color: #fbbf24; }
+.admin-input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 2px solid #374151;
+    background: #374151;
+    color: white;
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+.admin-input:focus { outline: none; border-color: #667eea; }
+
+.level-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+.empty-state p { margin-bottom: 10px; }
 </style>
 </head>
 <body>
-<div id="sys-status" class="status-red">🔴 Connecting...</div>
 
-<!-- 1. LOGIN -->
-<div id="login-view" class="view-section active center-content">
-    <h1 style="font-size: 40px; color: #facc15; margin-bottom: 20px;">IANS CONSOLE</h1>
-    <p style="color: #d1d5db; font-size: 20px;">Who is playing?</p>
-    
-    <div id="user-list" style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 20px;">
-        <p style="color: gray">Loading...</p>
+<div id="status-bar" class="status-connecting">🔄 連線中...</div>
+
+<!-- LOGIN VIEW -->
+<div id="login-view" class="view active">
+    <div class="logo">📚</div>
+    <h1 class="title">Ian's Word Quest</h1>
+    <p class="subtitle">選擇玩家開始遊戲</p>
+
+    <div id="user-grid" class="user-grid">
+        <p style="color: #6b7280; grid-column: 1/-1;">載入中...</p>
     </div>
 
-    <div style="margin-top: 40px;">
-        <button id="btn-add-player" class="btn btn-secondary">
-            + Add New Player
-        </button>
-    </div>
+    <button id="btn-add-player" class="btn btn-secondary">
+        ➕ 新增玩家
+    </button>
 </div>
 
-<!-- MODAL (Manually styled) -->
-<div id="add-user-modal" class="modal-overlay hidden">
+<!-- ADD USER MODAL -->
+<div id="modal-add-user" class="modal-overlay hidden">
     <div class="modal-box">
-        <h3 style="margin: 0 0 15px 0; font-size: 24px;">New Hero</h3>
-        <input type="text" id="new-username" placeholder="Enter Name" class="input-field">
-        <div style="display: flex; justify-content: flex-end; gap: 10px;">
-            <button id="btn-cancel-modal" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</button>
-            <button id="btn-create-user" class="btn btn-primary" style="padding: 10px 20px;">Create</button>
+        <h2>🦸 新增玩家</h2>
+        <input type="text" id="input-username" placeholder="輸入名字">
+        <div style="display: flex; gap: 12px;">
+            <button id="btn-cancel-add" class="btn btn-secondary" style="flex:1">取消</button>
+            <button id="btn-confirm-add" class="btn btn-primary" style="flex:1">建立</button>
         </div>
     </div>
 </div>
 
-<!-- 2. DASHBOARD -->
-<div id="dashboard-view" class="view-section">
-    <div style="background: #1f2937; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <button id="btn-logout" style="background:none; border:none; color: #9ca3af; cursor: pointer;">← Logout</button>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span id="dash-avatar" style="font-size: 24px;">👦</span>
-                <div>
-                    <div id="dash-name" style="font-weight: bold;">Ian</div>
-                    <div id="dash-level" style="font-size: 12px; color: #facc15;">LV.1</div>
-                </div>
+<!-- DASHBOARD VIEW -->
+<div id="dashboard-view" class="view">
+    <div class="dash-header">
+        <button id="btn-logout" class="btn btn-secondary" style="padding: 12px 20px;">← 登出</button>
+        <div class="dash-user">
+            <span id="dash-avatar" class="dash-avatar">👦</span>
+            <div class="dash-info">
+                <h3 id="dash-name">Player</h3>
+                <span id="dash-level">LV.1</span>
             </div>
         </div>
-        <button id="btn-admin" style="background: #374151; border: none; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">⚙️ Parent Zone</button>
+        <button id="btn-admin" class="btn btn-secondary" style="padding: 12px 20px;">⚙️</button>
     </div>
-    <div style="padding: 20px; overflow-y: auto; flex: 1;">
-        <h2 style="border-left: 4px solid #eab308; padding-left: 15px; margin-bottom: 20px;">Mission Select</h2>
-        <div id="level-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;"></div>
-        <div id="empty-levels-msg" class="hidden" style="text-align: center; color: gray; margin-top: 50px;">
-            <p>No missions available yet.</p>
-            <p>Go to Parent Zone to add missions!</p>
-        </div>
+
+    <h2 style="margin-bottom: 20px; font-size: 24px;">🎮 選擇關卡</h2>
+
+    <div id="level-grid" class="level-grid"></div>
+
+    <div id="empty-levels" class="empty-state hidden">
+        <p style="font-size: 48px; margin-bottom: 20px;">📭</p>
+        <p>目前沒有關卡</p>
+        <p>請到設定新增關卡</p>
     </div>
 </div>
 
-<!-- 3. GAME (Placeholder for structure) -->
-<div id="game-view" class="view-section" style="background: #111827;">
-    <div style="padding: 10px; background: #1f2937; display: flex; justify-content: space-between;">
-        <button id="btn-quit-game" style="color: #f87171; background: none; border: none; font-weight: bold;">EXIT 🏳️</button>
-        <span style="color: #facc15">Battle</span>
-    </div>
-    <div class="center-content" style="flex: 1;">
-        <div id="monster-emoji" style="font-size: 80px; cursor: pointer;">👾</div>
-        <div style="background: #1f2937; padding: 20px; border-radius: 12px; margin: 20px; border: 1px solid #2563eb;">
-            <h3 id="q-word" style="font-size: 32px; margin: 0;">...</h3>
-            <p id="q-meaning" style="color: #93c5fd; font-size: 18px;">...</p>
+<!-- GAME VIEW -->
+<div id="game-view" class="view">
+    <div class="game-header">
+        <button id="btn-quit" class="btn btn-danger" style="padding: 10px 16px; font-size: 14px;">✖ 離開</button>
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
         </div>
-        <div id="drop-zone" style="min-height: 60px; border: 2px dashed #4b5563; margin: 20px; border-radius: 8px; padding: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-            Tap words...
-        </div>
-        <div id="word-bank" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px;"></div>
+        <span id="progress-text" class="progress-text">0/5</span>
     </div>
-    <div style="padding: 20px; display: flex; justify-content: center; gap: 20px;">
-        <button id="btn-reset" class="btn btn-secondary">Reset</button>
-        <button id="btn-attack" class="btn btn-primary">ATTACK!</button>
+
+    <div class="game-content">
+        <div class="word-card">
+            <div id="word-english" class="word-english">Word</div>
+            <div class="word-hint">選擇正確的中文意思</div>
+        </div>
+
+        <div id="choices" class="choices"></div>
     </div>
 </div>
 
-<!-- 4. ADMIN -->
-<div id="admin-view" class="view-section">
-    <div style="padding: 20px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-            <h2>Parent Zone</h2>
-            <button id="btn-back-dashboard" class="btn btn-secondary" style="padding: 5px 15px;">Back</button>
-        </div>
-        <div style="background: #1f2937; padding: 20px; border-radius: 12px;">
-            <h3>Upload Mission (Excel)</h3>
-            <form id="upload-form">
-                <input type="text" name="title" placeholder="Mission Title" class="input-field" required>
-                <select name="difficulty" class="input-field"><option value="Normal">Normal</option></select>
-                <input type="file" name="file" accept=".xlsx" class="input-field" required>
-                <button type="submit" id="upload-btn" class="btn btn-primary" style="width: 100%;">Upload</button>
-                <p id="upload-status" style="text-align: center; margin-top: 10px; font-size: 14px;"></p>
-            </form>
-        </div>
-        <h3 style="margin-top: 30px;">Existing Missions</h3>
+<!-- RESULT OVERLAY -->
+<div id="result-overlay" class="result-overlay hidden">
+    <div class="result-box">
+        <div id="result-emoji" class="result-emoji">🎉</div>
+        <h2 id="result-title" class="result-title">太棒了！</h2>
+        <p id="result-score" class="result-score">答對 5/5 題，獲得 100 XP！</p>
+        <button id="btn-result-ok" class="btn btn-primary" style="width: 100%;">繼續</button>
+    </div>
+</div>
+
+<!-- ADMIN VIEW -->
+<div id="admin-view" class="view">
+    <div class="header">
+        <h2>⚙️ 設定</h2>
+        <button id="btn-back-dash" class="btn btn-secondary" style="padding: 12px 20px;">← 返回</button>
+    </div>
+
+    <div class="admin-section">
+        <h3>📤 上傳關卡 (Excel)</h3>
+        <form id="upload-form">
+            <input type="text" name="title" class="admin-input" placeholder="關卡名稱" required>
+            <select name="difficulty" class="admin-input">
+                <option value="Easy">簡單</option>
+                <option value="Normal">普通</option>
+                <option value="Hard">困難</option>
+            </select>
+            <input type="file" name="file" accept=".xlsx" class="admin-input" required>
+            <button type="submit" id="btn-upload" class="btn btn-primary" style="width: 100%;">上傳</button>
+            <p id="upload-status" style="text-align: center; margin-top: 12px;"></p>
+        </form>
+    </div>
+
+    <div class="admin-section">
+        <h3>📋 現有關卡</h3>
         <div id="admin-level-list"></div>
     </div>
 </div>
 
 <script>
-// --- LOGIC ---
-let currentUser=null,currentLevel=null,battleWords=[],currentWordIndex=0,playerSelection=[],defeatedCount=0,GOAL_COUNT=5;
+// ===== STATE =====
+var currentUser = null;
+var currentLevel = null;
+var gameWords = [];
+var currentWordIndex = 0;
+var correctCount = 0;
+var allWords = []; // Cache all words for generating wrong choices
 
+// ===== UTILITY =====
 function setStatus(msg, type) {
-    var el = document.getElementById("sys-status");
+    var el = document.getElementById("status-bar");
     el.textContent = msg;
-    el.className = type;
-    if(type === "status-green") setTimeout(function() { el.style.display = "none"; }, 3000);
-}
-
-function showModal() {
-    document.getElementById("add-user-modal").classList.remove("hidden");
-}
-
-function closeModal() {
-    document.getElementById("add-user-modal").classList.add("hidden");
-}
-
-function switchView(id){
-    document.querySelectorAll(".view-section").forEach(function(e) { e.classList.remove("active"); });
-    document.getElementById(id).classList.add("active");
-    if(id==="dashboard-view") fetchLevels();
-    if(id==="admin-view") fetchAdminLevels();
-}
-
-async function fetchUsers(){
-    setStatus("Connecting...", "status-red");
-    try {
-        var res = await fetch("/api/users");
-        if(!res.ok) throw new Error("API Error");
-        var users = await res.json();
-        var container = document.getElementById("user-list");
-        container.innerHTML = "";
-
-        if(users.length === 0) container.innerHTML = '<p style="color:gray">No players yet. Click Add New Player!</p>';
-
-        users.forEach(function(u) {
-            var div = document.createElement("div");
-            div.style.cssText = "background: #1f2937; padding: 20px; border-radius: 12px; cursor: pointer; border: 1px solid #374151; min-width: 100px;";
-            div.addEventListener("click", function() { selectUser(u); });
-            div.innerHTML = '<div style="font-size: 40px; margin-bottom: 10px;">'+u.avatar+'</div><div style="font-weight: bold;">'+u.name+'</div><div style="font-size: 12px; color: #facc15;">LV.'+u.level+'</div>';
-            container.appendChild(div);
-        });
-        setStatus("System Online", "status-green");
-    } catch(e) {
-        setStatus("Offline: " + e.message, "status-red");
+    el.className = type === "online" ? "status-online" : "status-connecting";
+    if (type === "online") {
+        setTimeout(function() { el.style.opacity = "0"; }, 2000);
     }
 }
 
-async function createNewUser(){
-    var name = document.getElementById("new-username").value;
-    if(!name) return alert("Please enter a name");
+function switchView(viewId) {
+    document.querySelectorAll(".view").forEach(function(v) { v.classList.remove("active"); });
+    document.getElementById(viewId).classList.add("active");
+}
 
+function shuffleArray(arr) {
+    var result = arr.slice();
+    for (var i = result.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = result[i];
+        result[i] = result[j];
+        result[j] = temp;
+    }
+    return result;
+}
+
+// ===== API =====
+async function fetchUsers() {
+    setStatus("🔄 連線中...", "connecting");
+    try {
+        var res = await fetch("/api/users");
+        if (!res.ok) throw new Error("API Error");
+        var users = await res.json();
+
+        var grid = document.getElementById("user-grid");
+        grid.innerHTML = "";
+
+        if (users.length === 0) {
+            grid.innerHTML = '<p style="color: #6b7280; grid-column: 1/-1;">還沒有玩家，請新增一個！</p>';
+        } else {
+            users.forEach(function(u) {
+                var div = document.createElement("div");
+                div.className = "user-card";
+                div.innerHTML = '<div class="user-avatar">' + u.avatar + '</div>' +
+                    '<div class="user-name">' + u.name + '</div>' +
+                    '<div class="user-level">LV.' + u.level + '</div>';
+                div.addEventListener("click", function() { selectUser(u); });
+                grid.appendChild(div);
+            });
+        }
+        setStatus("✅ 已連線", "online");
+    } catch (e) {
+        setStatus("❌ 連線失敗: " + e.message, "error");
+    }
+}
+
+async function createUser(name) {
     try {
         await fetch("/api/users", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: name })
         });
-        document.getElementById("new-username").value = "";
-        closeModal();
         fetchUsers();
-    } catch(e) { alert("Create Failed: " + e.message); }
-}
-
-function selectUser(u){
-    currentUser=u;
-    document.getElementById("dash-avatar").textContent=u.avatar;
-    document.getElementById("dash-name").textContent=u.name;
-    document.getElementById("dash-level").textContent="LV."+u.level;
-    switchView("dashboard-view");
-}
-
-async function fetchLevels(){
-    var res = await fetch("/api/levels");
-    var levels = await res.json();
-    var container = document.getElementById("level-list");
-    container.innerHTML = "";
-    if(levels.length===0) document.getElementById("empty-levels-msg").classList.remove("hidden");
-    else {
-        document.getElementById("empty-levels-msg").classList.add("hidden");
-        levels.forEach(function(l) {
-            var div = document.createElement("div");
-            div.style.cssText = "background: #1f2937; padding: 20px; border-radius: 12px; border-left: 4px solid #3b82f6; cursor: pointer;";
-            div.addEventListener("click", function() { startLevel(l); });
-            div.innerHTML = '<h3 style="margin:0 0 10px 0;">'+l.title+'</h3><div style="color:gray; font-size:14px;">'+l.word_count+' Words</div>';
-            container.appendChild(div);
-        });
+    } catch (e) {
+        alert("建立失敗: " + e.message);
     }
 }
 
-async function fetchAdminLevels(){
-    var res = await fetch("/api/levels");
-    var levels = await res.json();
-    var container = document.getElementById("admin-level-list");
-    container.innerHTML = "";
-    levels.forEach(function(l) {
-        var div = document.createElement("div");
-        div.style.cssText = "display: flex; justify-content: space-between; padding: 10px; background: #374151; margin-bottom: 10px; border-radius: 6px;";
+async function fetchLevels() {
+    try {
+        var res = await fetch("/api/levels");
+        var levels = await res.json();
 
-        var span = document.createElement("span");
-        span.textContent = l.title;
+        var grid = document.getElementById("level-grid");
+        var empty = document.getElementById("empty-levels");
+        grid.innerHTML = "";
 
-        var btn = document.createElement("button");
-        btn.textContent = "Delete";
-        btn.style.cssText = "color: #f87171; background: none; border: none; cursor: pointer;";
-        btn.addEventListener("click", function() { deleteLevel(l.id); });
+        if (levels.length === 0) {
+            empty.classList.remove("hidden");
+        } else {
+            empty.classList.add("hidden");
+            levels.forEach(function(l) {
+                var div = document.createElement("div");
+                div.className = "level-card";
+                div.innerHTML = '<div class="level-num">' + l.id + '</div>' +
+                    '<div class="level-words">' + l.word_count + ' 單字</div>' +
+                    '<div class="level-difficulty diff-' + l.difficulty + '">' + l.difficulty + '</div>';
+                div.addEventListener("click", function() { startGame(l); });
+                grid.appendChild(div);
+            });
+        }
+    } catch (e) {
+        console.error("fetchLevels error:", e);
+    }
+}
 
-        div.appendChild(span);
-        div.appendChild(btn);
-        container.appendChild(div);
-    });
+async function fetchAllWords() {
+    try {
+        var res = await fetch("/api/levels");
+        var levels = await res.json();
+        allWords = [];
+        for (var i = 0; i < levels.length; i++) {
+            var wordsRes = await fetch("/api/game/start/" + levels[i].id + "?count=100");
+            var words = await wordsRes.json();
+            allWords = allWords.concat(words);
+        }
+    } catch (e) {
+        console.error("fetchAllWords error:", e);
+    }
+}
+
+async function fetchAdminLevels() {
+    try {
+        var res = await fetch("/api/levels");
+        var levels = await res.json();
+
+        var list = document.getElementById("admin-level-list");
+        list.innerHTML = "";
+
+        if (levels.length === 0) {
+            list.innerHTML = '<p style="color: #6b7280;">沒有關卡</p>';
+        } else {
+            levels.forEach(function(l) {
+                var div = document.createElement("div");
+                div.className = "level-list-item";
+
+                var span = document.createElement("span");
+                span.textContent = l.title + " (" + l.word_count + " 字)";
+
+                var btn = document.createElement("button");
+                btn.className = "btn btn-danger";
+                btn.style.cssText = "padding: 8px 16px; font-size: 14px;";
+                btn.textContent = "刪除";
+                btn.addEventListener("click", function() { deleteLevel(l.id); });
+
+                div.appendChild(span);
+                div.appendChild(btn);
+                list.appendChild(div);
+            });
+        }
+    } catch (e) {
+        console.error("fetchAdminLevels error:", e);
+    }
 }
 
 async function deleteLevel(id) {
-    if(confirm("Delete?")) {
-        await fetch("/api/admin/levels/"+id, {method:"DELETE"});
+    if (confirm("確定要刪除此關卡？")) {
+        await fetch("/api/admin/levels/" + id, { method: "DELETE" });
         fetchAdminLevels();
+        fetchLevels();
     }
 }
 
-async function startLevel(l) {
-    currentLevel = l;
-    var res = await fetch("/api/game/start/"+l.id+"?count="+GOAL_COUNT);
-    battleWords = await res.json();
-    if(battleWords.length === 0) return alert("No words in this mission!");
-
-    currentWordIndex = 0; defeatedCount = 0; playerSelection = [];
-    switchView("game-view");
-    loadBattleWord(0);
+// ===== GAME LOGIC =====
+function selectUser(u) {
+    currentUser = u;
+    document.getElementById("dash-avatar").textContent = u.avatar;
+    document.getElementById("dash-name").textContent = u.name;
+    document.getElementById("dash-level").textContent = "LV." + u.level;
+    switchView("dashboard-view");
+    fetchLevels();
+    fetchAllWords();
 }
 
-function loadBattleWord(idx) {
-    if(idx >= battleWords.length) return finishBattle();
-    var w = battleWords[idx];
-    document.getElementById("q-word").textContent = w.word;
-    document.getElementById("q-meaning").textContent = w.meaning;
+async function startGame(level) {
+    currentLevel = level;
+    try {
+        var res = await fetch("/api/game/start/" + level.id + "?count=5");
+        gameWords = await res.json();
 
-    var parts = w.sentence.trim().split(/\s+/).sort(function() { return Math.random() - 0.5; });
-    var bank = document.getElementById("word-bank");
-    bank.innerHTML = "";
-    document.getElementById("drop-zone").innerHTML = '<span style="color:gray">Tap words...</span>';
-    playerSelection = [];
+        if (gameWords.length === 0) {
+            alert("這個關卡沒有單字！");
+            return;
+        }
 
-    parts.forEach(function(word) {
+        currentWordIndex = 0;
+        correctCount = 0;
+        switchView("game-view");
+        showQuestion();
+    } catch (e) {
+        alert("無法開始遊戲: " + e.message);
+    }
+}
+
+function showQuestion() {
+    if (currentWordIndex >= gameWords.length) {
+        endGame();
+        return;
+    }
+
+    var word = gameWords[currentWordIndex];
+    document.getElementById("word-english").textContent = word.word;
+    document.getElementById("progress-fill").style.width = (currentWordIndex / gameWords.length * 100) + "%";
+    document.getElementById("progress-text").textContent = currentWordIndex + "/" + gameWords.length;
+
+    // Generate choices (1 correct + 3 wrong)
+    var choices = [{ meaning: word.meaning, correct: true }];
+
+    // Get wrong choices from other words
+    var otherWords = allWords.filter(function(w) { return w.meaning !== word.meaning; });
+    otherWords = shuffleArray(otherWords);
+
+    for (var i = 0; i < 3 && i < otherWords.length; i++) {
+        choices.push({ meaning: otherWords[i].meaning, correct: false });
+    }
+
+    // If not enough words, add placeholder
+    while (choices.length < 4) {
+        choices.push({ meaning: "???", correct: false });
+    }
+
+    choices = shuffleArray(choices);
+
+    // Render choices
+    var container = document.getElementById("choices");
+    container.innerHTML = "";
+
+    choices.forEach(function(c) {
         var btn = document.createElement("button");
-        btn.textContent = word;
-        btn.className = "btn btn-primary";
-        btn.style.padding = "10px 15px";
-        btn.addEventListener("click", function() {
-            var span = document.createElement("span");
-            span.textContent = word;
-            span.style.cssText = "background: #eab308; color: black; padding: 5px 10px; border-radius: 4px; cursor: pointer;";
-            span.addEventListener("click", function() {
-                span.remove();
-                playerSelection.splice(playerSelection.indexOf(word), 1);
-                btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
-                if(playerSelection.length===0) document.getElementById("drop-zone").innerHTML='<span style="color:gray">Tap words...</span>';
-            });
-
-            if(playerSelection.length===0) document.getElementById("drop-zone").innerHTML="";
-            document.getElementById("drop-zone").appendChild(span);
-            playerSelection.push(word);
-            btn.style.opacity = "0.5"; btn.style.pointerEvents = "none";
-        });
-        bank.appendChild(btn);
+        btn.className = "choice-btn";
+        btn.textContent = c.meaning;
+        btn.addEventListener("click", function() { selectAnswer(btn, c.correct); });
+        container.appendChild(btn);
     });
 }
 
-function resetBattleSentence() { loadBattleWord(currentWordIndex); }
+function selectAnswer(btn, isCorrect) {
+    // Disable all buttons
+    var buttons = document.querySelectorAll(".choice-btn");
+    buttons.forEach(function(b) { b.disabled = true; });
 
-function submitAttack() {
-    var target = battleWords[currentWordIndex].sentence.replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");
-    var player = playerSelection.join("").replace(/[^\w\s]/gi,"").toLowerCase().replace(/\s+/g,"");
-
-    if(player === target) {
-        alert("Correct! Attack!");
-        defeatedCount++;
-        currentWordIndex++;
-        loadBattleWord(currentWordIndex);
+    if (isCorrect) {
+        btn.classList.add("correct");
+        correctCount++;
     } else {
-        alert("Wrong! Try again.");
-        resetBattleSentence();
+        btn.classList.add("wrong");
+        // Show correct answer
+        buttons.forEach(function(b) {
+            if (b.textContent === gameWords[currentWordIndex].meaning) {
+                b.classList.add("correct");
+            }
+        });
+    }
+
+    // Next question after delay
+    setTimeout(function() {
+        currentWordIndex++;
+        showQuestion();
+    }, 1000);
+}
+
+async function endGame() {
+    var xp = correctCount * 20;
+    var emoji = correctCount === gameWords.length ? "🎉" : (correctCount >= gameWords.length / 2 ? "👍" : "💪");
+    var title = correctCount === gameWords.length ? "完美！" : (correctCount >= gameWords.length / 2 ? "做得好！" : "繼續加油！");
+
+    document.getElementById("result-emoji").textContent = emoji;
+    document.getElementById("result-title").textContent = title;
+    document.getElementById("result-score").textContent = "答對 " + correctCount + "/" + gameWords.length + " 題，獲得 " + xp + " XP！";
+    document.getElementById("result-overlay").classList.remove("hidden");
+
+    // Update XP
+    if (xp > 0 && currentUser) {
+        try {
+            await fetch("/api/users/" + currentUser.id + "/progress?xp_gained=" + xp, { method: "POST" });
+            currentUser.xp += xp;
+            currentUser.level = Math.floor(currentUser.xp / 100) + 1;
+            document.getElementById("dash-level").textContent = "LV." + currentUser.level;
+        } catch (e) {
+            console.error("Update XP error:", e);
+        }
     }
 }
 
-async function finishBattle() {
-    alert("Mission Complete! +100 XP");
-    await fetch("/api/users/"+currentUser.id+"/progress?xp_gained=100", {method:"POST"});
-    currentUser.xp += 100;
-    switchView("dashboard-view");
-}
-
-function quitGame() { if(confirm("Quit?")) switchView("dashboard-view"); }
-
-// Initialize when DOM is ready
+// ===== EVENT LISTENERS =====
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("System V8 Loaded - Using addEventListener");
+    console.log("Ian's Word Quest V9 loaded");
 
-    // Bind all button events
-    document.getElementById("btn-add-player").addEventListener("click", showModal);
-    document.getElementById("btn-cancel-modal").addEventListener("click", closeModal);
-    document.getElementById("btn-create-user").addEventListener("click", createNewUser);
-    document.getElementById("btn-logout").addEventListener("click", function() { switchView("login-view"); });
-    document.getElementById("btn-admin").addEventListener("click", function() { switchView("admin-view"); });
-    document.getElementById("btn-quit-game").addEventListener("click", quitGame);
-    document.getElementById("btn-reset").addEventListener("click", resetBattleSentence);
-    document.getElementById("btn-attack").addEventListener("click", submitAttack);
-    document.getElementById("btn-back-dashboard").addEventListener("click", function() { switchView("dashboard-view"); });
+    // Login view
+    document.getElementById("btn-add-player").addEventListener("click", function() {
+        document.getElementById("modal-add-user").classList.remove("hidden");
+        document.getElementById("input-username").focus();
+    });
 
-    // Admin Upload Form
+    document.getElementById("btn-cancel-add").addEventListener("click", function() {
+        document.getElementById("modal-add-user").classList.add("hidden");
+        document.getElementById("input-username").value = "";
+    });
+
+    document.getElementById("btn-confirm-add").addEventListener("click", function() {
+        var name = document.getElementById("input-username").value.trim();
+        if (!name) {
+            alert("請輸入名字");
+            return;
+        }
+        createUser(name);
+        document.getElementById("modal-add-user").classList.add("hidden");
+        document.getElementById("input-username").value = "";
+    });
+
+    // Dashboard
+    document.getElementById("btn-logout").addEventListener("click", function() {
+        currentUser = null;
+        switchView("login-view");
+        fetchUsers();
+    });
+
+    document.getElementById("btn-admin").addEventListener("click", function() {
+        switchView("admin-view");
+        fetchAdminLevels();
+    });
+
+    // Game
+    document.getElementById("btn-quit").addEventListener("click", function() {
+        if (confirm("確定要離開？")) {
+            switchView("dashboard-view");
+        }
+    });
+
+    // Result
+    document.getElementById("btn-result-ok").addEventListener("click", function() {
+        document.getElementById("result-overlay").classList.add("hidden");
+        switchView("dashboard-view");
+    });
+
+    // Admin
+    document.getElementById("btn-back-dash").addEventListener("click", function() {
+        switchView("dashboard-view");
+    });
+
     document.getElementById("upload-form").addEventListener("submit", async function(e) {
         e.preventDefault();
-        var btn = document.getElementById("upload-btn");
+        var btn = document.getElementById("btn-upload");
         var status = document.getElementById("upload-status");
         var formData = new FormData(e.target);
 
         btn.disabled = true;
-        btn.textContent = "Uploading...";
+        btn.textContent = "上傳中...";
         status.textContent = "";
 
         try {
-            var res = await fetch("/api/admin/upload", {method: "POST", body: formData});
-            if(res.ok) {
-                status.textContent = "Success!";
-                status.style.color = "#4ade80";
+            var res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+            if (res.ok) {
+                status.textContent = "✅ 上傳成功！";
+                status.style.color = "#22c55e";
                 e.target.reset();
                 fetchAdminLevels();
             } else {
                 var data = await res.json();
                 throw new Error(data.detail);
             }
-        } catch(err) {
-            status.textContent = "Error: " + err.message;
-            status.style.color = "#f87171";
+        } catch (err) {
+            status.textContent = "❌ " + err.message;
+            status.style.color = "#ef4444";
         } finally {
             btn.disabled = false;
-            btn.textContent = "Upload";
+            btn.textContent = "上傳";
         }
     });
 
-    // Initial fetch
+    // Initial load
     fetchUsers();
 });
 </script>
