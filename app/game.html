@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ian's Word Quest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2d3748;
+        }
+        
+        .pixel-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .word-card {
+            transition: all 0.2s;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .word-card:active {
+            transform: scale(0.95);
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .damage-text {
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center text-white overflow-hidden bg-gray-900">
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="text-center space-y-8">
+        <h1 class="text-4xl md:text-6xl text-yellow-400 pixel-font mb-8 leading-relaxed">IAN'S<br>WORD QUEST</h1>
+        <div class="bg-gray-800 p-6 rounded-lg border-4 border-blue-500 max-w-md mx-auto shadow-2xl">
+            <p class="mb-4 text-xl">今日任務：擊敗 5 隻句子怪獸</p>
+            <p class="text-gray-400 text-sm mb-6">Daily Quest: Defeat 5 Sentence Monsters</p>
+            <button onclick="startGame()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-xl shadow-[0_4px_0_rgb(21,128,61)] active:shadow-[0_0px_0_rgb(21,128,61)] active:translate-y-1 transition-all w-full">
+                START GAME
+            </button>
+        </div>
+        <div id="loading" class="hidden text-yellow-400 mt-4">Loading Dictionary...</div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="hidden w-full max-w-4xl p-4 flex flex-col h-full max-h-[90vh]">
+        
+        <!-- Header / Progress -->
+        <div class="flex justify-between items-center mb-6 bg-gray-800 p-3 rounded-lg border-2 border-gray-600">
+            <div class="flex items-center space-x-2">
+                <span class="text-yellow-400 pixel-font">LVL 5</span>
+                <div class="w-32 h-4 bg-gray-700 rounded-full overflow-hidden border border-gray-600">
+                    <div id="player-xp" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="pixel-font text-green-400">MONSTERS: <span id="progress-count">0</span>/5</div>
+        </div>
+
+        <!-- Battle Arena -->
+        <div class="flex-1 flex flex-col items-center justify-start space-y-6 relative">
+            
+            <!-- Monster -->
+            <div class="relative">
+                <div id="monster" class="text-9xl transition-transform duration-200 cursor-pointer hover:scale-105">👾</div>
+                <div id="damage-overlay" class="absolute top-0 left-1/2 -translate-x-1/2 text-red-500 font-bold text-4xl hidden pointer-events-none">-20 HP</div>
+                
+                <!-- Monster HP -->
+                <div class="mt-4 w-48 h-6 bg-gray-700 rounded-full border-2 border-red-900 overflow-hidden mx-auto">
+                    <div id="monster-hp" class="h-full bg-red-500 transition-all duration-300" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- The Challenge (Word & Meaning) -->
+            <div class="text-center space-y-2 bg-gray-800/80 p-4 rounded-xl backdrop-blur w-full">
+                <h2 id="current-word" class="text-4xl font-bold text-yellow-300 tracking-wide">...</h2>
+                <p id="current-meaning" class="text-xl text-gray-300">...</p>
+            </div>
+
+            <!-- Sentence Construction Area (Target) -->
+            <div class="w-full bg-gray-800 rounded-xl p-6 min-h-[100px] border-2 border-dashed border-gray-600 flex flex-wrap gap-2 items-center justify-center transition-colors" id="target-zone">
+                <p class="text-gray-500 italic w-full text-center pointer-events-none" id="placeholder-text">Tap words below to build the sentence...</p>
+            </div>
+
+            <!-- Word Bank (Source) -->
+            <div id="word-bank" class="flex flex-wrap justify-center gap-3 w-full">
+                <!-- Words will be injected here -->
+            </div>
+
+        </div>
+        
+        <!-- Controls -->
+        <div class="mt-4 flex justify-center space-x-4">
+             <button onclick="checkAnswer()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-12 rounded-lg shadow-lg text-lg transform transition active:scale-95">
+                ATTACK! (送出攻擊)
+            </button>
+            <button onclick="resetSentence()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg">
+                ↺ Reset
+            </button>
+        </div>
+
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div id="victory-screen" class="hidden fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-50">
+        <div class="text-6xl mb-4">🏆</div>
+        <h2 class="text-4xl font-bold text-yellow-400 mb-4 pixel-font">VICTORY!</h2>
+        <p class="text-xl text-white mb-8">You defended the realm!</p>
+        
+        <div class="bg-gray-800 p-6 rounded-lg max-w-md w-full mb-8">
+            <h3 class="text-lg font-bold text-gray-400 mb-4">Words Mastered:</h3>
+            <ul id="mastered-list" class="text-left space-y-2"></ul>
+        </div>
+
+        <button onclick="location.reload()" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-8 rounded-lg pixel-font">
+            PLAY AGAIN
+        </button>
+    </div>
+
+    <script>
+        // Game State
+        let words = [];
+        let currentWordIndex = 0;
+        let currentSentenceParts = [];
+        let playerSelection = [];
+        let monstersDefeated = 0;
+        const TOTAL_MONSTERS = 5;
+
+        // Sounds (Simulated with visual cues for now to avoid browser autoplay policies)
+        
+        async function startGame() {
+            document.getElementById('loading').classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/words?count=' + TOTAL_MONSTERS);
+                words = await response.json();
+                
+                if (words.length === 0) {
+                    alert("No words found! Please check the Excel file.");
+                    return;
+                }
+
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('game-screen').classList.remove('hidden');
+                loadLevel(0);
+            } catch (e) {
+                alert("Error connecting to game server: " + e);
+            }
+        }
+
+        function loadLevel(index) {
+            if (index >= words.length) {
+                showVictory();
+                return;
+            }
+
+            currentWordIndex = index;
+            const data = words[index];
+            
+            // Reset UI
+            document.getElemen
