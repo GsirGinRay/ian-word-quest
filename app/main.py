@@ -1,4 +1,3 @@
-
 import os
 import random
 import uuid
@@ -12,16 +11,20 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boole
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 
+print("Starting V6 clean boot...")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
+# Database Setup
 try:
     DB_URL = f"sqlite:///{os.path.join(DATA_DIR, 'ian_quest.db')}"
     engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base = declarative_base()
 except:
+    print("DB Fallback to Memory")
     DB_URL = "sqlite:///:memory:"
     engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -29,6 +32,7 @@ except:
 
 app = FastAPI()
 
+# Models
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -86,9 +90,14 @@ class LevelOut(BaseModel):
     class Config:
         from_attributes = True
 
+# Routes
 @app.get("/")
 async def get_index():
-    with open(os.path.join(BASE_DIR, "index.html"), "r", encoding="utf-8") as f:
+    # Read HTML from file to avoid SyntaxError in Python
+    html_path = os.path.join(BASE_DIR, "index.html")
+    if not os.path.exists(html_path):
+        return HTMLResponse(content="<h1>Error: index.html not found</h1>")
+    with open(html_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 @app.get("/api/users", response_model=List[UserOut])
