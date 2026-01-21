@@ -87,7 +87,11 @@ body {
 }
 .level-card:hover { border-color: #667eea; transform: translateY(-4px); }
 .level-card.locked { opacity: 0.5; cursor: not-allowed; }
+.level-card.locked .num { color: #666; }
+.level-card.completed { background: linear-gradient(135deg, rgba(46,213,115,0.4) 0%, rgba(123,237,159,0.4) 100%); border-color: #2ed573; }
+.level-card.completed .num { color: #2ed573; font-size: 24px; }
 .level-card .num { font-size: 28px; font-weight: bold; color: #ffd700; }
+.level-card .level-num { font-size: 14px; color: #fff; margin-top: 2px; }
 .level-card .words { font-size: 12px; color: #aaa; margin-top: 4px; }
 
 /* Battle View */
@@ -409,6 +413,7 @@ var playerHP = 100;
 var monsterHP = 100;
 var timerInterval = null;
 var timeLeft = 10;
+var currentLevelId = null;
 
 var MONSTERS = [
     { emoji: "🟢", name: "史萊姆", hp: 60 },
@@ -486,16 +491,32 @@ async function createUser(name) {
 }
 
 async function fetchLevels() {
-    var res = await fetch("/api/levels");
+    var url = "/api/levels";
+    if (currentUser) {
+        url += "?user_id=" + currentUser.id;
+    }
+    var res = await fetch(url);
     var levels = await res.json();
     var grid = document.getElementById("level-grid");
     grid.innerHTML = "";
 
     levels.forEach(function(l, i) {
         var div = document.createElement("div");
-        div.className = "level-card";
-        div.innerHTML = '<div class="num">' + l.id + '</div><div class="words">' + l.word_count + '字</div>';
-        div.addEventListener("click", function() { startBattle(l); });
+        var statusIcon = l.completed ? "✓" : (l.unlocked ? "" : "🔒");
+        var statusClass = l.completed ? "completed" : (l.unlocked ? "" : "locked");
+
+        div.className = "level-card " + statusClass;
+        div.innerHTML = '<div class="num">' + (statusIcon || l.id) + '</div>' +
+                        '<div class="level-num">第 ' + l.id + ' 關</div>' +
+                        '<div class="words">' + l.word_count + '字</div>';
+
+        if (l.unlocked) {
+            div.addEventListener("click", function() { startBattle(l); });
+        } else {
+            div.addEventListener("click", function() {
+                alert("請先完成第 " + (l.id - 1) + " 關！");
+            });
+        }
         grid.appendChild(div);
     });
 }
@@ -525,6 +546,7 @@ async function startBattle(level) {
     }
 
     // Reset game state
+    currentLevelId = level.id;
     currentRound = 0;
     combo = 0;
     maxCombo = 0;
@@ -700,15 +722,27 @@ async function endBattle() {
     document.getElementById("result-accuracy").textContent = "正確率: " + accuracy + "%";
     document.getElementById("result-combo").textContent = "最高連擊: " + maxCombo;
     document.getElementById("result-xp").textContent = "+" + xp + " XP";
-    document.getElementById("result-overlay").classList.remove("hidden");
 
-    // Update XP
-    if (xp > 0 && currentUser) {
-        await fetch("/api/users/" + currentUser.id + "/progress?xp_gained=" + xp, { method: "POST" });
-        currentUser.xp += xp;
-        currentUser.level = Math.floor(currentUser.xp / 100) + 1;
+    // Update XP and level completion
+    var levelCompleted = false;
+    if (currentUser) {
+        var url = "/api/users/" + currentUser.id + "/progress?xp_gained=" + xp +
+                  "&level_id=" + currentLevelId + "&score=" + accuracy;
+        var res = await fetch(url, { method: "POST" });
+        var data = await res.json();
+        currentUser.xp = data.xp;
+        currentUser.level = data.level;
+        levelCompleted = data.level_completed;
         document.getElementById("info-stats").textContent = "Lv." + currentUser.level + " · " + currentUser.xp + " XP";
     }
+
+    // Show unlock message if level completed
+    if (levelCompleted) {
+        document.getElementById("result-title").textContent = "🎊 關卡完成！";
+        document.getElementById("result-xp").textContent = "+" + xp + " XP\n🔓 解鎖下一關！";
+    }
+
+    document.getElementById("result-overlay").classList.remove("hidden");
 }
 
 // ========== EVENT LISTENERS ==========
@@ -749,6 +783,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("btn-continue").addEventListener("click", function() {
         document.getElementById("result-overlay").classList.add("hidden");
         switchView("dashboard-view");
+        fetchLevels(); // Refresh to show newly unlocked levels
     });
 
     // Init

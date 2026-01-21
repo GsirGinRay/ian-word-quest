@@ -69,6 +69,15 @@ class Word(Base):
     sentence = Column(Text)
     pack = relationship("LevelPack", back_populates="words")
 
+class UserLevelProgress(Base):
+    __tablename__ = "user_level_progress"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    level_id = Column(Integer, ForeignKey("level_packs.id"), index=True)
+    completed = Column(Boolean, default=False)
+    best_score = Column(Integer, default=0)
+    completed_at = Column(DateTime, nullable=True)
+
 Base.metadata.create_all(bind=engine)
 
 def get_db():
@@ -210,20 +219,69 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @app.post("/api/users/{user_id}/progress")
-def update_progress(user_id: int, xp_gained: int, db: Session = Depends(get_db)):
+def update_progress(user_id: int, xp_gained: int, level_id: int = None, score: int = 0, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user: raise HTTPException(status_code=404, detail="User not found")
     user.xp += xp_gained
     user.level = (user.xp // 100) + 1
-    db.commit()
-    return {"xp": user.xp, "level": user.level}
 
-@app.get("/api/levels", response_model=List[LevelOut])
-def get_levels(db: Session = Depends(get_db)):
-    packs = db.query(LevelPack).filter(LevelPack.is_active == True).order_by(LevelPack.created_at.desc()).all()
+    # Mark level as completed if score >= 60% (3 out of 5 correct)
+    level_completed = False
+    if level_id and score >= 60:
+        progress = db.query(UserLevelProgress).filter(
+            UserLevelProgress.user_id == user_id,
+            UserLevelProgress.level_id == level_id
+        ).first()
+
+        if not progress:
+            progress = UserLevelProgress(
+                user_id=user_id,
+                level_id=level_id,
+                completed=True,
+                best_score=score,
+                completed_at=datetime.utcnow()
+            )
+            db.add(progress)
+            level_completed = True
+        elif not progress.completed:
+            progress.completed = True
+            progress.best_score = max(progress.best_score, score)
+            progress.completed_at = datetime.utcnow()
+            level_completed = True
+        elif score > progress.best_score:
+            progress.best_score = score
+
+    db.commit()
+    return {"xp": user.xp, "level": user.level, "level_completed": level_completed}
+
+@app.get("/api/levels")
+def get_levels(user_id: int = None, db: Session = Depends(get_db)):
+    packs = db.query(LevelPack).filter(LevelPack.is_active == True).order_by(LevelPack.id.asc()).all()
+
+    # Get user's completed levels
+    completed_levels = set()
+    if user_id:
+        progress = db.query(UserLevelProgress).filter(
+            UserLevelProgress.user_id == user_id,
+            UserLevelProgress.completed == True
+        ).all()
+        completed_levels = {p.level_id for p in progress}
+
     results = []
-    for p in packs:
-        results.append({"id": p.id, "title": p.title, "difficulty": p.difficulty, "word_count": len(p.words)})
+    for i, p in enumerate(packs):
+        # Level is unlocked if: it's the first level OR the previous level is completed
+        is_first = (i == 0)
+        prev_completed = (i > 0 and packs[i-1].id in completed_levels)
+        is_unlocked = is_first or prev_completed or p.id in completed_levels
+
+        results.append({
+            "id": p.id,
+            "title": p.title,
+            "difficulty": p.difficulty,
+            "word_count": len(p.words),
+            "unlocked": is_unlocked,
+            "completed": p.id in completed_levels
+        })
     return results
 
 @app.post("/api/admin/upload")
