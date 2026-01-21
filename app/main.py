@@ -85,6 +85,23 @@ def get_db():
         db.close()
 
 # Pre-load default levels from JSON on startup
+def download_words_json():
+    """Download words_data.json from GitHub if not present locally"""
+    json_path = os.path.join(DATA_DIR, "words_data.json")
+    if os.path.exists(json_path):
+        return json_path
+
+    print("words_data.json not found locally, downloading from GitHub...")
+    try:
+        import urllib.request
+        url = "https://raw.githubusercontent.com/GsirGinRay/ian-word-quest/main/app/data/words_data.json"
+        urllib.request.urlretrieve(url, json_path)
+        print(f"Downloaded words_data.json successfully")
+        return json_path
+    except Exception as e:
+        print(f"Failed to download: {e}")
+        return None
+
 def init_default_levels():
     db = SessionLocal()
     try:
@@ -104,12 +121,12 @@ def init_default_levels():
             db.query(LevelPack).delete()
             db.commit()
 
-        # Try to load from JSON file (extracted from 英檢.apkg)
-        json_path = os.path.join(DATA_DIR, "words_data.json")
+        # Try to load from JSON file, download if not present
+        json_path = download_words_json()
         print(f"Looking for JSON at: {json_path}")
-        print(f"JSON file exists: {os.path.exists(json_path)}")
+        print(f"JSON file exists: {os.path.exists(json_path) if json_path else False}")
 
-        if not os.path.exists(json_path):
+        if not json_path or not os.path.exists(json_path):
             print(f"JSON file not found, creating sample data")
             create_sample_levels(db)
             return
