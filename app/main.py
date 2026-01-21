@@ -11,20 +11,17 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boole
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 
-print("Starting V11 - 2042 Words from 英檢.apkg...")
+print("Starting V12 - Level Unlock System...")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# Delete old database to force re-import with correct encoding
+print(f"BASE_DIR: {BASE_DIR}")
+print(f"DATA_DIR: {DATA_DIR}")
+print(f"Files in DATA_DIR: {os.listdir(DATA_DIR) if os.path.exists(DATA_DIR) else 'DIR NOT FOUND'}")
+
 DB_PATH = os.path.join(DATA_DIR, "ian_quest.db")
-if os.path.exists(DB_PATH):
-    try:
-        os.remove(DB_PATH)
-        print("Removed old database for fresh start")
-    except:
-        pass
 
 # Database Setup
 try:
@@ -92,15 +89,28 @@ def init_default_levels():
     db = SessionLocal()
     try:
         # Check if we already have levels
-        existing = db.query(LevelPack).first()
-        if existing:
-            print(f"Levels already exist, skipping init")
+        existing_count = db.query(LevelPack).count()
+        print(f"Existing levels in DB: {existing_count}")
+
+        # If we have more than 1 level, assume it's properly initialized
+        if existing_count > 1:
+            print(f"Already have {existing_count} levels, skipping init")
             return
+
+        # If we only have 1 level (Sample Level), delete it and reload from JSON
+        if existing_count == 1:
+            print("Only 1 level found (probably Sample Level), will reload from JSON")
+            db.query(Word).delete()
+            db.query(LevelPack).delete()
+            db.commit()
 
         # Try to load from JSON file (extracted from 英檢.apkg)
         json_path = os.path.join(DATA_DIR, "words_data.json")
+        print(f"Looking for JSON at: {json_path}")
+        print(f"JSON file exists: {os.path.exists(json_path)}")
+
         if not os.path.exists(json_path):
-            print(f"JSON file not found at {json_path}, creating sample data")
+            print(f"JSON file not found, creating sample data")
             create_sample_levels(db)
             return
 
@@ -135,10 +145,10 @@ def init_default_levels():
                 db.commit()
 
             total_levels = (len(words_data) + chunk_size - 1) // chunk_size
-            print(f"Created {total_levels} levels with {len(words_data)} words")
+            print(f"SUCCESS: Created {total_levels} levels with {len(words_data)} words")
 
         except Exception as e:
-            print(f"Error loading JSON: {e}")
+            print(f"ERROR loading JSON: {e}")
             import traceback
             traceback.print_exc()
             create_sample_levels(db)
