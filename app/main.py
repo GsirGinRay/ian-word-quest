@@ -256,6 +256,16 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user); db.commit(); db.refresh(new_user)
     return new_user
 
+@app.post("/api/users/{user_id}/avatar")
+def update_avatar(user_id: int, avatar: str, db: Session = Depends(get_db)):
+    """Update user's avatar emoji"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.avatar = avatar
+    db.commit()
+    return {"status": "ok", "avatar": avatar}
+
 @app.post("/api/users/{user_id}/progress")
 def update_progress(user_id: int, xp_gained: int, level_id: int = None, score: int = 0, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()

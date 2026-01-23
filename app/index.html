@@ -450,6 +450,104 @@ body {
     font-size: 12px;
     margin-top: 4px;
 }
+
+/* Player title */
+.player-title {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.3);
+    margin-top: 2px;
+    display: inline-block;
+}
+
+/* Avatar selector */
+.avatar-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin: 16px 0;
+}
+.avatar-option {
+    font-size: 40px;
+    padding: 12px;
+    background: rgba(255,255,255,0.1);
+    border: 3px solid transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+.avatar-option:hover { border-color: #667eea; transform: scale(1.1); }
+.avatar-option.selected { border-color: #f39c12; background: rgba(243,156,18,0.2); }
+.avatar-option.locked { opacity: 0.4; cursor: not-allowed; }
+.avatar-option .lock-badge {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    font-size: 16px;
+}
+
+/* Level up overlay */
+.levelup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    animation: fadeIn 0.3s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.levelup-box {
+    text-align: center;
+    padding: 40px;
+    animation: scaleIn 0.5s ease-out;
+}
+@keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.levelup-stars {
+    font-size: 40px;
+    animation: starBurst 1s ease-out;
+}
+@keyframes starBurst { 0% { transform: scale(0); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.levelup-number {
+    font-size: 80px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #f39c12, #e74c3c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 16px 0;
+}
+.levelup-title {
+    font-size: 24px;
+    margin-bottom: 24px;
+}
+.levelup-rewards {
+    background: rgba(255,255,255,0.1);
+    padding: 16px 24px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    text-align: left;
+}
+.levelup-reward-item {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.levelup-reward-item:last-child { border-bottom: none; }
+.reward-new { color: #2ecc71; }
+
+/* Bonus indicator */
+.bonus-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+    font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -486,11 +584,12 @@ body {
 <div id="dashboard-view" class="view">
     <div class="dash-header">
         <button id="btn-logout" class="btn btn-secondary" style="padding:10px 16px;font-size:14px;">← 登出</button>
-        <div class="player-info">
-            <span id="info-avatar" class="avatar">🧙</span>
+        <div class="player-info" id="player-info-box" style="cursor:pointer;" title="點擊更換頭像">
+            <span id="info-avatar" class="avatar" style="font-size:40px;">🧒</span>
             <div class="details">
                 <div id="info-name" class="name">Player</div>
                 <div id="info-stats" class="stats">Lv.1 · 0 XP</div>
+                <div id="info-title" class="player-title">🐣 單字新手</div>
             </div>
         </div>
     </div>
@@ -589,6 +688,31 @@ body {
     </div>
 </div>
 
+<!-- Level Up Overlay -->
+<div id="levelup-overlay" class="levelup-overlay hidden">
+    <div class="levelup-box">
+        <div class="levelup-stars">⭐✨🌟✨⭐</div>
+        <div id="levelup-text" style="font-size:24px;color:#f39c12;">等級提升！</div>
+        <div id="levelup-number" class="levelup-number">Lv.5</div>
+        <div id="levelup-title" class="levelup-title">🐥 單字學徒</div>
+        <div id="levelup-rewards" class="levelup-rewards">
+            <div class="levelup-reward-item">🎁 獲得新稱號</div>
+        </div>
+        <button id="btn-levelup-close" class="btn btn-primary">太棒了！</button>
+    </div>
+</div>
+
+<!-- Avatar Selection Modal -->
+<div id="modal-avatar" class="modal hidden">
+    <div class="modal-box" style="max-width:400px;">
+        <h2>🎭 選擇頭像</h2>
+        <div id="avatar-selector" class="avatar-selector"></div>
+        <div class="modal-buttons">
+            <button id="btn-avatar-close" class="btn btn-primary" style="width:100%;">確定</button>
+        </div>
+    </div>
+</div>
+
 <!-- Result Overlay -->
 <div id="result-overlay" class="result-overlay hidden">
     <div class="result-box">
@@ -655,6 +779,52 @@ var MONSTERS = [
     { emoji: "👹", name: "惡魔", hp: 150 },
     { emoji: "🐉", name: "火龍", hp: 200 },
 ];
+
+// ========== LEVEL REWARD SYSTEM ==========
+// Titles based on player level
+var TITLES = [
+    { minLevel: 1, title: "🐣 單字新手", color: "#aaa" },
+    { minLevel: 5, title: "🐥 單字學徒", color: "#f1c40f" },
+    { minLevel: 10, title: "🦊 單字高手", color: "#e67e22" },
+    { minLevel: 15, title: "🦁 單字勇者", color: "#e74c3c" },
+    { minLevel: 20, title: "🐲 單字大師", color: "#9b59b6" },
+    { minLevel: 30, title: "👑 單字王者", color: "#f39c12" }
+];
+
+// Avatars unlocked at certain levels
+var AVATARS = [
+    { emoji: "🧒", name: "小朋友", unlockLevel: 1 },
+    { emoji: "🦸", name: "超級英雄", unlockLevel: 5 },
+    { emoji: "🥷", name: "忍者", unlockLevel: 10 },
+    { emoji: "🧝", name: "精靈", unlockLevel: 15 },
+    { emoji: "🦄", name: "獨角獸", unlockLevel: 20 },
+    { emoji: "👑", name: "國王", unlockLevel: 30 }
+];
+
+function getTitle(level) {
+    var title = TITLES[0];
+    for (var i = TITLES.length - 1; i >= 0; i--) {
+        if (level >= TITLES[i].minLevel) {
+            title = TITLES[i];
+            break;
+        }
+    }
+    return title;
+}
+
+function getUnlockedAvatars(level) {
+    return AVATARS.filter(function(a) { return level >= a.unlockLevel; });
+}
+
+function getTimeBonus(level) {
+    // Every 5 levels = +1 second
+    return Math.floor(level / 5);
+}
+
+function getXPBonus(level) {
+    // Every 10 levels = +10% XP
+    return Math.floor(level / 10) * 0.1;
+}
 
 // ========== SOUND SYSTEM ==========
 var audioContext = null;
@@ -1068,7 +1238,12 @@ async function fetchUsers() {
             users.forEach(function(u) {
                 var div = document.createElement("div");
                 div.className = "player-card";
-                div.innerHTML = '<div class="avatar">🧙</div><div class="name">' + u.name + '</div><div class="level">Lv.' + u.level + '</div>';
+                var avatar = u.avatar || "🧒";
+                var title = getTitle(u.level);
+                div.innerHTML = '<div class="avatar">' + avatar + '</div>' +
+                               '<div class="name">' + u.name + '</div>' +
+                               '<div class="level">Lv.' + u.level + '</div>' +
+                               '<div class="player-title" style="color:' + title.color + '">' + title.title + '</div>';
                 div.addEventListener("click", function() { selectPlayer(u); });
                 grid.appendChild(div);
             });
@@ -1146,12 +1321,82 @@ async function recordWordAnswer(wordId, correct) {
 // ========== GAME LOGIC ==========
 function selectPlayer(u) {
     currentUser = u;
-    document.getElementById("info-name").textContent = u.name;
-    document.getElementById("info-stats").textContent = "Lv." + u.level + " · " + u.xp + " XP";
+    updatePlayerDisplay();
     switchView("dashboard-view");
     fetchLevels();
     fetchAllWords();
     checkWeakWords();
+}
+
+function updatePlayerDisplay() {
+    if (!currentUser) return;
+
+    var title = getTitle(currentUser.level);
+    var xpBonus = getXPBonus(currentUser.level);
+    var timeBonus = getTimeBonus(currentUser.level);
+
+    document.getElementById("info-name").textContent = currentUser.name;
+    document.getElementById("info-stats").textContent = "Lv." + currentUser.level + " · " + currentUser.xp + " XP";
+    document.getElementById("info-title").textContent = title.title;
+    document.getElementById("info-title").style.color = title.color;
+
+    // Show avatar (use saved or default)
+    var avatar = currentUser.avatar || "🧒";
+    document.getElementById("info-avatar").textContent = avatar;
+
+    // Show bonuses if any
+    var bonusText = "";
+    if (timeBonus > 0) bonusText += " ⏱️+" + timeBonus + "秒";
+    if (xpBonus > 0) bonusText += " ✨+" + Math.round(xpBonus * 100) + "%XP";
+    if (bonusText) {
+        document.getElementById("info-stats").textContent += bonusText;
+    }
+}
+
+function showAvatarSelector() {
+    var container = document.getElementById("avatar-selector");
+    container.innerHTML = "";
+
+    var unlockedAvatars = getUnlockedAvatars(currentUser.level);
+    var unlockedEmojis = unlockedAvatars.map(function(a) { return a.emoji; });
+
+    AVATARS.forEach(function(avatar) {
+        var div = document.createElement("div");
+        var isUnlocked = currentUser.level >= avatar.unlockLevel;
+        var isSelected = (currentUser.avatar || "🧒") === avatar.emoji;
+
+        div.className = "avatar-option" + (isSelected ? " selected" : "") + (isUnlocked ? "" : " locked");
+        div.innerHTML = avatar.emoji + (isUnlocked ? "" : '<span class="lock-badge">🔒</span>');
+        div.title = avatar.name + (isUnlocked ? "" : " (Lv." + avatar.unlockLevel + " 解鎖)");
+
+        if (isUnlocked) {
+            div.addEventListener("click", function() {
+                currentUser.avatar = avatar.emoji;
+                // Update UI
+                document.querySelectorAll(".avatar-option").forEach(function(el) { el.classList.remove("selected"); });
+                div.classList.add("selected");
+                document.getElementById("info-avatar").textContent = avatar.emoji;
+                // Save to server
+                saveUserAvatar(avatar.emoji);
+            });
+        }
+
+        container.appendChild(div);
+    });
+
+    document.getElementById("modal-avatar").classList.remove("hidden");
+}
+
+async function saveUserAvatar(emoji) {
+    // Save avatar preference (we'll add this API endpoint)
+    if (!currentUser) return;
+    try {
+        await fetch("/api/users/" + currentUser.id + "/avatar?avatar=" + encodeURIComponent(emoji), {
+            method: "POST"
+        });
+    } catch(e) {
+        console.log("Could not save avatar");
+    }
 }
 
 async function checkWeakWords() {
@@ -1285,6 +1530,10 @@ function startTimer() {
         baseTime = Math.max(baseTime, 20);
     }
 
+    // Add time bonus from player level (every 5 levels = +1 second)
+    var playerTimeBonus = currentUser ? getTimeBonus(currentUser.level) : 0;
+    baseTime += playerTimeBonus;
+
     timeLeft = baseTime;
     var maxTime = baseTime;
     document.getElementById("timer-fill").style.width = "100%";
@@ -1412,7 +1661,12 @@ function handleAnswer(btn, correct, correctAnswer) {
 async function endBattle() {
     var won = playerHP > 0;
     var accuracy = Math.round(correctCount / gameWords.length * 100);
-    var xp = correctCount * 20 + maxCombo * 10;
+    var baseXP = correctCount * 20 + maxCombo * 10;
+
+    // Apply XP bonus from player level
+    var xpBonusPercent = currentUser ? getXPBonus(currentUser.level) : 0;
+    var bonusXP = Math.floor(baseXP * xpBonusPercent);
+    var totalXP = baseXP + bonusXP;
 
     // Play appropriate sound
     playSound(won ? 'levelup' : 'wrong');
@@ -1421,38 +1675,94 @@ async function endBattle() {
     document.getElementById("result-title").textContent = won ? "勝利！" : "戰敗...";
     document.getElementById("result-accuracy").textContent = "正確率: " + accuracy + "%";
     document.getElementById("result-combo").textContent = "最高連擊: " + maxCombo;
-    document.getElementById("result-xp").textContent = "+" + xp + " XP";
+
+    var xpText = "+" + baseXP + " XP";
+    if (bonusXP > 0) {
+        xpText += " (+" + bonusXP + " 等級加成)";
+    }
+    document.getElementById("result-xp").textContent = xpText;
+
+    // Track old level for level-up detection
+    var oldLevel = currentUser ? currentUser.level : 1;
 
     // Update XP and level completion
     var levelCompleted = false;
     if (currentUser && !isReviewMode) {
-        var url = "/api/users/" + currentUser.id + "/progress?xp_gained=" + xp +
+        var url = "/api/users/" + currentUser.id + "/progress?xp_gained=" + totalXP +
                   "&level_id=" + currentLevelId + "&score=" + accuracy;
         var res = await fetch(url, { method: "POST" });
         var data = await res.json();
         currentUser.xp = data.xp;
         currentUser.level = data.level;
         levelCompleted = data.level_completed;
-        document.getElementById("info-stats").textContent = "Lv." + currentUser.level + " · " + currentUser.xp + " XP";
+        updatePlayerDisplay();
     } else if (currentUser && isReviewMode) {
         // Give some XP for review mode too
-        var reviewXP = Math.floor(xp * 0.5);
+        var reviewXP = Math.floor(totalXP * 0.5);
         var url = "/api/users/" + currentUser.id + "/progress?xp_gained=" + reviewXP;
         var res = await fetch(url, { method: "POST" });
         var data = await res.json();
         currentUser.xp = data.xp;
         currentUser.level = data.level;
-        document.getElementById("info-stats").textContent = "Lv." + currentUser.level + " · " + currentUser.xp + " XP";
+        updatePlayerDisplay();
         document.getElementById("result-xp").textContent = "+" + reviewXP + " XP (複習獎勵)";
     }
 
     // Show unlock message if level completed
     if (levelCompleted) {
         document.getElementById("result-title").textContent = "🎊 關卡完成！";
-        document.getElementById("result-xp").textContent = "+" + xp + " XP\n🔓 解鎖下一關！";
+        document.getElementById("result-xp").textContent = xpText + "\n🔓 解鎖下一關！";
     }
 
-    document.getElementById("result-overlay").classList.remove("hidden");
+    // Check for player level up
+    if (currentUser && currentUser.level > oldLevel) {
+        showLevelUpCelebration(oldLevel, currentUser.level);
+    } else {
+        document.getElementById("result-overlay").classList.remove("hidden");
+    }
+}
+
+function showLevelUpCelebration(oldLevel, newLevel) {
+    var title = getTitle(newLevel);
+    var oldTitle = getTitle(oldLevel);
+
+    document.getElementById("levelup-number").textContent = "Lv." + newLevel;
+    document.getElementById("levelup-title").textContent = title.title;
+    document.getElementById("levelup-title").style.color = title.color;
+
+    // Build rewards list
+    var rewardsHtml = "";
+
+    // Check for new title
+    if (title.title !== oldTitle.title) {
+        rewardsHtml += '<div class="levelup-reward-item reward-new">🏷️ 新稱號: ' + title.title + '</div>';
+    }
+
+    // Check for new avatar unlock
+    var newAvatars = AVATARS.filter(function(a) { return a.unlockLevel === newLevel; });
+    newAvatars.forEach(function(a) {
+        rewardsHtml += '<div class="levelup-reward-item reward-new">🎭 解鎖頭像: ' + a.emoji + ' ' + a.name + '</div>';
+    });
+
+    // Check for time bonus milestone
+    if (newLevel % 5 === 0) {
+        rewardsHtml += '<div class="levelup-reward-item reward-new">⏱️ 答題時間 +1 秒！</div>';
+    }
+
+    // Check for XP bonus milestone
+    if (newLevel % 10 === 0) {
+        rewardsHtml += '<div class="levelup-reward-item reward-new">✨ XP 獲得 +10%！</div>';
+    }
+
+    if (!rewardsHtml) {
+        rewardsHtml = '<div class="levelup-reward-item">繼續努力升級獲得更多獎勵！</div>';
+    }
+
+    document.getElementById("levelup-rewards").innerHTML = rewardsHtml;
+    document.getElementById("levelup-overlay").classList.remove("hidden");
+
+    // Play level up sound
+    playSound('levelup');
 }
 
 // ========== EVENT LISTENERS ==========
@@ -1543,6 +1853,23 @@ document.addEventListener("DOMContentLoaded", function() {
         switchView("dashboard-view");
         fetchLevels();
         checkWeakWords();
+    });
+
+    // Level up celebration
+    document.getElementById("btn-levelup-close").addEventListener("click", function() {
+        document.getElementById("levelup-overlay").classList.add("hidden");
+        document.getElementById("result-overlay").classList.remove("hidden");
+    });
+
+    // Avatar selector
+    document.getElementById("player-info-box").addEventListener("click", function() {
+        if (currentUser) {
+            showAvatarSelector();
+        }
+    });
+
+    document.getElementById("btn-avatar-close").addEventListener("click", function() {
+        document.getElementById("modal-avatar").classList.add("hidden");
     });
 
     // Init
