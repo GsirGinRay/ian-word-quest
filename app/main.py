@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boole
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 
-print("Starting V12 - Level Unlock System...")
+print("Starting V13 - Multi-Question Types & Sound System...")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -74,6 +74,17 @@ class UserLevelProgress(Base):
     completed = Column(Boolean, default=False)
     best_score = Column(Integer, default=0)
     completed_at = Column(DateTime, nullable=True)
+
+class WordProgress(Base):
+    """Track user's mastery of individual words"""
+    __tablename__ = "word_progress"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    word_id = Column(Integer, ForeignKey("words.id"), index=True)
+    correct_count = Column(Integer, default=0)
+    wrong_count = Column(Integer, default=0)
+    last_seen = Column(DateTime, nullable=True)
+    mastery_level = Column(Integer, default=0)  # 0-5 stars
 
 Base.metadata.create_all(bind=engine)
 
@@ -285,29 +296,49 @@ def update_progress(user_id: int, xp_gained: int, level_id: int = None, score: i
 def get_levels(user_id: int = None, db: Session = Depends(get_db)):
     packs = db.query(LevelPack).filter(LevelPack.is_active == True).order_by(LevelPack.id.asc()).all()
 
-    # Get user's completed levels
-    completed_levels = set()
+    # Get mastery data for all levels if user is provided
+    level_mastery = {}
     if user_id:
-        progress = db.query(UserLevelProgress).filter(
-            UserLevelProgress.user_id == user_id,
-            UserLevelProgress.completed == True
-        ).all()
-        completed_levels = {p.level_id for p in progress}
+        # Get all word IDs by pack
+        for pack in packs:
+            word_ids = [w.id for w in pack.words]
+            if not word_ids:
+                level_mastery[pack.id] = {"mastered": 0, "total": 0}
+                continue
+
+            progress_list = db.query(WordProgress).filter(
+                WordProgress.user_id == user_id,
+                WordProgress.word_id.in_(word_ids)
+            ).all()
+
+            mastered = sum(1 for p in progress_list if (p.correct_count or 0) >= 3)
+            level_mastery[pack.id] = {"mastered": mastered, "total": len(word_ids)}
 
     results = []
     for i, p in enumerate(packs):
+        mastery_info = level_mastery.get(p.id, {"mastered": 0, "total": len(p.words)})
+        mastered = mastery_info["mastered"]
+        total = mastery_info["total"]
+        mastery_percent = int(mastered / total * 100) if total > 0 else 0
+
+        # Level is "completed" if user has mastered >= 80% of words
+        is_completed = mastery_percent >= 80
+
         # Level is unlocked if: it's the first level OR the previous level is completed
         is_first = (i == 0)
-        prev_completed = (i > 0 and packs[i-1].id in completed_levels)
-        is_unlocked = is_first or prev_completed or p.id in completed_levels
+        prev_completed = (i > 0 and level_mastery.get(packs[i-1].id, {}).get("mastered", 0) >=
+                         int(level_mastery.get(packs[i-1].id, {}).get("total", 1) * 0.8))
+        is_unlocked = is_first or prev_completed or is_completed
 
         results.append({
             "id": p.id,
             "title": p.title,
             "difficulty": p.difficulty,
-            "word_count": len(p.words),
+            "word_count": total,
             "unlocked": is_unlocked,
-            "completed": p.id in completed_levels
+            "completed": is_completed,
+            "mastered": mastered,
+            "mastery_percent": mastery_percent
         })
     return results
 
@@ -346,11 +377,79 @@ def delete_level(level_id: int, db: Session = Depends(get_db)):
     return {"status": "deleted"}
 
 @app.get("/api/game/start/{level_id}")
-def start_game(level_id: int, count: int = 5, db: Session = Depends(get_db)):
+def start_game(level_id: int, user_id: int = None, count: int = 5, db: Session = Depends(get_db)):
+    """Start game with smart word selection based on user's mastery"""
     pack = db.query(LevelPack).filter(LevelPack.id == level_id).first()
     if not pack: raise HTTPException(status_code=404, detail="Level not found")
-    words = pack.words
-    selected = random.sample(words, min(len(words), count))
+
+    all_words = pack.words
+    if not user_id:
+        # No user - just random selection
+        selected = random.sample(all_words, min(len(all_words), count))
+        return [{"id": w.id, "word": w.word, "meaning": w.meaning, "sentence": w.sentence} for w in selected]
+
+    # Get user's progress for all words in this level
+    word_ids = [w.id for w in all_words]
+    progress_list = db.query(WordProgress).filter(
+        WordProgress.user_id == user_id,
+        WordProgress.word_id.in_(word_ids)
+    ).all()
+    progress_map = {p.word_id: p for p in progress_list}
+
+    # Categorize words
+    weak_words = []      # Got wrong, need practice
+    unseen_words = []    # Never seen
+    learning_words = []  # Seen but not mastered (< 3 correct)
+    mastered_words = []  # Mastered (>= 3 correct)
+
+    for w in all_words:
+        p = progress_map.get(w.id)
+        if not p:
+            unseen_words.append(w)
+        elif (p.wrong_count or 0) > (p.correct_count or 0):
+            weak_words.append(w)
+        elif (p.correct_count or 0) >= 3:
+            mastered_words.append(w)
+        else:
+            learning_words.append(w)
+
+    # Smart selection priority:
+    # 1. Weak words (got wrong) - 40%
+    # 2. Unseen words (new) - 30%
+    # 3. Learning words (in progress) - 20%
+    # 4. Mastered words (review) - 10%
+    selected = []
+
+    # Add weak words first (up to 40%)
+    random.shuffle(weak_words)
+    selected.extend(weak_words[:max(1, int(count * 0.4))])
+
+    # Add unseen words (up to 30%)
+    random.shuffle(unseen_words)
+    remaining = count - len(selected)
+    selected.extend(unseen_words[:max(1, min(remaining, int(count * 0.3)))])
+
+    # Add learning words (up to 20%)
+    random.shuffle(learning_words)
+    remaining = count - len(selected)
+    selected.extend(learning_words[:min(remaining, int(count * 0.2))])
+
+    # Fill remaining with mastered words or any available
+    remaining = count - len(selected)
+    if remaining > 0:
+        random.shuffle(mastered_words)
+        selected.extend(mastered_words[:remaining])
+
+    # If still not enough, add from any category
+    remaining = count - len(selected)
+    if remaining > 0:
+        all_remaining = [w for w in all_words if w not in selected]
+        random.shuffle(all_remaining)
+        selected.extend(all_remaining[:remaining])
+
+    # Shuffle final selection
+    random.shuffle(selected)
+
     return [{"id": w.id, "word": w.word, "meaning": w.meaning, "sentence": w.sentence} for w in selected]
 
 @app.get("/api/words/all")
@@ -358,3 +457,113 @@ def get_all_words(db: Session = Depends(get_db)):
     """Get all words for generating wrong choices"""
     words = db.query(Word).all()
     return [{"id": w.id, "word": w.word, "meaning": w.meaning} for w in words]
+
+@app.post("/api/words/answer")
+def record_word_answer(user_id: int, word_id: int, correct: bool, db: Session = Depends(get_db)):
+    """Record user's answer for a word to track mastery"""
+    progress = db.query(WordProgress).filter(
+        WordProgress.user_id == user_id,
+        WordProgress.word_id == word_id
+    ).first()
+
+    if not progress:
+        progress = WordProgress(
+            user_id=user_id,
+            word_id=word_id,
+            correct_count=0,
+            wrong_count=0,
+            mastery_level=0
+        )
+        db.add(progress)
+        db.flush()  # Ensure defaults are set
+
+    if correct:
+        progress.correct_count = (progress.correct_count or 0) + 1
+    else:
+        progress.wrong_count = (progress.wrong_count or 0) + 1
+
+    progress.last_seen = datetime.utcnow()
+
+    # Calculate mastery level (0-5 stars)
+    correct = progress.correct_count or 0
+    wrong = progress.wrong_count or 0
+    total = correct + wrong
+    if total >= 3:
+        accuracy = correct / total
+        progress.mastery_level = min(5, int(accuracy * 6))
+
+    db.commit()
+    return {"mastery_level": progress.mastery_level or 0, "correct": correct, "wrong": wrong}
+
+@app.get("/api/words/weak")
+def get_weak_words(user_id: int, limit: int = 10, db: Session = Depends(get_db)):
+    """Get words the user frequently gets wrong (weak words for review)"""
+    # Get words with wrong_count > correct_count or low mastery
+    weak_progress = db.query(WordProgress).filter(
+        WordProgress.user_id == user_id,
+        WordProgress.wrong_count > 0
+    ).order_by(
+        (WordProgress.wrong_count - WordProgress.correct_count).desc()
+    ).limit(limit).all()
+
+    word_ids = [wp.word_id for wp in weak_progress]
+    if not word_ids:
+        return []
+
+    words = db.query(Word).filter(Word.id.in_(word_ids)).all()
+    return [{"id": w.id, "word": w.word, "meaning": w.meaning, "sentence": w.sentence} for w in words]
+
+@app.get("/api/words/progress")
+def get_word_progress(user_id: int, word_ids: str, db: Session = Depends(get_db)):
+    """Get mastery progress for specific words"""
+    ids = [int(x) for x in word_ids.split(",") if x.strip()]
+    progress = db.query(WordProgress).filter(
+        WordProgress.user_id == user_id,
+        WordProgress.word_id.in_(ids)
+    ).all()
+    return {str(p.word_id): {"mastery": p.mastery_level, "correct": p.correct_count, "wrong": p.wrong_count} for p in progress}
+
+@app.get("/api/levels/{level_id}/mastery")
+def get_level_mastery(level_id: int, user_id: int, db: Session = Depends(get_db)):
+    """Get user's mastery stats for a specific level"""
+    pack = db.query(LevelPack).filter(LevelPack.id == level_id).first()
+    if not pack:
+        raise HTTPException(status_code=404, detail="Level not found")
+
+    word_ids = [w.id for w in pack.words]
+    total_words = len(word_ids)
+
+    if total_words == 0:
+        return {"total": 0, "mastered": 0, "learning": 0, "unseen": 0, "weak": 0, "mastery_percent": 0}
+
+    progress_list = db.query(WordProgress).filter(
+        WordProgress.user_id == user_id,
+        WordProgress.word_id.in_(word_ids)
+    ).all()
+
+    mastered = 0  # correct >= 3
+    learning = 0  # seen but correct < 3
+    weak = 0      # wrong > correct
+    seen_ids = set()
+
+    for p in progress_list:
+        seen_ids.add(p.word_id)
+        correct = p.correct_count or 0
+        wrong = p.wrong_count or 0
+        if wrong > correct:
+            weak += 1
+        elif correct >= 3:
+            mastered += 1
+        else:
+            learning += 1
+
+    unseen = total_words - len(seen_ids)
+
+    return {
+        "total": total_words,
+        "mastered": mastered,
+        "learning": learning,
+        "unseen": unseen,
+        "weak": weak,
+        "mastery_percent": int(mastered / total_words * 100) if total_words > 0 else 0
+    }

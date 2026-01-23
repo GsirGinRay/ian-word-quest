@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Word Quest - 單字大冒險</title>
+<title>Word Quest V13 - 單字大冒險</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -34,6 +34,16 @@ body {
 .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
 .btn-attack { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; font-size: 22px; }
 .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 2px solid rgba(255,255,255,0.3); }
+.btn-sound {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 200;
+    padding: 10px 14px;
+    font-size: 20px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+}
 
 /* Login */
 #login-view { align-items: center; justify-content: center; padding: 20px; text-align: center; }
@@ -68,14 +78,14 @@ body {
 
 /* Dashboard */
 #dashboard-view { padding: 20px; }
-.dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .player-info { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.1); padding: 12px 20px; border-radius: 50px; }
 .player-info .avatar { font-size: 32px; }
 .player-info .details .name { font-weight: bold; }
 .player-info .details .stats { font-size: 14px; color: #ffd700; }
 
 .section-title { font-size: 24px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
-.level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
+.level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; max-height: calc(100vh - 200px); overflow-y: auto; padding-bottom: 20px; }
 .level-card {
     background: linear-gradient(135deg, rgba(102,126,234,0.4) 0%, rgba(118,75,162,0.4) 100%);
     padding: 20px;
@@ -93,6 +103,38 @@ body {
 .level-card .num { font-size: 28px; font-weight: bold; color: #ffd700; }
 .level-card .level-num { font-size: 14px; color: #fff; margin-top: 2px; }
 .level-card .words { font-size: 12px; color: #aaa; margin-top: 4px; }
+.level-card .mastery-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+.level-card .mastery-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #f39c12);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+.level-card .mastery-text {
+    font-size: 11px;
+    color: #ffd700;
+    margin-top: 4px;
+}
+
+/* Review Button */
+.review-btn {
+    background: linear-gradient(135deg, #ff9f43 0%, #ee5a24 100%);
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 16px;
+}
+.review-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Battle View */
 #battle-view { background: linear-gradient(180deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%); }
@@ -177,6 +219,15 @@ body {
     max-width: 500px;
     text-align: center;
 }
+.question-type-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #00b894, #00cec9);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
 .word-display {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 24px 40px;
@@ -185,7 +236,39 @@ body {
     box-shadow: 0 10px 30px rgba(102,126,234,0.4);
 }
 .word-english { font-size: 36px; font-weight: bold; }
+.word-chinese { font-size: 28px; color: #ffeaa7; margin-top: 8px; }
 .word-hint { color: rgba(255,255,255,0.7); font-size: 14px; margin-top: 8px; }
+
+/* Play Sound Button */
+.play-sound-btn {
+    background: linear-gradient(135deg, #74b9ff, #0984e3);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    margin: 10px 0;
+    transition: all 0.2s;
+}
+.play-sound-btn:hover { transform: scale(1.05); }
+.play-sound-btn:active { transform: scale(0.95); }
+
+/* Fill Blank Sentence */
+.fillblank-sentence {
+    font-size: 18px;
+    line-height: 1.8;
+    padding: 16px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+.fillblank-sentence .blank {
+    display: inline-block;
+    min-width: 80px;
+    border-bottom: 3px solid #ffd700;
+    margin: 0 4px;
+}
 
 /* Sentence display */
 .sentence-display {
@@ -228,6 +311,56 @@ body {
 .choice-btn.correct { background: #2ed573 !important; border-color: #2ed573 !important; }
 .choice-btn.wrong { background: #ff4757 !important; border-color: #ff4757 !important; }
 .choice-btn:disabled { cursor: not-allowed; }
+
+/* Spell Input */
+.spell-input-area {
+    margin: 16px 0;
+}
+.spell-display {
+    font-size: 32px;
+    letter-spacing: 8px;
+    padding: 16px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 12px;
+    min-height: 60px;
+    font-family: monospace;
+}
+.spell-display .cursor {
+    animation: blink 1s infinite;
+    border-right: 3px solid #ffd700;
+}
+@keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+
+/* Virtual Keyboard */
+.virtual-keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    max-width: 100%;
+}
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+.key-btn {
+    min-width: 32px;
+    height: 44px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.1s;
+}
+.key-btn:hover { background: rgba(255,255,255,0.25); }
+.key-btn:active { transform: scale(0.9); background: #667eea; }
+.key-btn.wide { min-width: 60px; font-size: 14px; }
+.key-btn.submit { background: linear-gradient(135deg, #2ed573, #7bed9f); min-width: 80px; }
+.key-btn.hint { background: linear-gradient(135deg, #ffd700, #ffa502); min-width: 80px; }
 
 /* Player HP */
 .player-status {
@@ -286,7 +419,7 @@ body {
 .result-emoji { font-size: 100px; margin-bottom: 20px; }
 .result-title { font-size: 36px; margin-bottom: 12px; }
 .result-stats { color: #aaa; margin-bottom: 8px; }
-.result-xp { font-size: 24px; color: #ffd700; margin-bottom: 32px; }
+.result-xp { font-size: 24px; color: #ffd700; margin-bottom: 32px; white-space: pre-line; }
 
 /* Effects */
 .screen-flash {
@@ -299,17 +432,36 @@ body {
 }
 .screen-flash.active { animation: flash 0.15s; }
 @keyframes flash { 0% { opacity: 0.5; } 100% { opacity: 0; } }
+
+/* Particle effects */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    animation: particleFade 1s forwards;
+}
+@keyframes particleFade {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0); }
+}
+
+/* Mastery stars */
+.mastery-stars {
+    color: #ffd700;
+    font-size: 12px;
+    margin-top: 4px;
+}
 </style>
 </head>
 <body>
 
+<button id="btn-sound" class="btn btn-sound" title="音效開關">🔊</button>
 <div class="screen-flash" id="screen-flash"></div>
 
 <!-- LOGIN -->
 <div id="login-view" class="view active">
     <div class="game-logo">⚔️</div>
     <h1 class="game-title">單字大冒險</h1>
-    <p class="game-subtitle">Word Quest</p>
+    <p class="game-subtitle">Word Quest V13</p>
 
     <div id="player-grid" class="player-grid">
         <p style="color:#666">載入中...</p>
@@ -343,6 +495,8 @@ body {
         </div>
     </div>
 
+    <button id="btn-review" class="review-btn hidden">📚 複習弱點單字</button>
+
     <div class="section-title">⚔️ 選擇關卡</div>
     <div id="level-grid" class="level-grid"></div>
 </div>
@@ -365,10 +519,57 @@ body {
         </div>
 
         <div class="question-area">
+            <div id="question-type-badge" class="question-type-badge">🎯 選擇題</div>
             <div class="word-display">
                 <div id="word-english" class="word-english">apple</div>
-                <div class="word-hint">選擇正確的中文意思來攻擊！</div>
+                <div id="word-chinese" class="word-chinese hidden"></div>
+                <div id="word-hint" class="word-hint">選擇正確的中文意思來攻擊！</div>
+                <button id="play-sound-btn" class="play-sound-btn hidden">🔊 播放發音</button>
+                <div id="fillblank-sentence" class="fillblank-sentence hidden"></div>
                 <div id="sentence-display" class="sentence-display"></div>
+            </div>
+
+            <div id="spell-input-area" class="spell-input-area hidden">
+                <div id="spell-display" class="spell-display"></div>
+                <div class="virtual-keyboard">
+                    <div class="keyboard-row">
+                        <button class="key-btn" data-key="Q">Q</button>
+                        <button class="key-btn" data-key="W">W</button>
+                        <button class="key-btn" data-key="E">E</button>
+                        <button class="key-btn" data-key="R">R</button>
+                        <button class="key-btn" data-key="T">T</button>
+                        <button class="key-btn" data-key="Y">Y</button>
+                        <button class="key-btn" data-key="U">U</button>
+                        <button class="key-btn" data-key="I">I</button>
+                        <button class="key-btn" data-key="O">O</button>
+                        <button class="key-btn" data-key="P">P</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key-btn" data-key="A">A</button>
+                        <button class="key-btn" data-key="S">S</button>
+                        <button class="key-btn" data-key="D">D</button>
+                        <button class="key-btn" data-key="F">F</button>
+                        <button class="key-btn" data-key="G">G</button>
+                        <button class="key-btn" data-key="H">H</button>
+                        <button class="key-btn" data-key="J">J</button>
+                        <button class="key-btn" data-key="K">K</button>
+                        <button class="key-btn" data-key="L">L</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key-btn hint" data-key="HINT">💡提示</button>
+                        <button class="key-btn" data-key="Z">Z</button>
+                        <button class="key-btn" data-key="X">X</button>
+                        <button class="key-btn" data-key="C">C</button>
+                        <button class="key-btn" data-key="V">V</button>
+                        <button class="key-btn" data-key="B">B</button>
+                        <button class="key-btn" data-key="N">N</button>
+                        <button class="key-btn" data-key="M">M</button>
+                        <button class="key-btn wide" data-key="BACK">⌫</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key-btn submit wide" data-key="ENTER">確認 ✓</button>
+                    </div>
+                </div>
             </div>
 
             <div id="choices" class="choices-grid"></div>
@@ -411,9 +612,40 @@ var maxCombo = 0;
 var correctCount = 0;
 var playerHP = 100;
 var monsterHP = 100;
+var monsterMaxHP = 100;
 var timerInterval = null;
 var timeLeft = 10;
 var currentLevelId = null;
+var isReviewMode = false;
+var soundEnabled = true;
+var spellInput = "";
+var currentQuestion = null;
+var hintsUsed = 0;
+
+// Question types by difficulty
+// 'listen' = 聽音辨字 (easiest - just hear and pick)
+// 'wordmatch' = 認識單字 (see word + hear, pick matching)
+// 'fillblank' = 句子填空 (read sentence, pick word)
+// 'spell' = 拼寫挑戰 (hardest - type the word)
+var ALL_QUESTION_TYPES = ['listen', 'wordmatch', 'fillblank', 'spell'];
+
+// Get available question types based on level
+// Note: Most words don't have Chinese meanings, so we focus on listening/spelling
+function getQuestionTypesForLevel(levelId) {
+    if (levelId <= 10) {
+        // Levels 1-10: Listen only (easiest - just hear and pick)
+        return ['listen'];
+    } else if (levelId <= 20) {
+        // Levels 11-20: Listen + See English pick English (word recognition)
+        return ['listen', 'wordmatch'];
+    } else if (levelId <= 30) {
+        // Levels 21-30: Add fill blank (uses sentences)
+        return ['listen', 'wordmatch', 'fillblank'];
+    } else {
+        // Levels 31+: Add spelling (hardest)
+        return ['listen', 'wordmatch', 'fillblank', 'spell'];
+    }
+}
 
 var MONSTERS = [
     { emoji: "🟢", name: "史萊姆", hp: 60 },
@@ -424,7 +656,125 @@ var MONSTERS = [
     { emoji: "🐉", name: "火龍", hp: 200 },
 ];
 
+// ========== SOUND SYSTEM ==========
+var audioContext = null;
+
+function initAudio() {
+    if (!audioContext) {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.log("Web Audio API not supported");
+        }
+    }
+}
+
+function speakWord(word) {
+    if (!soundEnabled) return;
+    if ('speechSynthesis' in window) {
+        // Cancel any ongoing speech
+        speechSynthesis.cancel();
+        var utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.8;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+    }
+}
+
+function playSound(type) {
+    if (!soundEnabled || !audioContext) return;
+
+    // Resume audio context if suspended (required for mobile)
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
+    var oscillator = audioContext.createOscillator();
+    var gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    var now = audioContext.currentTime;
+
+    if (type === 'correct') {
+        // Rising tone for correct answer
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(523.25, now); // C5
+        oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
+        oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
+        gainNode.gain.setValueAtTime(0.3, now);
+        gainNode.gain.exponentialDecayTo && gainNode.gain.exponentialDecayTo(0.01, now + 0.4);
+        gainNode.gain.setValueAtTime(0.3, now);
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.4);
+        oscillator.start(now);
+        oscillator.stop(now + 0.4);
+    } else if (type === 'wrong') {
+        // Falling tone for wrong answer
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(300, now);
+        oscillator.frequency.linearRampToValueAtTime(150, now + 0.3);
+        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        oscillator.start(now);
+        oscillator.stop(now + 0.3);
+    } else if (type === 'attack') {
+        // Attack sound
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(200, now);
+        oscillator.frequency.linearRampToValueAtTime(400, now + 0.05);
+        oscillator.frequency.linearRampToValueAtTime(100, now + 0.15);
+        gainNode.gain.setValueAtTime(0.3, now);
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        oscillator.start(now);
+        oscillator.stop(now + 0.2);
+    } else if (type === 'levelup') {
+        // Level up fanfare
+        var notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach(function(freq, i) {
+            var osc = audioContext.createOscillator();
+            var gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + i * 0.15);
+            gain.gain.setValueAtTime(0.3, now + i * 0.15);
+            gain.gain.linearRampToValueAtTime(0.01, now + i * 0.15 + 0.3);
+            osc.start(now + i * 0.15);
+            osc.stop(now + i * 0.15 + 0.3);
+        });
+    } else if (type === 'click') {
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, now);
+        gainNode.gain.setValueAtTime(0.1, now);
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.05);
+        oscillator.start(now);
+        oscillator.stop(now + 0.05);
+    }
+}
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById("btn-sound").textContent = soundEnabled ? "🔊" : "🔇";
+}
+
 // ========== UTILITIES ==========
+// Check if a meaning is just a part of speech (not actual meaning)
+var POS_WORDS = ['名詞', '動詞', '副詞', '形容詞', '介詞', '連接詞', '代名詞', '感嘆詞', '冠詞'];
+function isPartOfSpeech(meaning) {
+    if (!meaning) return true;
+    return POS_WORDS.indexOf(meaning.trim()) !== -1;
+}
+
+// Get display meaning - use word itself if meaning is just POS
+function getDisplayMeaning(word) {
+    if (isPartOfSpeech(word.meaning)) {
+        // If meaning is just POS, return the English word with hint
+        return word.word + ' (?)';
+    }
+    return word.meaning;
+}
+
 function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -455,6 +805,253 @@ function showDamage(amount, type) {
     div.style.top = (Math.random() * 50 + 50) + "px";
     arena.appendChild(div);
     setTimeout(function() { div.remove(); }, 1000);
+}
+
+function createParticles(x, y, color, count) {
+    var arena = document.querySelector(".battle-arena");
+    for (var i = 0; i < count; i++) {
+        var particle = document.createElement("div");
+        particle.className = "particle";
+        particle.style.left = x + "px";
+        particle.style.top = y + "px";
+        particle.style.width = "10px";
+        particle.style.height = "10px";
+        particle.style.background = color;
+        particle.style.borderRadius = "50%";
+        var angle = (Math.PI * 2 / count) * i;
+        var distance = 50 + Math.random() * 50;
+        particle.style.transform = "translate(" + (Math.cos(angle) * distance) + "px, " + (Math.sin(angle) * distance) + "px)";
+        arena.appendChild(particle);
+        setTimeout(function() { particle.remove(); }, 1000);
+    }
+}
+
+// ========== QUESTION GENERATION ==========
+function generateQuestion(word) {
+    // Get available question types based on current level
+    var availableTypes = getQuestionTypesForLevel(currentLevelId || 1);
+
+    // Choose a random question type from available ones
+    var type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+
+    // If word has no sentence, avoid fillblank
+    if (!word.sentence && type === 'fillblank') {
+        availableTypes = availableTypes.filter(function(t) { return t !== 'fillblank'; });
+        type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+    }
+
+    var question = {
+        type: type,
+        word: word,
+        correctAnswer: null,
+        choices: [],
+        prompt: "",
+        badge: ""
+    };
+
+    switch(type) {
+        case 'wordmatch':
+            // Word recognition: See word + hear it, pick the matching word
+            question.badge = "👀 認識單字";
+            question.prompt = "聽發音，找出相同的單字";
+            question.correctAnswer = word.word;
+            question.showEnglish = true;
+            question.autoSpeak = true;
+            var wrongWordsMatch = shuffle(allWords.filter(function(w) {
+                return w.word !== word.word && w.word.length > 2;
+            })).slice(0, 3);
+            question.choices = shuffle([
+                { text: word.word, correct: true },
+                { text: wrongWordsMatch[0] ? wrongWordsMatch[0].word : "apple", correct: false },
+                { text: wrongWordsMatch[1] ? wrongWordsMatch[1].word : "book", correct: false },
+                { text: wrongWordsMatch[2] ? wrongWordsMatch[2].word : "cat", correct: false }
+            ]);
+            break;
+
+        case 'listen':
+            question.badge = "🔊 聽音辨字";
+            question.prompt = "聽發音，選正確的單字";
+            question.correctAnswer = word.word;
+            // Generate similar-looking word choices
+            var wrongWords = shuffle(allWords.filter(function(w) {
+                return w.word !== word.word && w.word.length > 2;
+            })).slice(0, 3);
+            question.choices = shuffle([
+                { text: word.word, correct: true },
+                { text: wrongWords[0] ? wrongWords[0].word : "wrong1", correct: false },
+                { text: wrongWords[1] ? wrongWords[1].word : "wrong2", correct: false },
+                { text: wrongWords[2] ? wrongWords[2].word : "wrong3", correct: false }
+            ]);
+            break;
+
+        case 'translate':
+            question.badge = "🔤 中翻英";
+            question.prompt = "「" + word.meaning + "」的英文是？";
+            question.correctAnswer = word.word;
+            var wrongWords2 = shuffle(allWords.filter(function(w) {
+                return w.word !== word.word;
+            })).slice(0, 3);
+            question.choices = shuffle([
+                { text: word.word, correct: true },
+                { text: wrongWords2[0] ? wrongWords2[0].word : "wrong1", correct: false },
+                { text: wrongWords2[1] ? wrongWords2[1].word : "wrong2", correct: false },
+                { text: wrongWords2[2] ? wrongWords2[2].word : "wrong3", correct: false }
+            ]);
+            break;
+
+        case 'fillblank':
+            question.badge = "📝 句子填空";
+            question.prompt = "選出正確的單字填入句子";
+            question.correctAnswer = word.word;
+            // Create sentence with blank
+            var sentence = word.sentence || ("I have a " + word.word + ".");
+            var blankSentence = sentence.replace(new RegExp(word.word, 'gi'), '______');
+            question.blankSentence = blankSentence;
+            question.originalSentence = sentence;
+            var wrongWords3 = shuffle(allWords.filter(function(w) {
+                return w.word !== word.word;
+            })).slice(0, 3);
+            question.choices = shuffle([
+                { text: word.word, correct: true },
+                { text: wrongWords3[0] ? wrongWords3[0].word : "wrong1", correct: false },
+                { text: wrongWords3[1] ? wrongWords3[1].word : "wrong2", correct: false },
+                { text: wrongWords3[2] ? wrongWords3[2].word : "wrong3", correct: false }
+            ]);
+            break;
+
+        case 'spell':
+            question.badge = "✏️ 拼寫挑戰";
+            question.prompt = "聽發音，打出英文單字";
+            question.correctAnswer = word.word.toLowerCase();
+            question.showMeaning = true;
+            break;
+    }
+
+    return question;
+}
+
+function renderQuestion(question) {
+    currentQuestion = question;
+    spellInput = "";
+    hintsUsed = 0;
+
+    // Update badge
+    document.getElementById("question-type-badge").textContent = question.badge;
+
+    // Hide all optional elements first
+    document.getElementById("word-english").classList.add("hidden");
+    document.getElementById("word-chinese").classList.add("hidden");
+    document.getElementById("play-sound-btn").classList.add("hidden");
+    document.getElementById("fillblank-sentence").classList.add("hidden");
+    document.getElementById("spell-input-area").classList.add("hidden");
+    document.getElementById("choices").classList.remove("hidden");
+    document.getElementById("sentence-display").classList.remove("show");
+
+    // Configure based on question type
+    switch(question.type) {
+        case 'wordmatch':
+            // Show English word and speak it, pick matching word
+            document.getElementById("word-english").textContent = question.word.word;
+            document.getElementById("word-english").classList.remove("hidden");
+            document.getElementById("word-hint").textContent = question.prompt;
+            document.getElementById("play-sound-btn").classList.remove("hidden");
+            // Auto-play the word
+            setTimeout(function() { speakWord(question.word.word); }, 500);
+            break;
+
+        case 'listen':
+            document.getElementById("word-hint").textContent = question.prompt;
+            document.getElementById("play-sound-btn").classList.remove("hidden");
+            // Auto-play the word
+            setTimeout(function() { speakWord(question.word.word); }, 500);
+            break;
+
+        case 'translate':
+            document.getElementById("word-chinese").textContent = question.word.meaning;
+            document.getElementById("word-chinese").classList.remove("hidden");
+            document.getElementById("word-hint").textContent = question.prompt;
+            break;
+
+        case 'fillblank':
+            document.getElementById("word-hint").textContent = question.prompt;
+            document.getElementById("fillblank-sentence").innerHTML = question.blankSentence;
+            document.getElementById("fillblank-sentence").classList.remove("hidden");
+            break;
+
+        case 'spell':
+            document.getElementById("word-chinese").textContent = question.word.meaning;
+            document.getElementById("word-chinese").classList.remove("hidden");
+            document.getElementById("word-hint").textContent = question.prompt;
+            document.getElementById("play-sound-btn").classList.remove("hidden");
+            document.getElementById("choices").classList.add("hidden");
+            document.getElementById("spell-input-area").classList.remove("hidden");
+            updateSpellDisplay();
+            // Auto-play the word
+            setTimeout(function() { speakWord(question.word.word); }, 500);
+            break;
+    }
+
+    // Render choices (for non-spell types)
+    if (question.type !== 'spell') {
+        var container = document.getElementById("choices");
+        container.innerHTML = "";
+        question.choices.forEach(function(c) {
+            var btn = document.createElement("button");
+            btn.className = "choice-btn";
+            btn.textContent = c.text;
+            btn.addEventListener("click", function() {
+                handleAnswer(btn, c.correct, question.correctAnswer);
+            });
+            container.appendChild(btn);
+        });
+    }
+}
+
+function updateSpellDisplay() {
+    var display = document.getElementById("spell-display");
+    var targetLength = currentQuestion.word.word.length;
+    var html = "";
+
+    for (var i = 0; i < targetLength; i++) {
+        if (i < spellInput.length) {
+            html += spellInput[i].toUpperCase();
+        } else if (i === spellInput.length) {
+            html += '<span class="cursor"> </span>';
+        } else {
+            html += "_";
+        }
+        if (i < targetLength - 1) html += " ";
+    }
+
+    display.innerHTML = html;
+}
+
+function handleKeyPress(key) {
+    if (!currentQuestion || currentQuestion.type !== 'spell') return;
+
+    playSound('click');
+
+    if (key === 'BACK') {
+        spellInput = spellInput.slice(0, -1);
+        updateSpellDisplay();
+    } else if (key === 'HINT') {
+        // Reveal next letter
+        var correctWord = currentQuestion.word.word.toLowerCase();
+        if (spellInput.length < correctWord.length && hintsUsed < 3) {
+            spellInput += correctWord[spellInput.length];
+            hintsUsed++;
+            updateSpellDisplay();
+        }
+    } else if (key === 'ENTER') {
+        // Submit answer
+        var isCorrect = spellInput.toLowerCase() === currentQuestion.correctAnswer;
+        handleAnswer(null, isCorrect, currentQuestion.correctAnswer);
+    } else if (key.length === 1 && /[A-Z]/.test(key)) {
+        if (spellInput.length < currentQuestion.word.word.length) {
+            spellInput += key.toLowerCase();
+            updateSpellDisplay();
+        }
+    }
 }
 
 // ========== API ==========
@@ -505,16 +1102,23 @@ async function fetchLevels() {
         var statusIcon = l.completed ? "✓" : (l.unlocked ? "" : "🔒");
         var statusClass = l.completed ? "completed" : (l.unlocked ? "" : "locked");
 
+        // Calculate mastery display
+        var mastered = l.mastered || 0;
+        var total = l.word_count || 50;
+        var masteryPercent = l.mastery_percent || 0;
+        var needToUnlock = Math.ceil(total * 0.8); // 80% needed
+
         div.className = "level-card " + statusClass;
         div.innerHTML = '<div class="num">' + (statusIcon || l.id) + '</div>' +
                         '<div class="level-num">第 ' + l.id + ' 關</div>' +
-                        '<div class="words">' + l.word_count + '字</div>';
+                        '<div class="mastery-bar"><div class="mastery-fill" style="width:' + masteryPercent + '%"></div></div>' +
+                        '<div class="mastery-text">⭐ ' + mastered + '/' + needToUnlock + ' 精熟</div>';
 
         if (l.unlocked) {
             div.addEventListener("click", function() { startBattle(l); });
         } else {
             div.addEventListener("click", function() {
-                alert("請先完成第 " + (l.id - 1) + " 關！");
+                alert("請先精熟前一關 80% 的單字才能解鎖！\n目前進度：" + mastered + "/" + needToUnlock);
             });
         }
         grid.appendChild(div);
@@ -526,6 +1130,19 @@ async function fetchAllWords() {
     allWords = await res.json();
 }
 
+async function fetchWeakWords() {
+    if (!currentUser) return [];
+    var res = await fetch("/api/words/weak?user_id=" + currentUser.id + "&limit=10");
+    return await res.json();
+}
+
+async function recordWordAnswer(wordId, correct) {
+    if (!currentUser) return;
+    await fetch("/api/words/answer?user_id=" + currentUser.id + "&word_id=" + wordId + "&correct=" + correct, {
+        method: "POST"
+    });
+}
+
 // ========== GAME LOGIC ==========
 function selectPlayer(u) {
     currentUser = u;
@@ -534,16 +1151,69 @@ function selectPlayer(u) {
     switchView("dashboard-view");
     fetchLevels();
     fetchAllWords();
+    checkWeakWords();
+}
+
+async function checkWeakWords() {
+    var weakWords = await fetchWeakWords();
+    var btn = document.getElementById("btn-review");
+    if (weakWords.length >= 3) {
+        btn.classList.remove("hidden");
+        btn.textContent = "📚 複習弱點單字 (" + weakWords.length + "個)";
+    } else {
+        btn.classList.add("hidden");
+    }
+}
+
+async function startReviewMode() {
+    var weakWords = await fetchWeakWords();
+    if (weakWords.length < 3) {
+        alert("你的弱點單字不夠多，繼續挑戰新關卡吧！");
+        return;
+    }
+
+    isReviewMode = true;
+    gameWords = weakWords.slice(0, 5);
+    // Use level 15 difficulty for review (moderate - english + listen types)
+    currentLevelId = 15;
+
+    // Reset game state
+    currentRound = 0;
+    combo = 0;
+    maxCombo = 0;
+    correctCount = 0;
+    playerHP = 100;
+
+    // Use a special monster for review
+    var monster = { emoji: "📖", name: "複習怪", hp: 100 };
+    monsterHP = monster.hp;
+    monsterMaxHP = monster.hp;
+
+    document.getElementById("monster-emoji").textContent = monster.emoji;
+    document.getElementById("monster-name").textContent = monster.name;
+    document.getElementById("monster-hp-fill").style.width = "100%";
+    document.getElementById("player-hp-fill").style.width = "100%";
+    document.getElementById("player-hp-text").textContent = "100/100";
+
+    switchView("battle-view");
+    nextRound();
 }
 
 async function startBattle(level) {
-    var res = await fetch("/api/game/start/" + level.id + "?count=5");
+    // Pass user_id for smart word selection (prioritizes weak/unseen words)
+    var url = "/api/game/start/" + level.id + "?count=5";
+    if (currentUser) {
+        url += "&user_id=" + currentUser.id;
+    }
+    var res = await fetch(url);
     gameWords = await res.json();
 
     if (gameWords.length === 0) {
         alert("這個關卡沒有單字！");
         return;
     }
+
+    isReviewMode = false;
 
     // Reset game state
     currentLevelId = level.id;
@@ -557,6 +1227,7 @@ async function startBattle(level) {
     var monsterIndex = Math.min(Math.floor(level.id / 5), MONSTERS.length - 1);
     var monster = MONSTERS[monsterIndex];
     monsterHP = monster.hp;
+    monsterMaxHP = monster.hp;
 
     document.getElementById("monster-emoji").textContent = monster.emoji;
     document.getElementById("monster-name").textContent = monster.name;
@@ -575,12 +1246,7 @@ function nextRound() {
     }
 
     var word = gameWords[currentRound];
-    document.getElementById("word-english").textContent = word.word;
     document.getElementById("round-display").textContent = (currentRound + 1) + "/" + gameWords.length;
-
-    // Hide sentence display for new question
-    document.getElementById("sentence-display").classList.remove("show");
-    document.getElementById("sentence-display").textContent = "";
 
     // Update combo display
     var comboEl = document.getElementById("combo-display");
@@ -591,40 +1257,42 @@ function nextRound() {
         comboEl.classList.remove("active");
     }
 
-    // Generate 4 choices
-    var choices = [{ text: word.meaning, correct: true }];
-    var wrongWords = shuffle(allWords.filter(function(w) { return w.meaning !== word.meaning; }));
-    for (var i = 0; i < 3 && i < wrongWords.length; i++) {
-        choices.push({ text: wrongWords[i].meaning, correct: false });
-    }
-    while (choices.length < 4) {
-        choices.push({ text: "???", correct: false });
-    }
-    choices = shuffle(choices);
-
-    // Render choices
-    var container = document.getElementById("choices");
-    container.innerHTML = "";
-    choices.forEach(function(c) {
-        var btn = document.createElement("button");
-        btn.className = "choice-btn";
-        btn.textContent = c.text;
-        btn.addEventListener("click", function() { handleAnswer(btn, c.correct, word.meaning); });
-        container.appendChild(btn);
-    });
+    // Generate and render question
+    var question = generateQuestion(word);
+    renderQuestion(question);
 
     // Start timer
     startTimer();
 }
 
 function startTimer() {
-    timeLeft = 10;
+    // Adjust time based on level difficulty
+    var levelId = currentLevelId || 1;
+    var baseTime = 15;
+
+    if (levelId <= 10) {
+        baseTime = 20; // More time for beginners
+    } else if (levelId <= 20) {
+        baseTime = 18;
+    } else if (levelId <= 30) {
+        baseTime = 15;
+    } else {
+        baseTime = 12; // Harder levels = less time
+    }
+
+    // Spell questions always get extra time
+    if (currentQuestion && currentQuestion.type === 'spell') {
+        baseTime = Math.max(baseTime, 20);
+    }
+
+    timeLeft = baseTime;
+    var maxTime = baseTime;
     document.getElementById("timer-fill").style.width = "100%";
 
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(function() {
         timeLeft -= 0.1;
-        document.getElementById("timer-fill").style.width = (timeLeft / 10 * 100) + "%";
+        document.getElementById("timer-fill").style.width = (timeLeft / maxTime * 100) + "%";
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
@@ -635,7 +1303,7 @@ function startTimer() {
 
 function handleTimeout() {
     // Time's up = wrong answer
-    handleAnswer(null, false, gameWords[currentRound].meaning);
+    handleAnswer(null, false, currentQuestion ? currentQuestion.correctAnswer : "");
 }
 
 function handleAnswer(btn, correct, correctAnswer) {
@@ -645,25 +1313,44 @@ function handleAnswer(btn, correct, correctAnswer) {
     var buttons = document.querySelectorAll(".choice-btn");
     buttons.forEach(function(b) { b.disabled = true; });
 
-    // Show correct/wrong
+    // Disable keyboard
+    document.querySelectorAll(".key-btn").forEach(function(k) { k.disabled = true; });
+
+    // Record answer for mastery tracking
+    var word = gameWords[currentRound];
+    recordWordAnswer(word.id, correct);
+
+    // Show correct/wrong for choice-based questions
     if (btn) {
         btn.classList.add(correct ? "correct" : "wrong");
     }
 
-    // Highlight correct answer if wrong
-    if (!correct) {
+    // For spell questions, show the correct answer
+    if (currentQuestion && currentQuestion.type === 'spell') {
+        var display = document.getElementById("spell-display");
+        if (correct) {
+            display.style.color = "#2ed573";
+        } else {
+            display.innerHTML = '<span style="color:#ff4757;text-decoration:line-through">' + spellInput.toUpperCase() + '</span> → <span style="color:#2ed573">' + correctAnswer.toUpperCase() + '</span>';
+        }
+    }
+
+    // Highlight correct answer if wrong (for choice questions)
+    if (!correct && currentQuestion && currentQuestion.type !== 'spell') {
         buttons.forEach(function(b) {
             if (b.textContent === correctAnswer) b.classList.add("correct");
         });
     }
 
     // Show example sentence
-    var word = gameWords[currentRound];
     if (word.sentence) {
         var sentenceEl = document.getElementById("sentence-display");
         sentenceEl.innerHTML = "📖 " + word.sentence;
         sentenceEl.classList.add("show");
     }
+
+    // Play sound effect
+    playSound(correct ? 'correct' : 'wrong');
 
     var monsterEl = document.getElementById("monster-emoji");
 
@@ -673,11 +1360,16 @@ function handleAnswer(btn, correct, correctAnswer) {
         if (combo > maxCombo) maxCombo = combo;
         correctCount++;
 
+        // Play attack sound
+        setTimeout(function() { playSound('attack'); }, 200);
+
         // Calculate damage (base + combo bonus + time bonus)
         var baseDamage = 20;
-        var comboBonus = Math.min(combo - 1, 5) * 5; // up to +25 from combo
-        var timeBonus = Math.floor(timeLeft * 2); // up to +20 from time
-        var totalDamage = baseDamage + comboBonus + timeBonus;
+        var comboBonus = Math.min(combo - 1, 5) * 5;
+        var timeBonus = Math.floor(timeLeft * 2);
+        // Penalty for using hints in spell mode
+        var hintPenalty = hintsUsed * 5;
+        var totalDamage = Math.max(10, baseDamage + comboBonus + timeBonus - hintPenalty);
 
         monsterHP -= totalDamage;
         if (monsterHP < 0) monsterHP = 0;
@@ -687,11 +1379,14 @@ function handleAnswer(btn, correct, correctAnswer) {
         monsterEl.classList.add("shake", "hurt");
         showDamage(totalDamage, combo >= 3 ? "critical" : "");
 
-        document.getElementById("monster-hp-fill").style.width = (monsterHP / MONSTERS[0].hp * 100) + "%";
+        document.getElementById("monster-hp-fill").style.width = (monsterHP / monsterMaxHP * 100) + "%";
 
         setTimeout(function() {
             monsterEl.classList.remove("shake", "hurt");
         }, 300);
+
+        // Speak the word after correct answer
+        setTimeout(function() { speakWord(word.word); }, 500);
 
     } else {
         // Wrong answer - monster attacks player!
@@ -707,15 +1402,20 @@ function handleAnswer(btn, correct, correctAnswer) {
 
     // Next round after delay (longer to read sentence)
     setTimeout(function() {
+        // Re-enable keyboard for next round
+        document.querySelectorAll(".key-btn").forEach(function(k) { k.disabled = false; });
         currentRound++;
         nextRound();
-    }, 2000);
+    }, 2500);
 }
 
 async function endBattle() {
     var won = playerHP > 0;
     var accuracy = Math.round(correctCount / gameWords.length * 100);
     var xp = correctCount * 20 + maxCombo * 10;
+
+    // Play appropriate sound
+    playSound(won ? 'levelup' : 'wrong');
 
     document.getElementById("result-emoji").textContent = won ? "🎉" : "💀";
     document.getElementById("result-title").textContent = won ? "勝利！" : "戰敗...";
@@ -725,7 +1425,7 @@ async function endBattle() {
 
     // Update XP and level completion
     var levelCompleted = false;
-    if (currentUser) {
+    if (currentUser && !isReviewMode) {
         var url = "/api/users/" + currentUser.id + "/progress?xp_gained=" + xp +
                   "&level_id=" + currentLevelId + "&score=" + accuracy;
         var res = await fetch(url, { method: "POST" });
@@ -734,6 +1434,16 @@ async function endBattle() {
         currentUser.level = data.level;
         levelCompleted = data.level_completed;
         document.getElementById("info-stats").textContent = "Lv." + currentUser.level + " · " + currentUser.xp + " XP";
+    } else if (currentUser && isReviewMode) {
+        // Give some XP for review mode too
+        var reviewXP = Math.floor(xp * 0.5);
+        var url = "/api/users/" + currentUser.id + "/progress?xp_gained=" + reviewXP;
+        var res = await fetch(url, { method: "POST" });
+        var data = await res.json();
+        currentUser.xp = data.xp;
+        currentUser.level = data.level;
+        document.getElementById("info-stats").textContent = "Lv." + currentUser.level + " · " + currentUser.xp + " XP";
+        document.getElementById("result-xp").textContent = "+" + reviewXP + " XP (複習獎勵)";
     }
 
     // Show unlock message if level completed
@@ -747,6 +1457,18 @@ async function endBattle() {
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", function() {
+    // Initialize audio on first user interaction
+    document.body.addEventListener("click", function() {
+        initAudio();
+    }, { once: true });
+
+    // Sound toggle
+    document.getElementById("btn-sound").addEventListener("click", function(e) {
+        e.stopPropagation();
+        initAudio();
+        toggleSound();
+    });
+
     // Login
     document.getElementById("btn-new-player").addEventListener("click", function() {
         document.getElementById("modal-new-player").classList.remove("hidden");
@@ -771,6 +1493,11 @@ document.addEventListener("DOMContentLoaded", function() {
         switchView("login-view");
     });
 
+    // Review mode
+    document.getElementById("btn-review").addEventListener("click", function() {
+        startReviewMode();
+    });
+
     // Battle
     document.getElementById("btn-flee").addEventListener("click", function() {
         if (confirm("確定要逃跑嗎？")) {
@@ -779,11 +1506,43 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    // Play sound button
+    document.getElementById("play-sound-btn").addEventListener("click", function() {
+        if (currentQuestion) {
+            speakWord(currentQuestion.word.word);
+        }
+    });
+
+    // Virtual keyboard
+    document.querySelectorAll(".key-btn").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            handleKeyPress(btn.getAttribute("data-key"));
+        });
+    });
+
+    // Physical keyboard support for spell mode
+    document.addEventListener("keydown", function(e) {
+        if (currentQuestion && currentQuestion.type === 'spell' && !e.repeat) {
+            var key = e.key.toUpperCase();
+            if (key === 'BACKSPACE') {
+                handleKeyPress('BACK');
+                e.preventDefault();
+            } else if (key === 'ENTER') {
+                handleKeyPress('ENTER');
+                e.preventDefault();
+            } else if (/^[A-Z]$/.test(key)) {
+                handleKeyPress(key);
+                e.preventDefault();
+            }
+        }
+    });
+
     // Result
     document.getElementById("btn-continue").addEventListener("click", function() {
         document.getElementById("result-overlay").classList.add("hidden");
         switchView("dashboard-view");
-        fetchLevels(); // Refresh to show newly unlocked levels
+        fetchLevels();
+        checkWeakWords();
     });
 
     // Init
