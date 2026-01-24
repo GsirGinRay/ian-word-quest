@@ -166,6 +166,33 @@ body {
     padding: 20px;
     position: relative;
     overflow: hidden;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(240, 147, 251, 0.08) 0%, transparent 60%);
+}
+
+/* Star particles in battle arena */
+.battle-arena::before {
+    content: "✦ ✧ ⋆ ✵";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.1);
+    letter-spacing: 40px;
+    word-spacing: 80px;
+    line-height: 80px;
+    overflow: hidden;
+    pointer-events: none;
+    animation: twinkle 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
 }
 
 /* Monster */
@@ -184,16 +211,62 @@ body {
     background: linear-gradient(90deg, #ff4757, #ff6b81);
     transition: width 0.3s;
 }
+.monster-stage {
+    position: relative;
+    display: inline-block;
+    padding: 20px 40px;
+}
+.monster-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--monster-color, #ff6b81) 0%, transparent 70%);
+    opacity: 0.4;
+    animation: monsterPulse 2s ease-in-out infinite;
+    z-index: 0;
+}
+@keyframes monsterPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+}
 .monster-emoji {
     font-size: 100px;
     transition: all 0.15s;
     cursor: default;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+    position: relative;
+    z-index: 1;
+    animation: monsterFloat 3s ease-in-out infinite;
+    text-shadow: 0 0 30px var(--monster-color, #ff6b81);
+}
+@keyframes monsterFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 .monster-emoji.shake { animation: shake 0.3s; }
-.monster-emoji.hurt { filter: brightness(2) drop-shadow(0 10px 20px rgba(255,0,0,0.5)); }
+.monster-emoji.hurt {
+    filter: brightness(2) drop-shadow(0 10px 30px var(--monster-color, rgba(255,0,0,0.7)));
+    animation: hurt 0.3s;
+    text-shadow: 0 0 50px #fff, 0 0 80px var(--monster-color, #ff6b81);
+}
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
-.monster-name { font-size: 18px; color: #ff6b81; margin-top: 8px; }
+@keyframes hurt { 0%,100%{transform:scale(1)} 50%{transform:scale(0.9)} }
+.monster-name {
+    font-size: 18px;
+    color: #ff6b81;
+    margin-top: 8px;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.monster-level {
+    font-size: 12px;
+    color: #ffd700;
+    margin-top: 4px;
+}
 
 /* Damage Numbers */
 .damage-number {
@@ -613,8 +686,12 @@ body {
             <div class="monster-hp-bar">
                 <div id="monster-hp-fill" class="monster-hp-fill" style="width:100%"></div>
             </div>
-            <div id="monster-emoji" class="monster-emoji">👹</div>
+            <div id="monster-stage" class="monster-stage">
+                <div id="monster-glow" class="monster-glow"></div>
+                <div id="monster-emoji" class="monster-emoji">👹</div>
+            </div>
             <div id="monster-name" class="monster-name">史萊姆</div>
+            <div id="monster-level" class="monster-level"></div>
         </div>
 
         <div class="question-area">
@@ -772,12 +849,18 @@ function getQuestionTypesForLevel(levelId) {
 }
 
 var MONSTERS = [
-    { emoji: "🟢", name: "史萊姆", hp: 60 },
-    { emoji: "👻", name: "幽靈", hp: 80 },
-    { emoji: "🐺", name: "野狼", hp: 100 },
-    { emoji: "🧟", name: "殭屍", hp: 120 },
-    { emoji: "👹", name: "惡魔", hp: 150 },
-    { emoji: "🐉", name: "火龍", hp: 200 },
+    { emoji: "🦠", name: "黏液怪", hp: 60, color: "#2ecc71" },
+    { emoji: "🐙", name: "章魚妖", hp: 80, color: "#9b59b6" },
+    { emoji: "🦇", name: "蝙蝠王", hp: 100, color: "#34495e" },
+    { emoji: "🐺", name: "暗夜狼", hp: 100, color: "#7f8c8d" },
+    { emoji: "👻", name: "幽靈", hp: 120, color: "#ecf0f1" },
+    { emoji: "🧟", name: "殭屍", hp: 120, color: "#27ae60" },
+    { emoji: "👹", name: "赤鬼", hp: 150, color: "#e74c3c" },
+    { emoji: "👺", name: "天狗", hp: 150, color: "#c0392b" },
+    { emoji: "🐲", name: "青龍", hp: 180, color: "#3498db" },
+    { emoji: "🔥", name: "火焰魔", hp: 200, color: "#e67e22" },
+    { emoji: "🐉", name: "暗黑龍王", hp: 250, color: "#8e44ad" },
+    { emoji: "💀", name: "骷髏王", hp: 300, color: "#2c3e50" },
 ];
 
 // ========== LEVEL REWARD SYSTEM ==========
@@ -1430,13 +1513,19 @@ async function startReviewMode() {
     playerHP = 100;
 
     // Use a special monster for review
-    var monster = { emoji: "📖", name: "複習怪", hp: 100 };
+    var monster = { emoji: "📖", name: "複習怪", hp: 100, color: "#3498db" };
     monsterHP = monster.hp;
     monsterMaxHP = monster.hp;
 
     document.getElementById("monster-emoji").textContent = monster.emoji;
     document.getElementById("monster-name").textContent = monster.name;
+    document.getElementById("monster-name").style.color = monster.color;
+    document.getElementById("monster-level").textContent = "複習模式";
     document.getElementById("monster-hp-fill").style.width = "100%";
+
+    // Apply monster glow color
+    var stage = document.getElementById("monster-stage");
+    stage.style.setProperty('--monster-color', monster.color);
     document.getElementById("player-hp-fill").style.width = "100%";
     document.getElementById("player-hp-text").textContent = "100/100";
 
@@ -1476,7 +1565,13 @@ async function startBattle(level) {
 
     document.getElementById("monster-emoji").textContent = monster.emoji;
     document.getElementById("monster-name").textContent = monster.name;
+    document.getElementById("monster-name").style.color = monster.color;
+    document.getElementById("monster-level").textContent = "Lv." + level.id;
     document.getElementById("monster-hp-fill").style.width = "100%";
+
+    // Apply monster glow color
+    var stage = document.getElementById("monster-stage");
+    stage.style.setProperty('--monster-color', monster.color);
     document.getElementById("player-hp-fill").style.width = "100%";
     document.getElementById("player-hp-text").textContent = "100/100";
 
