@@ -271,7 +271,10 @@ def update_progress(user_id: int, xp_gained: int, level_id: int = None, score: i
     user = db.query(User).filter(User.id == user_id).first()
     if not user: raise HTTPException(status_code=404, detail="User not found")
     user.xp += xp_gained
-    user.level = (user.xp // 100) + 1
+    # NEW LEVEL FORMULA: sqrt(XP/25) + 1
+    # Level 1: 0 XP, Level 2: 25 XP, Level 3: 100 XP, Level 5: 400 XP, Level 10: 2025 XP
+    import math
+    user.level = int(math.sqrt(user.xp / 25)) + 1
 
     # Mark level as completed if score >= 60% (3 out of 5 correct)
     level_completed = False
@@ -321,7 +324,8 @@ def get_levels(user_id: int = None, db: Session = Depends(get_db)):
                 WordProgress.word_id.in_(word_ids)
             ).all()
 
-            mastered = sum(1 for p in progress_list if (p.correct_count or 0) >= 3)
+            # Mastery = 2 correct answers (was 3, now faster)
+            mastered = sum(1 for p in progress_list if (p.correct_count or 0) >= 2)
             level_mastery[pack.id] = {"mastered": mastered, "total": len(word_ids)}
 
     results = []
@@ -331,13 +335,13 @@ def get_levels(user_id: int = None, db: Session = Depends(get_db)):
         total = mastery_info["total"]
         mastery_percent = int(mastered / total * 100) if total > 0 else 0
 
-        # Level is "completed" if user has mastered >= 80% of words
-        is_completed = mastery_percent >= 80
+        # Level is "completed" if user has mastered >= 60% of words (was 80%, now faster)
+        is_completed = mastery_percent >= 60
 
-        # Level is unlocked if: it's the first level OR the previous level is completed
+        # Level is unlocked if: it's the first level OR the previous level is completed (60%)
         is_first = (i == 0)
         prev_completed = (i > 0 and level_mastery.get(packs[i-1].id, {}).get("mastered", 0) >=
-                         int(level_mastery.get(packs[i-1].id, {}).get("total", 1) * 0.8))
+                         int(level_mastery.get(packs[i-1].id, {}).get("total", 1) * 0.6))
         is_unlocked = is_first or prev_completed or is_completed
 
         results.append({

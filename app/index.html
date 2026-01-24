@@ -880,6 +880,8 @@ var soundEnabled = true;
 var spellInput = "";
 var currentQuestion = null;
 var hintsUsed = 0;
+var totalSpeedBonus = 0;  // Track speed bonus XP
+var questionStartTime = 0; // Track when question started
 
 // Question types by difficulty
 // 'listen' = 聽音辨字 (easiest - just hear and pick)
@@ -1137,6 +1139,89 @@ function createParticles(x, y, color, count) {
     }
 }
 
+// ========== CONFUSING WORD SELECTION ==========
+// Pick words that are likely to confuse the player
+function getConfusingWords(correctWord, count) {
+    var correct = correctWord.toLowerCase();
+    var firstLetter = correct.charAt(0);
+    var wordLength = correct.length;
+    var candidates = [];
+
+    // Score each word by how confusing it is
+    allWords.forEach(function(w) {
+        if (w.word.toLowerCase() === correct) return;
+        if (w.word.length < 2) return;
+
+        var word = w.word.toLowerCase();
+        var score = 0;
+
+        // Same first letter = very confusing (+30 points)
+        if (word.charAt(0) === firstLetter) {
+            score += 30;
+        }
+
+        // Similar length = confusing (+20 points for exact, +10 for ±1, +5 for ±2)
+        var lengthDiff = Math.abs(word.length - wordLength);
+        if (lengthDiff === 0) score += 20;
+        else if (lengthDiff === 1) score += 10;
+        else if (lengthDiff === 2) score += 5;
+
+        // Same ending = confusing (+15 points)
+        if (word.length >= 2 && correct.length >= 2) {
+            if (word.slice(-2) === correct.slice(-2)) score += 15;
+            else if (word.slice(-1) === correct.slice(-1)) score += 8;
+        }
+
+        // Contains similar letter patterns (+10 points)
+        var commonLetters = 0;
+        for (var i = 0; i < correct.length; i++) {
+            if (word.indexOf(correct[i]) !== -1) commonLetters++;
+        }
+        score += Math.min(commonLetters, 5) * 2;
+
+        // Add some randomness to avoid always same choices
+        score += Math.random() * 10;
+
+        if (score > 0) {
+            candidates.push({ word: w.word, score: score });
+        }
+    });
+
+    // Sort by score (highest first) and take top candidates
+    candidates.sort(function(a, b) { return b.score - a.score; });
+
+    // Take from different score ranges to have variety
+    var result = [];
+    var used = {};
+
+    // Take at least one from top 10 (most confusing)
+    var top10 = candidates.slice(0, 10);
+    if (top10.length > 0) {
+        var pick = top10[Math.floor(Math.random() * top10.length)];
+        result.push(pick.word);
+        used[pick.word] = true;
+    }
+
+    // Fill rest with variety
+    for (var i = 0; i < candidates.length && result.length < count; i++) {
+        if (!used[candidates[i].word]) {
+            result.push(candidates[i].word);
+            used[candidates[i].word] = true;
+        }
+    }
+
+    // Fallback if not enough candidates
+    while (result.length < count) {
+        var fallback = allWords[Math.floor(Math.random() * allWords.length)];
+        if (fallback && !used[fallback.word] && fallback.word !== correctWord) {
+            result.push(fallback.word);
+            used[fallback.word] = true;
+        }
+    }
+
+    return result;
+}
+
 // ========== QUESTION GENERATION ==========
 function generateQuestion(word) {
     // Get available question types based on current level
@@ -1160,6 +1245,9 @@ function generateQuestion(word) {
         badge: ""
     };
 
+    // Get 3 confusing wrong answers
+    var wrongWords = getConfusingWords(word.word, 3);
+
     switch(type) {
         case 'wordmatch':
             // Word recognition: See word + hear it, pick the matching word
@@ -1168,14 +1256,11 @@ function generateQuestion(word) {
             question.correctAnswer = word.word;
             question.showEnglish = true;
             question.autoSpeak = true;
-            var wrongWordsMatch = shuffle(allWords.filter(function(w) {
-                return w.word !== word.word && w.word.length > 2;
-            })).slice(0, 3);
             question.choices = shuffle([
                 { text: word.word, correct: true },
-                { text: wrongWordsMatch[0] ? wrongWordsMatch[0].word : "apple", correct: false },
-                { text: wrongWordsMatch[1] ? wrongWordsMatch[1].word : "book", correct: false },
-                { text: wrongWordsMatch[2] ? wrongWordsMatch[2].word : "cat", correct: false }
+                { text: wrongWords[0], correct: false },
+                { text: wrongWords[1], correct: false },
+                { text: wrongWords[2], correct: false }
             ]);
             break;
 
@@ -1183,15 +1268,11 @@ function generateQuestion(word) {
             question.badge = "🔊 聽音辨字";
             question.prompt = "聽發音，選正確的單字";
             question.correctAnswer = word.word;
-            // Generate similar-looking word choices
-            var wrongWords = shuffle(allWords.filter(function(w) {
-                return w.word !== word.word && w.word.length > 2;
-            })).slice(0, 3);
             question.choices = shuffle([
                 { text: word.word, correct: true },
-                { text: wrongWords[0] ? wrongWords[0].word : "wrong1", correct: false },
-                { text: wrongWords[1] ? wrongWords[1].word : "wrong2", correct: false },
-                { text: wrongWords[2] ? wrongWords[2].word : "wrong3", correct: false }
+                { text: wrongWords[0], correct: false },
+                { text: wrongWords[1], correct: false },
+                { text: wrongWords[2], correct: false }
             ]);
             break;
 
@@ -1199,14 +1280,11 @@ function generateQuestion(word) {
             question.badge = "🔤 中翻英";
             question.prompt = "「" + word.meaning + "」的英文是？";
             question.correctAnswer = word.word;
-            var wrongWords2 = shuffle(allWords.filter(function(w) {
-                return w.word !== word.word;
-            })).slice(0, 3);
             question.choices = shuffle([
                 { text: word.word, correct: true },
-                { text: wrongWords2[0] ? wrongWords2[0].word : "wrong1", correct: false },
-                { text: wrongWords2[1] ? wrongWords2[1].word : "wrong2", correct: false },
-                { text: wrongWords2[2] ? wrongWords2[2].word : "wrong3", correct: false }
+                { text: wrongWords[0], correct: false },
+                { text: wrongWords[1], correct: false },
+                { text: wrongWords[2], correct: false }
             ]);
             break;
 
@@ -1219,14 +1297,11 @@ function generateQuestion(word) {
             var blankSentence = sentence.replace(new RegExp(word.word, 'gi'), '______');
             question.blankSentence = blankSentence;
             question.originalSentence = sentence;
-            var wrongWords3 = shuffle(allWords.filter(function(w) {
-                return w.word !== word.word;
-            })).slice(0, 3);
             question.choices = shuffle([
                 { text: word.word, correct: true },
-                { text: wrongWords3[0] ? wrongWords3[0].word : "wrong1", correct: false },
-                { text: wrongWords3[1] ? wrongWords3[1].word : "wrong2", correct: false },
-                { text: wrongWords3[2] ? wrongWords3[2].word : "wrong3", correct: false }
+                { text: wrongWords[0], correct: false },
+                { text: wrongWords[1], correct: false },
+                { text: wrongWords[2], correct: false }
             ]);
             break;
 
@@ -1418,23 +1493,23 @@ async function fetchLevels() {
         var statusIcon = l.completed ? "✓" : (l.unlocked ? "" : "🔒");
         var statusClass = l.completed ? "completed" : (l.unlocked ? "" : "locked");
 
-        // Calculate mastery display
+        // Calculate mastery display (60% needed to unlock next)
         var mastered = l.mastered || 0;
         var total = l.word_count || 50;
         var masteryPercent = l.mastery_percent || 0;
-        var needToUnlock = Math.ceil(total * 0.8); // 80% needed
+        var needToUnlock = Math.ceil(total * 0.6); // 60% needed
 
         div.className = "level-card " + statusClass;
         div.innerHTML = '<div class="num">' + (statusIcon || l.id) + '</div>' +
                         '<div class="level-num">第 ' + l.id + ' 關</div>' +
-                        '<div class="mastery-bar"><div class="mastery-fill" style="width:' + masteryPercent + '%"></div></div>' +
+                        '<div class="mastery-bar"><div class="mastery-fill" style="width:' + Math.min(100, mastered / needToUnlock * 100) + '%"></div></div>' +
                         '<div class="mastery-text">⭐ ' + mastered + '/' + needToUnlock + ' 精熟</div>';
 
         if (l.unlocked) {
             div.addEventListener("click", function() { startBattle(l); });
         } else {
             div.addEventListener("click", function() {
-                alert("請先精熟前一關 80% 的單字才能解鎖！\n目前進度：" + mastered + "/" + needToUnlock);
+                alert("精熟前一關 60% 的單字即可解鎖！\n（每個單字答對 2 次 = 精熟）");
             });
         }
         grid.appendChild(div);
@@ -1569,6 +1644,7 @@ async function startReviewMode() {
     maxCombo = 0;
     correctCount = 0;
     playerHP = 100;
+    totalSpeedBonus = 0;
 
     // Use a special monster for review
     var monster = { emoji: "📖", name: "複習怪", hp: 100, color: "#3498db" };
@@ -1614,6 +1690,7 @@ async function startBattle(level) {
     maxCombo = 0;
     correctCount = 0;
     playerHP = 100;
+    totalSpeedBonus = 0;
 
     // Pick a monster based on level
     var monsterIndex = Math.min(Math.floor(level.id / 5), MONSTERS.length - 1);
@@ -1658,6 +1735,9 @@ function nextRound() {
     // Generate and render question
     var question = generateQuestion(word);
     renderQuestion(question);
+
+    // Track question start time for speed bonus
+    questionStartTime = Date.now();
 
     // Start timer
     startTimer();
@@ -1762,6 +1842,14 @@ function handleAnswer(btn, correct, correctAnswer) {
         if (combo > maxCombo) maxCombo = combo;
         correctCount++;
 
+        // Calculate speed bonus (answer in <3 seconds = +5 XP, <5 seconds = +3 XP)
+        var answerTime = (Date.now() - questionStartTime) / 1000;
+        if (answerTime < 3) {
+            totalSpeedBonus += 5;
+        } else if (answerTime < 5) {
+            totalSpeedBonus += 3;
+        }
+
         // Play attack sound
         setTimeout(function() { playSound('attack'); }, 200);
 
@@ -1814,12 +1902,23 @@ function handleAnswer(btn, correct, correctAnswer) {
 async function endBattle() {
     var won = playerHP > 0;
     var accuracy = Math.round(correctCount / gameWords.length * 100);
-    var baseXP = correctCount * 20 + maxCombo * 10;
 
-    // Apply XP bonus from player level
+    // NEW XP SYSTEM: More balanced, harder to level up
+    // Base: 10 XP per correct (was 20)
+    // Combo bonus: +2 XP per combo level
+    // Perfect bonus: +50% if all correct
+    // Speed bonus: tracked in totalSpeedBonus
+    var baseXP = correctCount * 10;
+    var comboXP = maxCombo * 2;
+    var perfectBonus = (correctCount === gameWords.length) ? Math.floor(baseXP * 0.5) : 0;
+    var speedXP = totalSpeedBonus || 0;
+
+    var subtotalXP = baseXP + comboXP + perfectBonus + speedXP;
+
+    // Apply player level bonus (smaller now)
     var xpBonusPercent = currentUser ? getXPBonus(currentUser.level) : 0;
-    var bonusXP = Math.floor(baseXP * xpBonusPercent);
-    var totalXP = baseXP + bonusXP;
+    var levelBonusXP = Math.floor(subtotalXP * xpBonusPercent);
+    var totalXP = subtotalXP + levelBonusXP;
 
     // Play appropriate sound
     playSound(won ? 'levelup' : 'wrong');
@@ -1829,10 +1928,14 @@ async function endBattle() {
     document.getElementById("result-accuracy").textContent = "正確率: " + accuracy + "%";
     document.getElementById("result-combo").textContent = "最高連擊: " + maxCombo;
 
-    var xpText = "+" + baseXP + " XP";
-    if (bonusXP > 0) {
-        xpText += " (+" + bonusXP + " 等級加成)";
-    }
+    // Build detailed XP breakdown
+    var xpLines = [];
+    xpLines.push("基礎: +" + baseXP);
+    if (comboXP > 0) xpLines.push("連擊: +" + comboXP);
+    if (perfectBonus > 0) xpLines.push("🎯全對: +" + perfectBonus);
+    if (speedXP > 0) xpLines.push("⚡快速: +" + speedXP);
+    if (levelBonusXP > 0) xpLines.push("等級加成: +" + levelBonusXP);
+    var xpText = xpLines.join(" | ") + "\n總計: +" + totalXP + " XP";
     document.getElementById("result-xp").textContent = xpText;
 
     // Track old level for level-up detection
