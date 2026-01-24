@@ -11,13 +11,14 @@ body {
     color: white;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 .hidden { display: none !important; }
 
 /* Views */
 .view { display: none; min-height: 100vh; }
-.view.active { display: flex; flex-direction: column; }
+.view.active { display: flex; flex-direction: column; overflow-y: auto; }
 
 /* Buttons */
 .btn {
@@ -137,7 +138,11 @@ body {
 .review-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Battle View */
-#battle-view { background: linear-gradient(180deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%); }
+#battle-view {
+    background: linear-gradient(180deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%);
+    min-height: 100vh;
+    height: auto;
+}
 
 .battle-header {
     padding: 12px 20px;
@@ -165,7 +170,7 @@ body {
     justify-content: space-around;
     padding: 20px;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     background:
         radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.15) 0%, transparent 40%),
         radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.15) 0%, transparent 40%),
@@ -620,6 +625,59 @@ body {
     font-size: 12px;
     margin-left: 8px;
     font-weight: bold;
+}
+
+/* ========== MOBILE RESPONSIVE ========== */
+@media screen and (max-height: 700px) {
+    /* Compact monster display */
+    .monster-emoji { font-size: 70px; }
+    .monster-stage { padding: 10px 30px; }
+    .monster-glow { width: 100px; height: 100px; }
+    .monster-hp-bar { width: 150px; height: 12px; margin-bottom: 8px; }
+    .monster-name { font-size: 14px; margin-top: 4px; }
+    .monster-level { font-size: 10px; }
+
+    /* Compact question area */
+    .word-display { padding: 16px 24px; margin-bottom: 12px; }
+    .word-english { font-size: 28px; }
+    .word-chinese { font-size: 22px; }
+    .question-type-badge { padding: 4px 12px; font-size: 12px; margin-bottom: 8px; }
+
+    /* Smaller choices */
+    .choices-grid { gap: 8px; }
+    .choice-btn { padding: 12px 8px; font-size: 16px; min-height: 50px; }
+
+    /* Compact player status */
+    .player-status { padding: 8px 12px; }
+    .player-avatar { font-size: 28px; }
+    .player-hp-bar { height: 16px; }
+
+    /* Compact keyboard */
+    .key-btn { min-width: 28px; height: 38px; font-size: 16px; }
+    .spell-display { font-size: 26px; padding: 12px; min-height: 50px; }
+
+    /* Battle arena spacing */
+    .battle-arena { padding: 12px; justify-content: space-between; }
+    .battle-header { padding: 8px 16px; }
+}
+
+@media screen and (max-height: 600px) {
+    /* Extra compact for very small screens */
+    .monster-emoji { font-size: 50px; }
+    .monster-stage { padding: 5px 20px; }
+    .monster-glow { width: 80px; height: 80px; }
+    .word-display { padding: 12px 16px; margin-bottom: 8px; }
+    .word-english { font-size: 24px; }
+    .choice-btn { padding: 10px 6px; font-size: 14px; min-height: 44px; }
+    .timer-bar { margin-top: 8px; }
+}
+
+@media screen and (max-width: 380px) {
+    /* Narrow phones */
+    .key-btn { min-width: 26px; height: 36px; font-size: 14px; }
+    .key-btn.wide { min-width: 50px; font-size: 12px; }
+    .choice-btn { font-size: 14px; padding: 10px 6px; }
+    .word-english { font-size: 24px; }
 }
 </style>
 </head>
