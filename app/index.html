@@ -67,6 +67,27 @@ body {
 .player-card .avatar { font-size: 48px; }
 .player-card .name { font-weight: bold; margin-top: 8px; }
 .player-card .level { color: #ffd700; font-size: 14px; }
+.player-card { position: relative; }
+.player-card .btn-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,71,87,0.8);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.player-card:hover .btn-delete { opacity: 1; }
+.player-card .btn-delete:hover { background: #ff4757; transform: scale(1.1); }
 
 /* Modal */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
@@ -1458,9 +1479,22 @@ async function fetchUsers() {
                 var title = getTitle(u.level);
                 div.innerHTML = '<div class="avatar">' + avatar + '</div>' +
                                '<div class="name">' + u.name + '</div>' +
-                               '<div class="level">Lv.' + u.level + '</div>' +
-                               '<div class="player-title" style="color:' + title.color + '">' + title.title + '</div>';
-                div.addEventListener("click", function() { selectPlayer(u); });
+                               '<div class="level">Lv.' + u.level + ' · ' + u.xp + ' XP</div>' +
+                               '<div class="player-title" style="color:' + title.color + '">' + title.title + '</div>' +
+                               '<button class="btn-delete" title="刪除角色">✕</button>';
+
+                // Click card to select player
+                div.addEventListener("click", function(e) {
+                    if (e.target.classList.contains("btn-delete")) return;
+                    selectPlayer(u);
+                });
+
+                // Delete button
+                div.querySelector(".btn-delete").addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    deletePlayer(u);
+                });
+
                 grid.appendChild(div);
             });
         }
@@ -1476,6 +1510,22 @@ async function createUser(name) {
         body: JSON.stringify({ name: name })
     });
     fetchUsers();
+}
+
+async function deletePlayer(user) {
+    var confirmMsg = "確定要刪除「" + user.name + "」嗎？\n\n⚠️ 所有遊戲進度將會永久刪除！";
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        var res = await fetch("/api/users/" + user.id, { method: "DELETE" });
+        if (res.ok) {
+            fetchUsers();
+        } else {
+            alert("刪除失敗，請稍後再試");
+        }
+    } catch (e) {
+        alert("刪除失敗：" + e.message);
+    }
 }
 
 async function fetchLevels() {

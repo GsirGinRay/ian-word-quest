@@ -266,6 +266,22 @@ def update_avatar(user_id: int, avatar: str, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "ok", "avatar": avatar}
 
+@app.delete("/api/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    """Delete a user and all their progress"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Delete user's word progress
+    db.query(WordProgress).filter(WordProgress.user_id == user_id).delete()
+    # Delete user's level progress
+    db.query(UserLevelProgress).filter(UserLevelProgress.user_id == user_id).delete()
+    # Delete user
+    db.delete(user)
+    db.commit()
+    return {"status": "ok", "message": f"User {user.name} deleted"}
+
 @app.post("/api/users/{user_id}/progress")
 def update_progress(user_id: int, xp_gained: int, level_id: int = None, score: int = 0, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
