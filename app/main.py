@@ -865,6 +865,23 @@ def get_user_reading_level(user_id: int, db: Session = Depends(get_db)):
         "accuracy": accuracy
     }
 
+@app.post("/api/admin/reset-passages")
+def reset_reading_passages(db: Session = Depends(get_db)):
+    """Delete all reading passages and reinitialize with new stories"""
+    # Delete all questions first (foreign key constraint)
+    db.query(ReadingQuestion).delete()
+    # Delete all passages
+    db.query(ReadingPassage).delete()
+    # Delete user progress
+    db.query(UserReadingProgress).delete()
+    db.commit()
+
+    # Reinitialize with new stories
+    init_sample_passages()
+
+    count = db.query(ReadingPassage).count()
+    return {"message": f"Reset complete! Created {count} new passages."}
+
 # ========== INITIALIZE SAMPLE READING PASSAGES ==========
 def init_sample_passages():
     """Create sample reading passages if none exist"""
@@ -877,153 +894,412 @@ def init_sample_passages():
 
         import json
 
-        # Sample passages at different Lexile levels
+        # EXCITING STORY SERIES!
         sample_passages = [
-            # Level 1: Lexile 350L - Very simple
+            # ===== DETECTIVE AMY SERIES =====
+            # Episode 1: Lexile 350L
             {
-                "title": "The Red Ball",
-                "content": """Tom has a ball. The ball is red. Tom likes his ball very much.
+                "title": "🔍 Detective Amy #1: The Missing Cookies",
+                "content": """Amy loves to solve mysteries. She is only 10 years old, but everyone calls her "Detective Amy."
 
-Tom plays with the ball every day. He throws it up. He catches it.
+One day, her mom baked chocolate cookies. She put them on the kitchen table. But when Amy came home from school, the cookies were GONE!
 
-One day, the ball goes over the fence. Tom is sad. His friend Amy helps him. Amy gets the ball back.
+"Who took my cookies?" Mom asked.
 
-Tom says, "Thank you, Amy!" Now Tom and Amy play together.""",
+Amy looked around. She saw brown crumbs on the floor. The crumbs made a trail. Amy followed the trail... to the dog's bed!
+
+There was Max, the family dog. He had chocolate on his nose!
+
+"I found the cookie thief!" Amy laughed. "It's Max!"
+
+Mom said, "Good job, Detective Amy. But Max can't eat chocolate. It's bad for dogs!"
+
+Amy learned something new: chocolate is dangerous for dogs. She gave Max a dog treat instead.""",
                 "lexile_level": 350,
                 "difficulty": "beginner",
                 "vocabulary": json.dumps([
-                    {"word": "ball", "meaning": "球"},
-                    {"word": "throws", "meaning": "丟、投"},
-                    {"word": "catches", "meaning": "接住"},
-                    {"word": "fence", "meaning": "籬笆"},
-                    {"word": "together", "meaning": "一起"}
+                    {"word": "detective", "meaning": "偵探"},
+                    {"word": "mystery", "meaning": "謎團"},
+                    {"word": "crumbs", "meaning": "碎屑"},
+                    {"word": "trail", "meaning": "痕跡、軌跡"},
+                    {"word": "thief", "meaning": "小偷"},
+                    {"word": "dangerous", "meaning": "危險的"}
                 ]),
                 "questions": [
-                    {"type": "comprehension", "q": "What color is Tom's ball?", "a": "Red", "b": "Blue", "c": "Green", "correct": "A", "explain": "The story says 'The ball is red.'"},
-                    {"type": "comprehension", "q": "What does Tom do with the ball every day?", "a": "He sleeps with it", "b": "He plays with it", "c": "He eats it", "correct": "B", "explain": "The story says 'Tom plays with the ball every day.'"},
-                    {"type": "comprehension", "q": "Where does the ball go?", "a": "Under the bed", "b": "Into the water", "c": "Over the fence", "correct": "C", "explain": "The story says 'the ball goes over the fence.'"},
-                    {"type": "comprehension", "q": "Who helps Tom get the ball?", "a": "His mom", "b": "Amy", "c": "His dad", "correct": "B", "explain": "The story says 'His friend Amy helps him.'"}
+                    {"type": "comprehension", "q": "What does everyone call Amy?", "a": "Cookie Girl", "b": "Detective Amy", "c": "Super Amy", "correct": "B", "explain": "The story says 'everyone calls her Detective Amy.'"},
+                    {"type": "comprehension", "q": "What was missing?", "a": "The dog", "b": "Amy's homework", "c": "Chocolate cookies", "correct": "C", "explain": "Mom's chocolate cookies were gone from the table."},
+                    {"type": "inference", "q": "How did Amy know Max took the cookies?", "a": "Max told her", "b": "She followed the crumbs to Max's bed", "c": "She saw Max eat them", "correct": "B", "explain": "Amy followed the trail of crumbs to Max's bed and saw chocolate on his nose."},
+                    {"type": "main_idea", "q": "What lesson did Amy learn?", "a": "Dogs are bad pets", "b": "Cookies are yummy", "c": "Chocolate is dangerous for dogs", "correct": "C", "explain": "Mom explained that chocolate is bad for dogs."}
                 ]
             },
-            # Level 2: Lexile 400L
+            # Episode 2: Lexile 400L
             {
-                "title": "My Pet Dog",
-                "content": """I have a pet dog named Max. Max is a golden retriever. He has soft, yellow fur and big brown eyes.
+                "title": "🔍 Detective Amy #2: The Disappearing Lunch",
+                "content": """Something strange was happening at school. Every day, someone's lunch disappeared!
 
-Every morning, I take Max for a walk in the park. He loves to run and chase birds. Sometimes he jumps into the pond to swim!
+On Monday, Ben's sandwich was gone. On Tuesday, Sara's apple vanished. On Wednesday, even the teacher's salad disappeared!
 
-Max is also very smart. He can do many tricks. He can sit, shake hands, and roll over. When I say "fetch," he runs to get his ball.
+"We need Detective Amy!" the students said.
 
-At night, Max sleeps next to my bed. He keeps me safe. Max is my best friend.""",
+Amy began her investigation. She asked questions. "When did your lunch disappear?" Everyone said the same thing: "During morning recess."
+
+Amy had an idea. On Thursday, she stayed inside during recess. She hid behind the bookshelf and watched.
+
+Soon, the classroom door opened slowly. A small figure came in. It was... a squirrel!
+
+The furry thief grabbed a banana from Tom's lunchbox. It ran out the window!
+
+Amy told the teacher. They closed the window. No more lunches disappeared after that!
+
+"Another mystery solved!" Amy said proudly.""",
                 "lexile_level": 400,
                 "difficulty": "beginner",
                 "vocabulary": json.dumps([
-                    {"word": "retriever", "meaning": "獵犬（品種）"},
-                    {"word": "fur", "meaning": "毛皮"},
-                    {"word": "chase", "meaning": "追逐"},
-                    {"word": "pond", "meaning": "池塘"},
-                    {"word": "tricks", "meaning": "把戲"},
-                    {"word": "fetch", "meaning": "去撿回來"}
+                    {"word": "disappeared", "meaning": "消失了"},
+                    {"word": "vanished", "meaning": "不見了"},
+                    {"word": "investigation", "meaning": "調查"},
+                    {"word": "recess", "meaning": "下課時間"},
+                    {"word": "squirrel", "meaning": "松鼠"},
+                    {"word": "figure", "meaning": "身影"},
+                    {"word": "furry", "meaning": "毛茸茸的"}
                 ]),
                 "questions": [
-                    {"type": "comprehension", "q": "What kind of dog is Max?", "a": "A poodle", "b": "A golden retriever", "c": "A bulldog", "correct": "B", "explain": "The story says 'Max is a golden retriever.'"},
-                    {"type": "comprehension", "q": "What does Max like to chase in the park?", "a": "Cats", "b": "Cars", "c": "Birds", "correct": "C", "explain": "The story says 'He loves to run and chase birds.'"},
-                    {"type": "vocabulary", "q": "What does 'fetch' mean in this story?", "a": "To sleep", "b": "To get something and bring it back", "c": "To eat food", "correct": "B", "explain": "'Fetch' means to go get something and bring it back."},
-                    {"type": "inference", "q": "Why does the writer say Max keeps them safe?", "a": "Max is a guard dog", "b": "Max sleeps next to the bed at night", "c": "Max is very big", "correct": "B", "explain": "Dogs sleeping nearby can alert their owners to danger."}
+                    {"type": "comprehension", "q": "When did the lunches disappear?", "a": "After school", "b": "During morning recess", "c": "At night", "correct": "B", "explain": "Everyone said their lunch disappeared during morning recess."},
+                    {"type": "comprehension", "q": "Where did Amy hide?", "a": "Under the desk", "b": "Behind the bookshelf", "c": "In the closet", "correct": "B", "explain": "Amy hid behind the bookshelf to watch."},
+                    {"type": "comprehension", "q": "Who was the real thief?", "a": "A student", "b": "The teacher", "c": "A squirrel", "correct": "C", "explain": "A squirrel was coming through the window to steal food."},
+                    {"type": "inference", "q": "How did they stop the thief?", "a": "They caught the squirrel", "b": "They closed the window", "c": "They called the police", "correct": "B", "explain": "They closed the window so the squirrel couldn't get in anymore."}
                 ]
             },
-            # Level 3: Lexile 450L
+            # ===== TIME TRAVELERS SERIES =====
+            # Episode 1: Lexile 450L
             {
-                "title": "The School Library",
-                "content": """The school library is my favorite place. It is a large room with many bookshelves. There are thousands of books about different topics.
+                "title": "⏰ Time Travelers #1: The Magic Watch",
+                "content": """Tom and his sister Lily found an old watch in their grandmother's attic. The watch looked very strange. It had too many buttons!
 
-Mrs. Chen is the librarian. She helps students find books and answers our questions. She always has good book recommendations.
+"What does this button do?" Tom asked. He pressed it.
 
-I visit the library twice a week. I like to sit by the window and read. The chairs there are very comfortable. Sometimes I do my homework there because it is quiet.
+WHOOOOSH!
 
-Last week, I discovered a series about space exploration. The books describe astronauts traveling to Mars. I have already read three books in the series. I cannot wait to read the rest!""",
+Suddenly, everything around them changed. They were not in the attic anymore. They were standing in a forest. And there was a DINOSAUR right in front of them!
+
+"We went back in time!" Lily whispered. "This must be the age of dinosaurs!"
+
+The dinosaur was huge. It had a long neck and was eating leaves from a tall tree. Tom remembered his science class.
+
+"That's a Brachiosaurus," he said. "Don't worry. It only eats plants!"
+
+They watched the gentle giant eat. Then Tom pressed another button on the watch.
+
+WHOOOOSH!
+
+They were back in the attic. But now they knew: this watch could travel through time!
+
+"Where should we go next?" Lily asked excitedly.
+
+TO BE CONTINUED...""",
                 "lexile_level": 450,
                 "difficulty": "intermediate",
                 "vocabulary": json.dumps([
-                    {"word": "library", "meaning": "圖書館"},
-                    {"word": "bookshelves", "meaning": "書架"},
-                    {"word": "librarian", "meaning": "圖書館員"},
-                    {"word": "recommendations", "meaning": "推薦"},
-                    {"word": "discovered", "meaning": "發現"},
-                    {"word": "exploration", "meaning": "探索"},
-                    {"word": "astronauts", "meaning": "太空人"}
+                    {"word": "attic", "meaning": "閣樓"},
+                    {"word": "dinosaur", "meaning": "恐龍"},
+                    {"word": "whispered", "meaning": "低聲說"},
+                    {"word": "Brachiosaurus", "meaning": "腕龍"},
+                    {"word": "gentle", "meaning": "溫和的"},
+                    {"word": "giant", "meaning": "巨人、巨大的"},
+                    {"word": "excitedly", "meaning": "興奮地"}
                 ]),
                 "questions": [
-                    {"type": "comprehension", "q": "How often does the writer visit the library?", "a": "Every day", "b": "Once a week", "c": "Twice a week", "correct": "C", "explain": "The story says 'I visit the library twice a week.'"},
-                    {"type": "comprehension", "q": "Who is Mrs. Chen?", "a": "A teacher", "b": "The librarian", "c": "A student", "correct": "B", "explain": "The story says 'Mrs. Chen is the librarian.'"},
-                    {"type": "vocabulary", "q": "What does 'recommendations' mean?", "a": "Rules to follow", "b": "Suggestions about what is good", "c": "Homework assignments", "correct": "B", "explain": "Recommendations are suggestions about things that might be good or useful."},
-                    {"type": "inference", "q": "Why does the writer do homework in the library?", "a": "Because it is quiet there", "b": "Because Mrs. Chen tells them to", "c": "Because there are no chairs at home", "correct": "A", "explain": "The story says 'I do my homework there because it is quiet.'"},
-                    {"type": "main_idea", "q": "What is this story mainly about?", "a": "How to become an astronaut", "b": "The writer's love for the school library", "c": "Mrs. Chen's job", "correct": "B", "explain": "The whole story is about why the writer loves the school library."}
+                    {"type": "comprehension", "q": "Where did Tom and Lily find the watch?", "a": "In a store", "b": "In their grandmother's attic", "c": "At school", "correct": "B", "explain": "They found the watch in their grandmother's attic."},
+                    {"type": "comprehension", "q": "What happened when Tom pressed the button?", "a": "The watch broke", "b": "They traveled back in time", "c": "The lights turned off", "correct": "B", "explain": "They traveled to the age of dinosaurs."},
+                    {"type": "vocabulary", "q": "What does 'gentle' mean?", "a": "Scary and dangerous", "b": "Kind and not harmful", "c": "Very fast", "correct": "B", "explain": "Gentle means calm, kind, and not likely to hurt anyone."},
+                    {"type": "inference", "q": "Why wasn't the Brachiosaurus dangerous?", "a": "It was sleeping", "b": "It was small", "c": "It only eats plants, not meat", "correct": "C", "explain": "Tom said it only eats plants, so it wouldn't try to eat them."},
+                    {"type": "main_idea", "q": "What will probably happen next in the story?", "a": "They will throw away the watch", "b": "They will travel to another time", "c": "They will sell the watch", "correct": "B", "explain": "Lily asked 'Where should we go next?' so they will likely have more adventures."}
                 ]
             },
-            # Level 4: Lexile 500L
+            # ===== TIME TRAVELERS SERIES (continued) =====
+            # Episode 2: Lexile 500L
             {
-                "title": "Weather Around the World",
-                "content": """Weather is different in every part of the world. Some places are hot all year long, while others have cold winters with lots of snow.
+                "title": "⏰ Time Travelers #2: Escape from Ancient Egypt",
+                "content": """Tom pressed a button on the magic watch. "Let's go to ancient Egypt!" he said.
 
-Near the equator, countries like Brazil and Indonesia have tropical weather. It is warm and humid there, and it rains frequently. Tropical rainforests grow in these regions because of all the rain.
+WHOOOOSH!
 
-In contrast, countries like Canada and Russia have very cold winters. Temperatures can drop below minus thirty degrees Celsius! People who live there must wear heavy coats and boots to stay warm.
+When they opened their eyes, they were standing in a desert. The sun was burning hot. In front of them stood the Great Pyramid - and it was being built RIGHT NOW!
 
-Some places have four distinct seasons: spring, summer, autumn, and winter. Each season brings different weather. In spring, flowers bloom. Summer is hot and sunny. Autumn brings colorful leaves. Winter is cold and sometimes snowy.
+Thousands of workers were pulling huge stone blocks. Men shouted orders. Lily grabbed Tom's arm. "This is amazing!" she whispered.
 
-Scientists who study weather are called meteorologists. They use special tools to predict what the weather will be like tomorrow or next week.""",
+Suddenly, a guard spotted them. "STOP! Who are you?" he yelled. "Spies! Catch them!"
+
+Tom and Lily started running. The guards chased them between the giant stone blocks. Tom's heart was pounding!
+
+"Press the watch!" Lily screamed.
+
+Tom looked at the watch, but his hands were shaking. He couldn't find the right button!
+
+A guard reached out to grab Lily's arm. Just then, Tom found the button and pressed it hard.
+
+WHOOOOSH!
+
+They landed back in the attic, safe and sound. But Lily was holding something in her hand - a small golden scarab beetle!
+
+"We brought back treasure from ancient Egypt!" she gasped.
+
+Grandma walked in. She saw the beetle and smiled mysteriously. "Ah, I see you found my old watch. And it still works perfectly..."
+
+What did Grandma mean? Did SHE use the watch before?
+
+TO BE CONTINUED...""",
                 "lexile_level": 500,
                 "difficulty": "intermediate",
                 "vocabulary": json.dumps([
-                    {"word": "equator", "meaning": "赤道"},
-                    {"word": "tropical", "meaning": "熱帶的"},
-                    {"word": "humid", "meaning": "潮濕的"},
-                    {"word": "frequently", "meaning": "頻繁地"},
-                    {"word": "contrast", "meaning": "對比"},
-                    {"word": "distinct", "meaning": "明顯不同的"},
-                    {"word": "meteorologists", "meaning": "氣象學家"},
-                    {"word": "predict", "meaning": "預測"}
+                    {"word": "ancient", "meaning": "古代的"},
+                    {"word": "pyramid", "meaning": "金字塔"},
+                    {"word": "desert", "meaning": "沙漠"},
+                    {"word": "guard", "meaning": "守衛"},
+                    {"word": "spotted", "meaning": "發現了"},
+                    {"word": "chased", "meaning": "追趕"},
+                    {"word": "pounding", "meaning": "怦怦跳"},
+                    {"word": "scarab", "meaning": "聖甲蟲"},
+                    {"word": "mysteriously", "meaning": "神秘地"}
                 ]),
                 "questions": [
-                    {"type": "comprehension", "q": "What kind of weather do countries near the equator have?", "a": "Cold and snowy", "b": "Tropical - warm and humid", "c": "Dry and windy", "correct": "B", "explain": "The story says 'countries like Brazil and Indonesia have tropical weather. It is warm and humid there.'"},
-                    {"type": "comprehension", "q": "How cold can winters get in Canada and Russia?", "a": "Below minus 30 degrees Celsius", "b": "Below zero degrees Celsius", "c": "Below 10 degrees Celsius", "correct": "A", "explain": "The story says 'Temperatures can drop below minus thirty degrees Celsius!'"},
-                    {"type": "vocabulary", "q": "What does 'predict' mean?", "a": "To remember the past", "b": "To say what will happen in the future", "c": "To write a story", "correct": "B", "explain": "Predict means to say what you think will happen before it happens."},
-                    {"type": "comprehension", "q": "What do scientists who study weather call themselves?", "a": "Biologists", "b": "Meteorologists", "c": "Geologists", "correct": "B", "explain": "The story says 'Scientists who study weather are called meteorologists.'"},
-                    {"type": "main_idea", "q": "What is the main idea of this passage?", "a": "How to become a meteorologist", "b": "Weather is different in different parts of the world", "c": "Why rainforests are important", "correct": "B", "explain": "The passage describes how weather varies in different regions of the world."}
+                    {"type": "comprehension", "q": "Where did Tom and Lily travel to?", "a": "Ancient China", "b": "Ancient Egypt", "c": "Ancient Rome", "correct": "B", "explain": "Tom said 'Let's go to ancient Egypt!' and they saw the Great Pyramid."},
+                    {"type": "comprehension", "q": "What did the guards think Tom and Lily were?", "a": "Tourists", "b": "Workers", "c": "Spies", "correct": "C", "explain": "The guard yelled 'Spies! Catch them!'"},
+                    {"type": "inference", "q": "Why couldn't Tom press the watch button quickly?", "a": "The button was broken", "b": "His hands were shaking from fear", "c": "The watch ran out of power", "correct": "B", "explain": "The story says 'his hands were shaking' because they were being chased."},
+                    {"type": "comprehension", "q": "What did Lily bring back from Egypt?", "a": "A stone block", "b": "A golden scarab beetle", "c": "A pyramid model", "correct": "B", "explain": "Lily was holding 'a small golden scarab beetle.'"},
+                    {"type": "inference", "q": "What secret does Grandma seem to have?", "a": "She built the watch", "b": "She has used the watch for time travel before", "c": "She works at a museum", "correct": "B", "explain": "Grandma smiled mysteriously and said the watch 'still works perfectly,' suggesting she used it before."}
                 ]
             },
-            # Level 5: Lexile 550L
+            # ===== DETECTIVE AMY SERIES (continued) =====
+            # Episode 3: Lexile 550L
             {
-                "title": "The Amazing Honey Bee",
-                "content": """Honey bees are remarkable insects that play an important role in our world. They live together in large groups called colonies, and each colony can have up to 60,000 bees!
+                "title": "🔍 Detective Amy #3: The Ghost in the Library",
+                "content": """Strange things were happening in the school library. Books fell off shelves by themselves. Lights flickered on and off. And sometimes, students heard whispering when nobody was there!
 
-Every colony has three types of bees: the queen, workers, and drones. The queen is the only bee that lays eggs. Worker bees are all female, and they do most of the work. They build the honeycomb, gather food, and protect the hive. Drones are male bees whose main job is to mate with the queen.
+"It's a ghost!" everyone said. Some students were too scared to enter the library.
 
-Bees are essential for pollination. When bees visit flowers to collect nectar, pollen sticks to their fuzzy bodies. As they fly from flower to flower, they spread this pollen. This process helps plants produce fruits and seeds. In fact, about one-third of the food we eat depends on pollination by bees!
+But Detective Amy didn't believe in ghosts. "There must be a logical explanation," she said.
 
-Unfortunately, bee populations are declining around the world. Pesticides, habitat loss, and climate change are all threats to bees. Scientists and farmers are working together to find ways to protect these valuable insects.
+Amy decided to investigate. She stayed late after school and hid between the bookshelves. The library grew dark and quiet. Amy waited nervously.
 
-You can help bees too! Planting flowers in your garden gives bees more places to find food. Avoiding pesticides in your yard also keeps bees safe.""",
+Suddenly - WHOOSH! A book flew off the shelf! Amy jumped, but she didn't scream. Instead, she looked carefully.
+
+She noticed something: there was a small hole in the wall behind the bookshelf. Cold air was blowing through the hole! When the wind blew hard, it pushed the books off the shelves.
+
+Amy followed the hole and found that it connected to the old air conditioning system. The broken machine was making the whispering sound!
+
+The next day, Amy explained everything to the principal. The maintenance team fixed the hole and repaired the air conditioner.
+
+"No more ghost!" the students cheered.
+
+Amy smiled. "Remember: every mystery has a solution. You just have to look for clues!"
+
+But that night, Amy received a mysterious letter with no return address. It said: "Great detective work. I'm watching you. - A Friend"
+
+Who was watching Amy? A new mystery was about to begin...
+
+TO BE CONTINUED...""",
                 "lexile_level": 550,
                 "difficulty": "intermediate",
                 "vocabulary": json.dumps([
-                    {"word": "remarkable", "meaning": "非凡的"},
-                    {"word": "colonies", "meaning": "群落"},
-                    {"word": "honeycomb", "meaning": "蜂巢"},
-                    {"word": "essential", "meaning": "必要的"},
-                    {"word": "pollination", "meaning": "授粉"},
-                    {"word": "nectar", "meaning": "花蜜"},
-                    {"word": "declining", "meaning": "下降中"},
-                    {"word": "pesticides", "meaning": "殺蟲劑"},
-                    {"word": "habitat", "meaning": "棲息地"}
+                    {"word": "flickered", "meaning": "閃爍"},
+                    {"word": "whispering", "meaning": "低語聲"},
+                    {"word": "logical", "meaning": "合理的"},
+                    {"word": "explanation", "meaning": "解釋"},
+                    {"word": "investigate", "meaning": "調查"},
+                    {"word": "nervously", "meaning": "緊張地"},
+                    {"word": "maintenance", "meaning": "維修"},
+                    {"word": "principal", "meaning": "校長"},
+                    {"word": "mysterious", "meaning": "神秘的"}
                 ]),
                 "questions": [
-                    {"type": "comprehension", "q": "How many bees can live in one colony?", "a": "Up to 6,000", "b": "Up to 60,000", "c": "Up to 600", "correct": "B", "explain": "The story says 'each colony can have up to 60,000 bees!'"},
-                    {"type": "comprehension", "q": "What is the queen bee's main job?", "a": "To gather food", "b": "To protect the hive", "c": "To lay eggs", "correct": "C", "explain": "The story says 'The queen is the only bee that lays eggs.'"},
-                    {"type": "vocabulary", "q": "What does 'essential' mean in this passage?", "a": "Not important", "b": "Very necessary", "c": "Dangerous", "correct": "B", "explain": "Essential means very important or necessary."},
-                    {"type": "inference", "q": "Why are bees important for our food?", "a": "They make honey for us to eat", "b": "They help plants produce fruits through pollination", "c": "They eat harmful insects", "correct": "B", "explain": "The passage explains that pollination by bees helps plants produce fruits and seeds."},
-                    {"type": "main_idea", "q": "What would be the best title for the last two paragraphs?", "a": "How Bees Make Honey", "b": "Threats to Bees and How to Help", "c": "The Life of a Worker Bee", "correct": "B", "explain": "The last two paragraphs discuss problems facing bees and what we can do to help."}
+                    {"type": "comprehension", "q": "What strange things happened in the library?", "a": "Books disappeared completely", "b": "Books fell, lights flickered, and there was whispering", "c": "The librarian acted weird", "correct": "B", "explain": "Books fell off shelves, lights flickered on and off, and students heard whispering."},
+                    {"type": "comprehension", "q": "Why did Amy stay late in the library?", "a": "To read books", "b": "To do homework", "c": "To investigate the mystery", "correct": "C", "explain": "Amy decided to investigate and hid between the bookshelves."},
+                    {"type": "inference", "q": "What was really causing the 'ghost' sounds?", "a": "A real ghost", "b": "Students playing tricks", "c": "A broken air conditioning system", "correct": "C", "explain": "The hole connected to the old air conditioning system, and the broken machine was making the whispering sound."},
+                    {"type": "vocabulary", "q": "What does 'logical' mean?", "a": "Scary and supernatural", "b": "Making sense and reasonable", "c": "Funny and silly", "correct": "B", "explain": "Logical means something that makes sense and can be explained with reasoning."},
+                    {"type": "inference", "q": "Who might have sent the mysterious letter at the end?", "a": "The principal", "b": "Someone who knows about Amy's detective skills", "c": "The ghost", "correct": "B", "explain": "The letter praised Amy's 'detective work,' so someone has been following her mysteries."},
+                    {"type": "main_idea", "q": "What lesson does this story teach?", "a": "Ghosts are real", "b": "Libraries are dangerous", "c": "Every mystery has a logical solution if you look for clues", "correct": "C", "explain": "Amy said 'every mystery has a solution. You just have to look for clues!'"}
+                ]
+            },
+            # ===== TIME TRAVELERS SERIES (continued) =====
+            # Episode 3: Lexile 600L
+            {
+                "title": "⏰ Time Travelers #3: Knights and Dragons",
+                "content": """Grandma sat down with Tom and Lily. She held the magic watch carefully.
+
+"I used this watch many times when I was young," Grandma said. "I've seen dinosaurs, met ancient kings, and even visited the future. But one trip was the most dangerous of all."
+
+Tom and Lily listened with wide eyes.
+
+"I traveled to medieval Europe," Grandma continued. "The year was 1352. I accidentally appeared inside a castle during a battle!"
+
+"What happened?" Lily asked excitedly.
+
+Grandma smiled. "Why don't I show you? Let's go together this time."
+
+She pressed the buttons expertly. WHOOOOSH!
+
+Suddenly, they stood in a stone courtyard. Knights in shining armor rushed past them. Swords clashed and arrows flew through the air!
+
+"We need to hide!" Grandma shouted. She led them behind a wooden cart.
+
+A young knight fell near them. He was injured and couldn't get up. Without thinking, Tom ran out and helped drag the knight to safety.
+
+"You saved my life!" the knight said gratefully. "I am Prince Edward. When I become king, I will remember your bravery."
+
+Grandma pressed the watch. WHOOOOSH! They returned home.
+
+"Grandma," Tom asked, "did Prince Edward really become king?"
+
+Grandma pulled out an old history book. "Look at page 47."
+
+Tom found the page. It showed a painting of King Edward III - and the king was wearing the EXACT same face as the young knight they saved!
+
+"Our family has been part of history," Grandma winked. "More than you'll ever know."
+
+TO BE CONTINUED...""",
+                "lexile_level": 600,
+                "difficulty": "intermediate",
+                "vocabulary": json.dumps([
+                    {"word": "medieval", "meaning": "中世紀的"},
+                    {"word": "accidentally", "meaning": "意外地"},
+                    {"word": "expertly", "meaning": "熟練地"},
+                    {"word": "courtyard", "meaning": "庭院"},
+                    {"word": "armor", "meaning": "盔甲"},
+                    {"word": "clashed", "meaning": "碰撞"},
+                    {"word": "injured", "meaning": "受傷的"},
+                    {"word": "gratefully", "meaning": "感激地"},
+                    {"word": "bravery", "meaning": "勇敢"}
+                ]),
+                "questions": [
+                    {"type": "comprehension", "q": "What year did Grandma travel to in her dangerous trip?", "a": "1250", "b": "1352", "c": "1452", "correct": "B", "explain": "Grandma said 'The year was 1352.'"},
+                    {"type": "comprehension", "q": "Where did they appear when they traveled?", "a": "In a forest", "b": "In a castle during a battle", "c": "On a ship", "correct": "B", "explain": "They appeared inside a castle during a battle."},
+                    {"type": "inference", "q": "Why did Tom run out to help the knight?", "a": "He wanted a reward", "b": "Grandma told him to", "c": "He acted bravely without thinking", "correct": "C", "explain": "The story says 'Without thinking, Tom ran out and helped.'"},
+                    {"type": "comprehension", "q": "Who was the young knight they saved?", "a": "A farmer", "b": "Prince Edward, who later became king", "c": "A merchant", "correct": "B", "explain": "The knight said 'I am Prince Edward' and the history book showed he became King Edward III."},
+                    {"type": "inference", "q": "What does Grandma mean when she says 'Our family has been part of history'?", "a": "Their family writes history books", "b": "Their family has influenced important historical events through time travel", "c": "Their family is very old", "correct": "B", "explain": "Tom saved Prince Edward who became a king, showing how their time travels affected history."},
+                    {"type": "vocabulary", "q": "What does 'medieval' mean?", "a": "Related to the Middle Ages in Europe", "b": "Related to modern times", "c": "Related to the future", "correct": "A", "explain": "Medieval refers to the Middle Ages, roughly 500-1500 CE in European history."}
+                ]
+            },
+            # ===== DETECTIVE AMY SERIES (continued) =====
+            # Episode 4: Lexile 650L
+            {
+                "title": "🔍 Detective Amy #4: The Secret Code",
+                "content": """Amy couldn't stop thinking about the mysterious letter. Someone was watching her, but who?
+
+Then more strange things began happening. Amy found coded messages in her locker. The first one said: "PHHW DW WKH ROG WUHH."
+
+Amy recognized it immediately - a Caesar cipher! She shifted each letter back by 3. M-E-E-T A-T T-H-E O-L-D T-R-E-E.
+
+"Meet at the old tree," Amy whispered. The old oak tree was behind the school playground.
+
+Should she go? It could be dangerous. But Amy's curiosity was stronger than her fear.
+
+After school, she walked to the old tree. Nobody was there. But she found another note pinned to the bark: "LOOK UP."
+
+Amy looked up and gasped. In the branches sat three kids from her class - Ben, Sara, and Tom! They were all wearing matching pins that said "Junior Detectives."
+
+"Surprise!" they laughed.
+
+Ben explained, "We've been watching your cases. You're amazing at solving mysteries! We created this club to learn from you."
+
+Amy felt touched. "But why all the secrets and codes?"
+
+"We wanted to prove we could be good detectives too," Sara said. "Did we pass the test?"
+
+Amy grinned. "You used proper encryption, left clever clues, and never revealed your identities. You definitely passed!"
+
+From that day on, the Junior Detectives Club met every week. Amy taught them how to find clues, and together they solved even bigger mysteries.
+
+But Amy kept wondering - those first mysterious letters... were they really from Ben's group? Or was someone else still watching?
+
+TO BE CONTINUED...""",
+                "lexile_level": 650,
+                "difficulty": "advanced",
+                "vocabulary": json.dumps([
+                    {"word": "coded", "meaning": "編碼的"},
+                    {"word": "cipher", "meaning": "密碼"},
+                    {"word": "shifted", "meaning": "移動"},
+                    {"word": "curiosity", "meaning": "好奇心"},
+                    {"word": "pinned", "meaning": "釘住"},
+                    {"word": "matching", "meaning": "相配的"},
+                    {"word": "touched", "meaning": "感動的"},
+                    {"word": "encryption", "meaning": "加密"},
+                    {"word": "revealed", "meaning": "揭露"}
+                ]),
+                "questions": [
+                    {"type": "comprehension", "q": "What kind of code was used in the message?", "a": "Binary code", "b": "Caesar cipher", "c": "Morse code", "correct": "B", "explain": "Amy recognized it as a Caesar cipher and shifted each letter back by 3."},
+                    {"type": "comprehension", "q": "What did the decoded message say?", "a": "Meet at the old tree", "b": "Go to the library", "c": "Come to school early", "correct": "A", "explain": "When Amy decoded it, it said 'Meet at the old tree.'"},
+                    {"type": "inference", "q": "Why did Amy decide to go even though it might be dangerous?", "a": "Her parents made her go", "b": "Her curiosity was stronger than her fear", "c": "She didn't think it was dangerous", "correct": "B", "explain": "The story says 'Amy's curiosity was stronger than her fear.'"},
+                    {"type": "comprehension", "q": "What was the surprise waiting for Amy?", "a": "A birthday party", "b": "Three classmates who wanted to form a detective club", "c": "A treasure chest", "correct": "B", "explain": "Ben, Sara, and Tom were there wearing 'Junior Detectives' pins and wanted to learn from Amy."},
+                    {"type": "inference", "q": "Why does the story end with Amy wondering if someone else is still watching?", "a": "She is paranoid", "b": "There may be another mystery connected to the original letters", "c": "She forgot who sent them", "correct": "B", "explain": "Amy questions whether the FIRST mysterious letters were really from Ben's group, suggesting another mystery."},
+                    {"type": "vocabulary", "q": "What does 'encryption' mean?", "a": "Writing in a foreign language", "b": "Converting information into a secret code", "c": "Writing very small", "correct": "B", "explain": "Encryption means converting information into code so only certain people can read it."}
+                ]
+            },
+            # ===== TIME TRAVELERS SERIES (continued) =====
+            # Episode 4: Lexile 700L
+            {
+                "title": "⏰ Time Travelers #4: The Future City",
+                "content": """After their adventure with the knights, Tom had an idea.
+
+"Grandma, can the watch travel to the future too?"
+
+Grandma hesitated. "Yes, but traveling to the future is more dangerous. The future isn't fixed - it changes based on our decisions today. What we see might not come true."
+
+Lily's eyes sparkled. "Can we try? Just once?"
+
+Grandma sighed but smiled. "Very well. But we must be careful."
+
+She set the watch to the year 2150. WHOOOOSH!
+
+They appeared in a city that took their breath away. Flying cars zoomed through transparent tubes in the sky. Buildings stretched up like silver needles, covered with gardens on every floor. Robots walked alongside humans, chatting like old friends.
+
+"This is incredible!" Tom exclaimed.
+
+A friendly robot approached them. "Welcome, time travelers! I am Assistant Unit 7. You are the seventeenth group from the past to visit this month."
+
+"People time travel often?" Lily asked, surprised.
+
+"Oh yes! After Dr. Chen invented affordable time machines in 2089, temporal tourism became popular. Many people visit their ancestors or see historical events."
+
+Tom frowned. "Wait - if everyone time travels, doesn't that mess up history?"
+
+The robot beeped thoughtfully. "Excellent question! The Temporal Protection Agency monitors all trips. They prevent anyone from making changes that would harm the timeline."
+
+Suddenly, an alarm blared. Red lights flashed everywhere.
+
+"WARNING," a voice announced. "Unauthorized temporal anomaly detected. All time travelers must return to their origin points immediately."
+
+Grandma grabbed the children's hands. "That's our cue to leave!"
+
+She pressed the watch frantically. WHOOOOSH!
+
+They landed back in the attic. But something was different. The room looked older. Dust covered everything.
+
+"Grandma," Tom whispered, "how long were we gone?"
+
+Outside the window, they saw their house - but it looked abandoned. What had happened while they were away?
+
+TO BE CONTINUED...""",
+                "lexile_level": 700,
+                "difficulty": "advanced",
+                "vocabulary": json.dumps([
+                    {"word": "hesitated", "meaning": "猶豫"},
+                    {"word": "transparent", "meaning": "透明的"},
+                    {"word": "incredible", "meaning": "難以置信的"},
+                    {"word": "ancestors", "meaning": "祖先"},
+                    {"word": "temporal", "meaning": "時間的"},
+                    {"word": "unauthorized", "meaning": "未經授權的"},
+                    {"word": "anomaly", "meaning": "異常"},
+                    {"word": "frantically", "meaning": "瘋狂地"},
+                    {"word": "abandoned", "meaning": "被遺棄的"}
+                ]),
+                "questions": [
+                    {"type": "comprehension", "q": "What year did they travel to?", "a": "2050", "b": "2150", "c": "2250", "correct": "B", "explain": "Grandma set the watch to the year 2150."},
+                    {"type": "comprehension", "q": "According to the robot, who invented affordable time machines?", "a": "Grandma", "b": "A scientist named Newton", "c": "Dr. Chen in 2089", "correct": "C", "explain": "The robot said 'Dr. Chen invented affordable time machines in 2089.'"},
+                    {"type": "inference", "q": "Why did Grandma say traveling to the future is dangerous?", "a": "There are monsters in the future", "b": "The future isn't fixed and changes based on present decisions", "c": "The watch might break", "correct": "B", "explain": "Grandma explained 'The future isn't fixed - it changes based on our decisions today.'"},
+                    {"type": "comprehension", "q": "What does the Temporal Protection Agency do?", "a": "Build time machines", "b": "Monitor time trips to prevent harmful changes to history", "c": "Give tours of the future", "correct": "B", "explain": "The Agency 'monitors all trips' and 'prevents anyone from making changes that would harm the timeline.'"},
+                    {"type": "inference", "q": "What problem might they face at the end of the story?", "a": "They lost the watch", "b": "Time passed differently while they were gone, and something changed at home", "c": "They traveled to the wrong year", "correct": "B", "explain": "The attic looked older, dusty, and the house looked abandoned - suggesting time passed strangely while they were away."},
+                    {"type": "vocabulary", "q": "What does 'anomaly' mean?", "a": "Something normal", "b": "Something unusual or unexpected", "c": "A type of robot", "correct": "B", "explain": "Anomaly means something that deviates from what is normal or expected."}
                 ]
             }
         ]
