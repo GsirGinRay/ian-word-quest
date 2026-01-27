@@ -718,6 +718,248 @@ body {
     font-size: 14px;
     margin-left: 8px;
 }
+/* ========== READING MODE ========== */
+#reading-list-view { padding: 20px; }
+#reading-view {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    padding: 0;
+}
+
+.reading-header {
+    padding: 16px 20px;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.reading-progress {
+    font-size: 14px;
+    color: #aaa;
+}
+.lexile-badge {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.passage-container {
+    padding: 20px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+.passage-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #fff;
+}
+.passage-content {
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 18px;
+    line-height: 1.8;
+    color: #e0e0e0;
+    margin-bottom: 20px;
+    white-space: pre-line;
+}
+.passage-tools {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.passage-tools .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+.vocab-panel {
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+.vocab-panel h4 {
+    color: #ffd700;
+    margin-bottom: 12px;
+}
+.vocab-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.vocab-item {
+    background: rgba(255,255,255,0.1);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.vocab-item:hover {
+    background: rgba(255,215,0,0.2);
+}
+.vocab-item .word { color: #fff; font-weight: bold; }
+.vocab-item .meaning { color: #aaa; margin-left: 6px; }
+
+.question-panel {
+    background: rgba(102,126,234,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+.question-number {
+    font-size: 12px;
+    color: #667eea;
+    margin-bottom: 8px;
+}
+.question-text {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #fff;
+}
+.question-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.option-btn {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: left;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.option-btn:hover {
+    background: rgba(102,126,234,0.3);
+    border-color: #667eea;
+}
+.option-btn.selected {
+    background: rgba(102,126,234,0.4);
+    border-color: #667eea;
+}
+.option-btn.correct {
+    background: rgba(46,213,115,0.3);
+    border-color: #2ed573;
+}
+.option-btn.wrong {
+    background: rgba(255,71,87,0.3);
+    border-color: #ff4757;
+}
+.option-label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #667eea;
+}
+
+.explanation-box {
+    background: rgba(255,255,255,0.05);
+    border-left: 3px solid #667eea;
+    padding: 12px 16px;
+    margin-top: 12px;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    color: #aaa;
+}
+
+.reading-result {
+    text-align: center;
+    padding: 40px 20px;
+}
+.reading-result .score {
+    font-size: 48px;
+    font-weight: bold;
+    color: #2ed573;
+}
+.reading-result .detail {
+    font-size: 18px;
+    color: #aaa;
+    margin: 16px 0;
+}
+.reading-result .lexile-change {
+    font-size: 16px;
+    color: #ffd700;
+    margin-bottom: 24px;
+}
+
+/* Passage list */
+.passage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    padding-bottom: 20px;
+}
+.passage-card {
+    background: linear-gradient(135deg, rgba(102,126,234,0.3) 0%, rgba(118,75,162,0.3) 100%);
+    padding: 20px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+.passage-card:hover {
+    border-color: #667eea;
+    transform: translateY(-4px);
+}
+.passage-card.completed {
+    border-color: #2ed573;
+}
+.passage-card .title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+.passage-card .meta {
+    font-size: 14px;
+    color: #aaa;
+}
+.passage-card .score-badge {
+    display: inline-block;
+    background: #2ed573;
+    color: #000;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+/* Mode selector tabs */
+.mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 4px;
+}
+.mode-tab {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: #aaa;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+.mode-tab.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+}
+.mode-tab:hover:not(.active) {
+    color: #fff;
+}
+
 .level-card .btn-browse {
     position: absolute;
     bottom: 8px;
@@ -833,10 +1075,27 @@ body {
         </div>
     </div>
 
-    <button id="btn-review" class="review-btn hidden">📚 複習弱點單字</button>
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+        <button id="tab-vocab" class="mode-tab active">📝 單字練習</button>
+        <button id="tab-reading" class="mode-tab">📖 閱讀測驗</button>
+    </div>
 
-    <div class="section-title">⚔️ 選擇關卡</div>
-    <div id="level-grid" class="level-grid"></div>
+    <!-- Vocabulary Mode Content -->
+    <div id="vocab-mode-content">
+        <button id="btn-review" class="review-btn hidden">📚 複習弱點單字</button>
+        <div class="section-title">⚔️ 選擇關卡</div>
+        <div id="level-grid" class="level-grid"></div>
+    </div>
+
+    <!-- Reading Mode Content -->
+    <div id="reading-mode-content" class="hidden">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>📚 閱讀文章</span>
+            <span id="user-lexile" class="lexile-badge">Lexile: 350L</span>
+        </div>
+        <div id="passage-grid" class="passage-grid"></div>
+    </div>
 </div>
 
 <!-- BATTLE -->
@@ -931,6 +1190,58 @@ body {
     </div>
 </div>
 
+<!-- READING VIEW -->
+<div id="reading-view" class="view">
+    <div class="reading-header">
+        <button id="btn-reading-back" class="btn btn-secondary" style="padding:8px 16px;font-size:14px;">← 返回</button>
+        <div id="reading-lexile" class="lexile-badge">350L</div>
+        <div id="reading-progress" class="reading-progress">題目 1/4</div>
+    </div>
+
+    <div class="passage-container">
+        <!-- Passage Content (shown during reading) -->
+        <div id="passage-section">
+            <h2 id="passage-title" class="passage-title">The Red Ball</h2>
+            <div id="passage-content" class="passage-content">Loading...</div>
+
+            <div class="passage-tools">
+                <button id="btn-read-aloud" class="btn btn-secondary">🔊 朗讀全文</button>
+                <button id="btn-show-vocab" class="btn btn-secondary">📝 查看生詞</button>
+            </div>
+
+            <div id="vocab-panel" class="vocab-panel hidden">
+                <h4>📚 本文生詞</h4>
+                <div id="vocab-list" class="vocab-list"></div>
+            </div>
+
+            <button id="btn-start-questions" class="btn btn-primary" style="width:100%;margin-top:16px;">開始答題 →</button>
+        </div>
+
+        <!-- Questions Section (shown during quiz) -->
+        <div id="questions-section" class="hidden">
+            <div id="question-container"></div>
+
+            <div id="question-nav" style="display:flex;gap:12px;margin-top:20px;">
+                <button id="btn-prev-q" class="btn btn-secondary" style="flex:1;" disabled>← 上一題</button>
+                <button id="btn-next-q" class="btn btn-primary" style="flex:1;">下一題 →</button>
+            </div>
+        </div>
+
+        <!-- Results Section (shown after completion) -->
+        <div id="reading-result-section" class="hidden">
+            <div class="reading-result">
+                <div class="result-emoji" style="font-size:64px;margin-bottom:16px;">📖</div>
+                <div id="reading-score" class="score">80%</div>
+                <div id="reading-detail" class="detail">答對 4 / 5 題</div>
+                <div id="reading-lexile-change" class="lexile-change"></div>
+                <div id="reading-xp" style="color:#ffd700;font-size:18px;margin-bottom:24px;">+60 XP</div>
+                <button id="btn-review-answers" class="btn btn-secondary" style="margin-bottom:12px;">📋 查看答案解析</button>
+                <button id="btn-reading-done" class="btn btn-primary">完成 ✓</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Level Up Overlay -->
 <div id="levelup-overlay" class="levelup-overlay hidden">
     <div class="levelup-box">
@@ -1004,6 +1315,13 @@ var currentQuestion = null;
 var hintsUsed = 0;
 var totalSpeedBonus = 0;  // Track speed bonus XP
 var questionStartTime = 0; // Track when question started
+
+// ========== READING MODE STATE ==========
+var currentPassage = null;
+var readingQuestions = [];
+var currentReadingQuestion = 0;
+var readingAnswers = {};
+var userLexile = 350;
 
 // Question types by difficulty
 // 'listen' = 聽音辨字 (easiest - just hear and pick)
@@ -1740,6 +2058,266 @@ async function recordWordAnswer(wordId, correct) {
     });
 }
 
+// ========== READING MODE ==========
+async function fetchPassages() {
+    var url = "/api/reading/passages";
+    if (currentUser) {
+        url += "?user_id=" + currentUser.id;
+    }
+
+    try {
+        var res = await fetch(url);
+        var data = await res.json();
+
+        userLexile = data.user_lexile || 350;
+        document.getElementById("user-lexile").textContent = "Lexile: " + userLexile + "L";
+
+        var grid = document.getElementById("passage-grid");
+        grid.innerHTML = "";
+
+        if (data.passages.length === 0) {
+            grid.innerHTML = '<p style="color:#666;text-align:center;padding:40px;">還沒有閱讀文章</p>';
+            return;
+        }
+
+        data.passages.forEach(function(p) {
+            var div = document.createElement("div");
+            div.className = "passage-card" + (p.completed ? " completed" : "");
+            div.innerHTML =
+                '<div class="title">' + p.title + '</div>' +
+                '<div class="meta">Lexile ' + p.lexile_level + 'L · ' + p.question_count + ' 題</div>' +
+                (p.completed ? '<span class="score-badge">✓ ' + p.score + '%</span>' : '');
+
+            div.addEventListener("click", function() {
+                startReading(p.id);
+            });
+
+            grid.appendChild(div);
+        });
+    } catch (e) {
+        console.error("Failed to fetch passages:", e);
+    }
+}
+
+async function startReading(passageId) {
+    try {
+        var res = await fetch("/api/reading/passages/" + passageId);
+        currentPassage = await res.json();
+        readingQuestions = currentPassage.questions;
+        currentReadingQuestion = 0;
+        readingAnswers = {};
+
+        // Update UI
+        document.getElementById("passage-title").textContent = currentPassage.title;
+        document.getElementById("passage-content").textContent = currentPassage.content;
+        document.getElementById("reading-lexile").textContent = currentPassage.lexile_level + "L";
+        document.getElementById("reading-progress").textContent = "閱讀中";
+
+        // Show vocabulary
+        var vocabList = document.getElementById("vocab-list");
+        vocabList.innerHTML = "";
+        if (currentPassage.vocabulary && currentPassage.vocabulary.length > 0) {
+            currentPassage.vocabulary.forEach(function(v) {
+                var span = document.createElement("span");
+                span.className = "vocab-item";
+                span.innerHTML = '<span class="word">' + v.word + '</span><span class="meaning">' + v.meaning + '</span>';
+                span.addEventListener("click", function() {
+                    speakWord(v.word);
+                });
+                vocabList.appendChild(span);
+            });
+        }
+
+        // Reset sections
+        document.getElementById("passage-section").classList.remove("hidden");
+        document.getElementById("questions-section").classList.add("hidden");
+        document.getElementById("reading-result-section").classList.add("hidden");
+        document.getElementById("vocab-panel").classList.add("hidden");
+
+        switchView("reading-view");
+    } catch (e) {
+        alert("無法載入文章：" + e.message);
+    }
+}
+
+function startReadingQuestions() {
+    document.getElementById("passage-section").classList.add("hidden");
+    document.getElementById("questions-section").classList.remove("hidden");
+    currentReadingQuestion = 0;
+    renderReadingQuestion();
+}
+
+function renderReadingQuestion() {
+    if (currentReadingQuestion >= readingQuestions.length) {
+        submitReadingAnswers();
+        return;
+    }
+
+    var q = readingQuestions[currentReadingQuestion];
+    document.getElementById("reading-progress").textContent = "題目 " + (currentReadingQuestion + 1) + "/" + readingQuestions.length;
+
+    var container = document.getElementById("question-container");
+    var optionsHtml = "";
+    var optionKeys = Object.keys(q.options).filter(function(k) { return q.options[k]; });
+
+    optionKeys.forEach(function(key) {
+        var selected = readingAnswers[q.id] === key;
+        optionsHtml += '<button class="option-btn' + (selected ? ' selected' : '') + '" data-option="' + key + '">' +
+                       '<span class="option-label">' + key + '</span>' + q.options[key] +
+                       '</button>';
+    });
+
+    container.innerHTML =
+        '<div class="question-panel">' +
+        '<div class="question-number">' + getQuestionTypeLabel(q.type) + '</div>' +
+        '<div class="question-text">' + q.question + '</div>' +
+        '<div class="question-options">' + optionsHtml + '</div>' +
+        '</div>';
+
+    // Add click handlers
+    container.querySelectorAll(".option-btn").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            readingAnswers[q.id] = btn.getAttribute("data-option");
+            container.querySelectorAll(".option-btn").forEach(function(b) {
+                b.classList.remove("selected");
+            });
+            btn.classList.add("selected");
+        });
+    });
+
+    // Update navigation buttons
+    document.getElementById("btn-prev-q").disabled = currentReadingQuestion === 0;
+    var nextBtn = document.getElementById("btn-next-q");
+    if (currentReadingQuestion === readingQuestions.length - 1) {
+        nextBtn.textContent = "提交答案 ✓";
+    } else {
+        nextBtn.textContent = "下一題 →";
+    }
+}
+
+function getQuestionTypeLabel(type) {
+    switch(type) {
+        case "comprehension": return "📖 閱讀理解";
+        case "vocabulary": return "📝 詞彙理解";
+        case "inference": return "🤔 推理判斷";
+        case "main_idea": return "💡 主旨大意";
+        default: return "❓ 問題";
+    }
+}
+
+function prevReadingQuestion() {
+    if (currentReadingQuestion > 0) {
+        currentReadingQuestion--;
+        renderReadingQuestion();
+    }
+}
+
+function nextReadingQuestion() {
+    if (currentReadingQuestion < readingQuestions.length - 1) {
+        currentReadingQuestion++;
+        renderReadingQuestion();
+    } else {
+        submitReadingAnswers();
+    }
+}
+
+async function submitReadingAnswers() {
+    if (!currentUser || !currentPassage) return;
+
+    try {
+        var res = await fetch("/api/reading/passages/" + currentPassage.id + "/submit?user_id=" + currentUser.id, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(readingAnswers)
+        });
+        var result = await res.json();
+
+        // Show results
+        document.getElementById("questions-section").classList.add("hidden");
+        document.getElementById("reading-result-section").classList.remove("hidden");
+
+        document.getElementById("reading-score").textContent = result.score + "%";
+        document.getElementById("reading-detail").textContent = "答對 " + result.correct + " / " + result.total + " 題";
+        document.getElementById("reading-xp").textContent = "+" + result.xp_earned + " XP";
+
+        // Lexile change message
+        var lexileMsg = "";
+        if (result.new_lexile > userLexile) {
+            lexileMsg = "📈 Lexile 提升！ " + userLexile + "L → " + result.new_lexile + "L";
+        } else if (result.new_lexile < userLexile) {
+            lexileMsg = "📉 Lexile: " + result.new_lexile + "L";
+        } else {
+            lexileMsg = "📊 Lexile: " + result.new_lexile + "L";
+        }
+        document.getElementById("reading-lexile-change").textContent = lexileMsg;
+        userLexile = result.new_lexile;
+
+        // Update user XP
+        if (currentUser) {
+            currentUser.xp += result.xp_earned;
+            updatePlayerDisplay();
+        }
+
+        // Store results for review
+        window.readingResults = result.results;
+
+    } catch (e) {
+        alert("提交失敗：" + e.message);
+    }
+}
+
+function showAnswerReview() {
+    if (!window.readingResults) return;
+
+    var container = document.getElementById("question-container");
+    var html = "";
+
+    readingQuestions.forEach(function(q, i) {
+        var result = window.readingResults.find(function(r) { return r.question_id === q.id; });
+        var isCorrect = result && result.correct;
+
+        html += '<div class="question-panel" style="margin-bottom:16px;">' +
+                '<div class="question-number">' + getQuestionTypeLabel(q.type) + '</div>' +
+                '<div class="question-text">' + q.question + '</div>' +
+                '<div class="question-options">';
+
+        Object.keys(q.options).filter(function(k) { return q.options[k]; }).forEach(function(key) {
+            var classes = "option-btn";
+            if (key === result.correct_answer) classes += " correct";
+            else if (key === result.user_answer && !result.correct) classes += " wrong";
+
+            html += '<button class="' + classes + '" disabled>' +
+                    '<span class="option-label">' + key + '</span>' + q.options[key] +
+                    '</button>';
+        });
+
+        html += '</div>';
+
+        if (q.explanation) {
+            html += '<div class="explanation-box">💡 ' + q.explanation + '</div>';
+        }
+
+        html += '</div>';
+    });
+
+    container.innerHTML = html;
+    document.getElementById("reading-result-section").classList.add("hidden");
+    document.getElementById("questions-section").classList.remove("hidden");
+    document.getElementById("btn-prev-q").classList.add("hidden");
+    document.getElementById("btn-next-q").textContent = "返回結果";
+    document.getElementById("btn-next-q").onclick = function() {
+        document.getElementById("questions-section").classList.add("hidden");
+        document.getElementById("reading-result-section").classList.remove("hidden");
+        document.getElementById("btn-prev-q").classList.remove("hidden");
+        document.getElementById("btn-next-q").onclick = nextReadingQuestion;
+    };
+}
+
+function finishReading() {
+    switchView("dashboard-view");
+    fetchPassages();
+}
+
 // ========== GAME LOGIC ==========
 function selectPlayer(u) {
     currentUser = u;
@@ -2351,6 +2929,50 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("btn-avatar-close").addEventListener("click", function() {
         document.getElementById("modal-avatar").classList.add("hidden");
     });
+
+    // ========== MODE TABS ==========
+    document.getElementById("tab-vocab").addEventListener("click", function() {
+        document.getElementById("tab-vocab").classList.add("active");
+        document.getElementById("tab-reading").classList.remove("active");
+        document.getElementById("vocab-mode-content").classList.remove("hidden");
+        document.getElementById("reading-mode-content").classList.add("hidden");
+    });
+
+    document.getElementById("tab-reading").addEventListener("click", function() {
+        document.getElementById("tab-reading").classList.add("active");
+        document.getElementById("tab-vocab").classList.remove("active");
+        document.getElementById("reading-mode-content").classList.remove("hidden");
+        document.getElementById("vocab-mode-content").classList.add("hidden");
+        fetchPassages();
+    });
+
+    // ========== READING MODE ==========
+    document.getElementById("btn-reading-back").addEventListener("click", function() {
+        if (confirm("確定要離開嗎？進度不會保存。")) {
+            switchView("dashboard-view");
+        }
+    });
+
+    document.getElementById("btn-read-aloud").addEventListener("click", function() {
+        if (currentPassage) {
+            var utterance = new SpeechSynthesisUtterance(currentPassage.content);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85;
+            speechSynthesis.speak(utterance);
+        }
+    });
+
+    document.getElementById("btn-show-vocab").addEventListener("click", function() {
+        var panel = document.getElementById("vocab-panel");
+        panel.classList.toggle("hidden");
+        this.textContent = panel.classList.contains("hidden") ? "📝 查看生詞" : "📝 隱藏生詞";
+    });
+
+    document.getElementById("btn-start-questions").addEventListener("click", startReadingQuestions);
+    document.getElementById("btn-prev-q").addEventListener("click", prevReadingQuestion);
+    document.getElementById("btn-next-q").addEventListener("click", nextReadingQuestion);
+    document.getElementById("btn-review-answers").addEventListener("click", showAnswerReview);
+    document.getElementById("btn-reading-done").addEventListener("click", finishReading);
 
     // Init
     fetchUsers();
