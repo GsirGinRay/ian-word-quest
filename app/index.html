@@ -648,6 +648,93 @@ body {
     font-weight: bold;
 }
 
+/* Word Browser Modal */
+.word-browser {
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.word-browser h2 {
+    margin-bottom: 8px;
+}
+.word-browser .subtitle {
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+.word-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.word-item {
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 16px;
+    border-left: 4px solid #667eea;
+}
+.word-item.mastered {
+    border-left-color: #2ed573;
+}
+.word-item .word-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.word-item .english {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+}
+.word-item .status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+}
+.word-item .status.mastered {
+    background: rgba(46,213,115,0.3);
+    color: #2ed573;
+}
+.word-item .chinese {
+    font-size: 16px;
+    color: #ffeaa7;
+    margin-bottom: 8px;
+}
+.word-item .sentence {
+    font-size: 14px;
+    color: #aaa;
+    font-style: italic;
+    line-height: 1.5;
+}
+.word-item .btn-speak {
+    background: #3498db;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
+}
+.level-card .btn-browse {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(102,126,234,0.8);
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: white;
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.level-card:hover .btn-browse { opacity: 1; }
+.level-card .btn-browse:hover { background: #667eea; }
+
 /* ========== MOBILE RESPONSIVE ========== */
 @media screen and (max-height: 700px) {
     /* Compact monster display */
@@ -865,6 +952,20 @@ body {
         <div id="avatar-selector" class="avatar-selector"></div>
         <div class="modal-buttons">
             <button id="btn-avatar-close" class="btn btn-primary" style="width:100%;">確定</button>
+        </div>
+    </div>
+</div>
+
+<!-- Word Browser Modal -->
+<div id="modal-words" class="modal hidden">
+    <div class="modal-box word-browser">
+        <h2 id="words-title">📚 單字列表</h2>
+        <p id="words-subtitle" class="subtitle">第 1 關 · 50 個單字</p>
+        <div id="word-list" class="word-list">
+            <!-- Words will be inserted here -->
+        </div>
+        <div class="modal-buttons" style="margin-top:20px;">
+            <button id="btn-words-close" class="btn btn-primary" style="width:100%;">關閉</button>
         </div>
     </div>
 </div>
@@ -1550,18 +1651,29 @@ async function fetchLevels() {
         var needToUnlock = Math.ceil(total * 0.4); // 40% needed = more achievable!
 
         div.className = "level-card " + statusClass;
+        div.style.position = "relative";
         div.innerHTML = '<div class="num">' + (statusIcon || l.id) + '</div>' +
                         '<div class="level-num">第 ' + l.id + ' 關</div>' +
                         '<div class="mastery-bar"><div class="mastery-fill" style="width:' + Math.min(100, mastered / needToUnlock * 100) + '%"></div></div>' +
-                        '<div class="mastery-text">⭐ ' + mastered + '/' + needToUnlock + ' 精熟</div>';
+                        '<div class="mastery-text">⭐ ' + mastered + '/' + needToUnlock + ' 精熟</div>' +
+                        '<button class="btn-browse" data-level="' + l.id + '">📖 瀏覽</button>';
 
-        if (l.unlocked) {
-            div.addEventListener("click", function() { startBattle(l); });
-        } else {
-            div.addEventListener("click", function() {
+        // Click card to start battle
+        div.addEventListener("click", function(e) {
+            if (e.target.classList.contains("btn-browse")) return;
+            if (l.unlocked) {
+                startBattle(l);
+            } else {
                 alert("精熟前一關 40% 的單字即可解鎖！\n（每個單字答對 2 次 = 精熟）");
-            });
-        }
+            }
+        });
+
+        // Browse button - always available
+        div.querySelector(".btn-browse").addEventListener("click", function(e) {
+            e.stopPropagation();
+            browseWords(l.id);
+        });
+
         grid.appendChild(div);
     });
 }
@@ -1569,6 +1681,50 @@ async function fetchLevels() {
 async function fetchAllWords() {
     var res = await fetch("/api/words/all");
     allWords = await res.json();
+}
+
+async function browseWords(levelId) {
+    var url = "/api/levels/" + levelId + "/words";
+    if (currentUser) {
+        url += "?user_id=" + currentUser.id;
+    }
+
+    try {
+        var res = await fetch(url);
+        var data = await res.json();
+
+        document.getElementById("words-title").textContent = "📚 " + data.level_title;
+        document.getElementById("words-subtitle").textContent =
+            "第 " + levelId + " 關 · " + data.total_words + " 個單字";
+
+        var container = document.getElementById("word-list");
+        container.innerHTML = "";
+
+        data.words.forEach(function(w, i) {
+            var div = document.createElement("div");
+            div.className = "word-item" + (w.mastered ? " mastered" : "");
+
+            var statusText = w.mastered ? "✓ 已精熟" :
+                             (w.correct_count > 0 ? "學習中 " + w.correct_count + "/2" : "未學習");
+            var statusClass = w.mastered ? "mastered" : "";
+
+            div.innerHTML =
+                '<div class="word-header">' +
+                    '<span class="english">' + (i+1) + '. ' + w.word +
+                        '<button class="btn-speak" onclick="speakWord(\'' + w.word + '\')" title="播放發音">🔊</button>' +
+                    '</span>' +
+                    '<span class="status ' + statusClass + '">' + statusText + '</span>' +
+                '</div>' +
+                '<div class="chinese">' + w.meaning + '</div>' +
+                (w.sentence ? '<div class="sentence">"' + w.sentence + '"</div>' : '');
+
+            container.appendChild(div);
+        });
+
+        document.getElementById("modal-words").classList.remove("hidden");
+    } catch (e) {
+        alert("無法載入單字列表：" + e.message);
+    }
 }
 
 async function fetchWeakWords() {
@@ -2178,6 +2334,11 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("btn-levelup-close").addEventListener("click", function() {
         document.getElementById("levelup-overlay").classList.add("hidden");
         document.getElementById("result-overlay").classList.remove("hidden");
+    });
+
+    // Word browser
+    document.getElementById("btn-words-close").addEventListener("click", function() {
+        document.getElementById("modal-words").classList.add("hidden");
     });
 
     // Avatar selector

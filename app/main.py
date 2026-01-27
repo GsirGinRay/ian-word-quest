@@ -498,6 +498,45 @@ def get_all_words(db: Session = Depends(get_db)):
     words = db.query(Word).all()
     return [{"id": w.id, "word": w.word, "meaning": w.meaning} for w in words]
 
+@app.get("/api/levels/{level_id}/words")
+def get_level_words(level_id: int, user_id: int = None, db: Session = Depends(get_db)):
+    """Get all words in a level for browsing/preview"""
+    pack = db.query(LevelPack).filter(LevelPack.id == level_id).first()
+    if not pack:
+        raise HTTPException(status_code=404, detail="Level not found")
+
+    words = pack.words
+
+    # Get user progress if provided
+    progress_map = {}
+    if user_id:
+        word_ids = [w.id for w in words]
+        progress_list = db.query(WordProgress).filter(
+            WordProgress.user_id == user_id,
+            WordProgress.word_id.in_(word_ids)
+        ).all()
+        progress_map = {p.word_id: p for p in progress_list}
+
+    result = []
+    for w in words:
+        p = progress_map.get(w.id)
+        result.append({
+            "id": w.id,
+            "word": w.word,
+            "meaning": w.meaning,
+            "sentence": w.sentence or "",
+            "correct_count": p.correct_count if p else 0,
+            "wrong_count": p.wrong_count if p else 0,
+            "mastered": (p.correct_count or 0) >= 2 if p else False
+        })
+
+    return {
+        "level_id": level_id,
+        "level_title": pack.title,
+        "total_words": len(result),
+        "words": result
+    }
+
 @app.post("/api/words/answer")
 def record_word_answer(user_id: int, word_id: int, correct: bool, db: Session = Depends(get_db)):
     """Record user's answer for a word to track mastery"""
