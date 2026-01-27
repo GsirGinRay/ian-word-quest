@@ -351,13 +351,14 @@ def get_levels(user_id: int = None, db: Session = Depends(get_db)):
         total = mastery_info["total"]
         mastery_percent = int(mastered / total * 100) if total > 0 else 0
 
-        # Level is "completed" if user has mastered >= 60% of words (was 80%, now faster)
-        is_completed = mastery_percent >= 60
+        # Level is "completed" if user has mastered >= 40% of words
+        # With 50 words, need 20 mastered = achievable in ~8 perfect battles
+        is_completed = mastery_percent >= 40
 
-        # Level is unlocked if: it's the first level OR the previous level is completed (60%)
+        # Level is unlocked if: it's the first level OR the previous level is completed (40%)
         is_first = (i == 0)
         prev_completed = (i > 0 and level_mastery.get(packs[i-1].id, {}).get("mastered", 0) >=
-                         int(level_mastery.get(packs[i-1].id, {}).get("total", 1) * 0.6))
+                         int(level_mastery.get(packs[i-1].id, {}).get("total", 1) * 0.4))
         is_unlocked = is_first or prev_completed or is_completed
 
         results.append({
@@ -426,11 +427,11 @@ def start_game(level_id: int, user_id: int = None, count: int = 5, db: Session =
     ).all()
     progress_map = {p.word_id: p for p in progress_list}
 
-    # Categorize words
-    weak_words = []      # Got wrong, need practice
-    unseen_words = []    # Never seen
-    learning_words = []  # Seen but not mastered (< 3 correct)
-    mastered_words = []  # Mastered (>= 3 correct)
+    # Categorize words (mastery = 2 correct answers)
+    weak_words = []      # Got wrong more than correct, need practice
+    unseen_words = []    # Never seen - TOP PRIORITY for learning
+    learning_words = []  # Seen but not mastered (1 correct)
+    mastered_words = []  # Mastered (>= 2 correct)
 
     for w in all_words:
         p = progress_map.get(w.id)
@@ -438,44 +439,53 @@ def start_game(level_id: int, user_id: int = None, count: int = 5, db: Session =
             unseen_words.append(w)
         elif (p.wrong_count or 0) > (p.correct_count or 0):
             weak_words.append(w)
-        elif (p.correct_count or 0) >= 3:
+        elif (p.correct_count or 0) >= 2:  # Mastery = 2 correct
             mastered_words.append(w)
         else:
             learning_words.append(w)
 
-    # Smart selection priority:
-    # 1. Weak words (got wrong) - 40%
-    # 2. Unseen words (new) - 30%
-    # 3. Learning words (in progress) - 20%
-    # 4. Mastered words (review) - 10%
+    # NEW PRIORITY: Focus on learning NEW words first!
+    # 1. Unseen words (NEW!) - 50% priority - this is where learning happens
+    # 2. Learning words (almost mastered) - 30% - reinforce
+    # 3. Weak words (struggling) - 15% - extra practice
+    # 4. Mastered words (review) - 5% - minimal review
     selected = []
+    selected_ids = set()
 
-    # Add weak words first (up to 40%)
-    random.shuffle(weak_words)
-    selected.extend(weak_words[:max(1, int(count * 0.4))])
+    def add_words(word_list, max_count):
+        """Add words without duplicates"""
+        random.shuffle(word_list)
+        added = 0
+        for w in word_list:
+            if w.id not in selected_ids and added < max_count:
+                selected.append(w)
+                selected_ids.add(w.id)
+                added += 1
 
-    # Add unseen words (up to 30%)
-    random.shuffle(unseen_words)
-    remaining = count - len(selected)
-    selected.extend(unseen_words[:max(1, min(remaining, int(count * 0.3)))])
+    # Priority 1: NEW unseen words (50% = 2-3 words out of 5)
+    add_words(unseen_words, max(2, int(count * 0.5)))
 
-    # Add learning words (up to 20%)
-    random.shuffle(learning_words)
-    remaining = count - len(selected)
-    selected.extend(learning_words[:min(remaining, int(count * 0.2))])
+    # Priority 2: Learning words - almost there! (30%)
+    add_words(learning_words, max(1, int(count * 0.3)))
 
-    # Fill remaining with mastered words or any available
+    # Priority 3: Weak words - need practice (15%)
+    add_words(weak_words, max(1, int(count * 0.15)))
+
+    # Priority 4: Mastered - minimal review (5%)
+    if len(selected) < count:
+        add_words(mastered_words, 1)
+
+    # Fill remaining if needed (from any non-mastered first)
     remaining = count - len(selected)
     if remaining > 0:
-        random.shuffle(mastered_words)
-        selected.extend(mastered_words[:remaining])
+        all_unmastered = [w for w in all_words if w.id not in selected_ids and w not in mastered_words]
+        add_words(all_unmastered, remaining)
 
-    # If still not enough, add from any category
+    # Last resort: add mastered words
     remaining = count - len(selected)
     if remaining > 0:
-        all_remaining = [w for w in all_words if w not in selected]
-        random.shuffle(all_remaining)
-        selected.extend(all_remaining[:remaining])
+        leftover = [w for w in all_words if w.id not in selected_ids]
+        add_words(leftover, remaining)
 
     # Shuffle final selection
     random.shuffle(selected)

@@ -1543,11 +1543,11 @@ async function fetchLevels() {
         var statusIcon = l.completed ? "✓" : (l.unlocked ? "" : "🔒");
         var statusClass = l.completed ? "completed" : (l.unlocked ? "" : "locked");
 
-        // Calculate mastery display (60% needed to unlock next)
+        // Calculate mastery display (40% needed to unlock next)
         var mastered = l.mastered || 0;
         var total = l.word_count || 50;
         var masteryPercent = l.mastery_percent || 0;
-        var needToUnlock = Math.ceil(total * 0.6); // 60% needed
+        var needToUnlock = Math.ceil(total * 0.4); // 40% needed = more achievable!
 
         div.className = "level-card " + statusClass;
         div.innerHTML = '<div class="num">' + (statusIcon || l.id) + '</div>' +
@@ -1559,7 +1559,7 @@ async function fetchLevels() {
             div.addEventListener("click", function() { startBattle(l); });
         } else {
             div.addEventListener("click", function() {
-                alert("精熟前一關 60% 的單字即可解鎖！\n（每個單字答對 2 次 = 精熟）");
+                alert("精熟前一關 40% 的單字即可解鎖！\n（每個單字答對 2 次 = 精熟）");
             });
         }
         grid.appendChild(div);
@@ -1765,7 +1765,8 @@ async function startBattle(level) {
 }
 
 function nextRound() {
-    if (currentRound >= gameWords.length || playerHP <= 0) {
+    // End battle if: all questions done, player dead, OR monster dead
+    if (currentRound >= gameWords.length || playerHP <= 0 || monsterHP <= 0) {
         endBattle();
         return;
     }
@@ -1950,8 +1951,10 @@ function handleAnswer(btn, correct, correctAnswer) {
 }
 
 async function endBattle() {
-    var won = playerHP > 0;
-    var accuracy = Math.round(correctCount / gameWords.length * 100);
+    // Win if: player alive AND (monster dead OR all questions answered)
+    var won = playerHP > 0 && (monsterHP <= 0 || currentRound >= gameWords.length);
+    var questionsAnswered = Math.min(currentRound, gameWords.length);
+    var accuracy = questionsAnswered > 0 ? Math.round(correctCount / questionsAnswered * 100) : 0;
 
     // NEW XP SYSTEM: More balanced, harder to level up
     // Base: 10 XP per correct (was 20)
@@ -1960,7 +1963,7 @@ async function endBattle() {
     // Speed bonus: tracked in totalSpeedBonus
     var baseXP = correctCount * 10;
     var comboXP = maxCombo * 2;
-    var perfectBonus = (correctCount === gameWords.length) ? Math.floor(baseXP * 0.5) : 0;
+    var perfectBonus = (correctCount === questionsAnswered && questionsAnswered > 0) ? Math.floor(baseXP * 0.5) : 0;
     var speedXP = totalSpeedBonus || 0;
 
     var subtotalXP = baseXP + comboXP + perfectBonus + speedXP;
@@ -1973,9 +1976,19 @@ async function endBattle() {
     // Play appropriate sound
     playSound(won ? 'levelup' : 'wrong');
 
-    document.getElementById("result-emoji").textContent = won ? "🎉" : "💀";
-    document.getElementById("result-title").textContent = won ? "勝利！" : "戰敗...";
-    document.getElementById("result-accuracy").textContent = "正確率: " + accuracy + "%";
+    // Different messages based on outcome
+    var monsterKilled = monsterHP <= 0;
+    if (won && monsterKilled) {
+        document.getElementById("result-emoji").textContent = "⚔️";
+        document.getElementById("result-title").textContent = "怪物擊敗！";
+    } else if (won) {
+        document.getElementById("result-emoji").textContent = "🎉";
+        document.getElementById("result-title").textContent = "勝利！";
+    } else {
+        document.getElementById("result-emoji").textContent = "💀";
+        document.getElementById("result-title").textContent = "戰敗...";
+    }
+    document.getElementById("result-accuracy").textContent = "正確率: " + accuracy + "% (" + correctCount + "/" + questionsAnswered + ")";
     document.getElementById("result-combo").textContent = "最高連擊: " + maxCombo;
 
     // Build detailed XP breakdown
