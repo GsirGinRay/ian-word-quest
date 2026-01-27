@@ -1201,6 +1201,9 @@ body {
     <div class="passage-container">
         <!-- Passage Content (shown during reading) -->
         <div id="passage-section">
+            <div id="passage-image-container" style="text-align:center;margin-bottom:20px;">
+                <img id="passage-image" src="" alt="Passage Image" style="max-width:100%;border-radius:12px;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+            </div>
             <h2 id="passage-title" class="passage-title">The Red Ball</h2>
             <div id="passage-content" class="passage-content">Loading...</div>
 
@@ -2109,6 +2112,15 @@ async function startReading(passageId) {
 
         // Update UI
         document.getElementById("passage-title").textContent = currentPassage.title;
+        
+        var imgEl = document.getElementById("passage-image");
+        if (currentPassage.image_url) {
+            imgEl.src = currentPassage.image_url;
+            imgEl.style.display = "inline-block";
+        } else {
+            imgEl.style.display = "none";
+        }
+
         document.getElementById("passage-content").textContent = currentPassage.content;
         document.getElementById("reading-lexile").textContent = currentPassage.lexile_level + "L";
         document.getElementById("reading-progress").textContent = "閱讀中";

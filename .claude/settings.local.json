@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(dir:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(git -C \"D:\\\\Ian\\\\英文檢定\\\\ian-word-quest\" log --oneline -20)",
+      "Bash(python3:*)",
+      "Bash(timeout 10 uvicorn:*)",
+      "Bash(timeout:*)",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\garyo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--Ian------ian-word-quest\\\\tasks\\\\b6fc210.output'' -Tail 15\")",
+      "Bash(powershell:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}

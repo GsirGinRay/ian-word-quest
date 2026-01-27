@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boolean, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
@@ -37,6 +38,7 @@ except:
     Base = declarative_base()
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 # Models
 class User(Base):
@@ -96,6 +98,7 @@ class ReadingPassage(Base):
     lexile_level = Column(Integer, default=350)  # Lexile measure (350-700)
     difficulty = Column(String, default="beginner")  # beginner, intermediate, advanced
     vocabulary = Column(Text)  # JSON list of key vocabulary words
+    image_url = Column(String, nullable=True)  # Path to cover image
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     questions = relationship("ReadingQuestion", back_populates="passage", cascade="all, delete-orphan")
@@ -772,6 +775,7 @@ def get_passage_detail(passage_id: int, db: Session = Depends(get_db)):
         "content": passage.content,
         "lexile_level": passage.lexile_level,
         "difficulty": passage.difficulty,
+        "image_url": passage.image_url,
         "vocabulary": vocab,
         "questions": questions
     }
@@ -900,6 +904,7 @@ def init_sample_passages():
             # Episode 1: Lexile 350L
             {
                 "title": "🔍 Detective Amy #1: The Missing Cookies",
+                "image": "/static/passages/amy1.jpg",
                 "content": """Amy loves to solve mysteries. She is only 10 years old, but everyone calls her "Detective Amy."
 
 One day, her mom baked chocolate cookies. She put them on the kitchen table. But when Amy came home from school, the cookies were GONE!
@@ -935,6 +940,7 @@ Amy learned something new: chocolate is dangerous for dogs. She gave Max a dog t
             # Episode 2: Lexile 400L
             {
                 "title": "🔍 Detective Amy #2: The Disappearing Lunch",
+                "image": "/static/passages/amy2.jpg",
                 "content": """Something strange was happening at school. Every day, someone's lunch disappeared!
 
 On Monday, Ben's sandwich was gone. On Tuesday, Sara's apple vanished. On Wednesday, even the teacher's salad disappeared!
@@ -974,6 +980,7 @@ Amy told the teacher. They closed the window. No more lunches disappeared after 
             # Episode 1: Lexile 450L
             {
                 "title": "⏰ Time Travelers #1: The Magic Watch",
+                "image": "/static/passages/time1.jpg",
                 "content": """Tom and his sister Lily found an old watch in their grandmother's attic. The watch looked very strange. It had too many buttons!
 
 "What does this button do?" Tom asked. He pressed it.
@@ -1020,6 +1027,7 @@ TO BE CONTINUED...""",
             # Episode 2: Lexile 500L
             {
                 "title": "⏰ Time Travelers #2: Escape from Ancient Egypt",
+                "image": "/static/passages/time2.jpg",
                 "content": """Tom pressed a button on the magic watch. "Let's go to ancient Egypt!" he said.
 
 WHOOOOSH!
@@ -1074,6 +1082,7 @@ TO BE CONTINUED...""",
             # Episode 3: Lexile 550L
             {
                 "title": "🔍 Detective Amy #3: The Ghost in the Library",
+                "image": "/static/passages/amy3.jpg",
                 "content": """Strange things were happening in the school library. Books fell off shelves by themselves. Lights flickered on and off. And sometimes, students heard whispering when nobody was there!
 
 "It's a ghost!" everyone said. Some students were too scared to enter the library.
@@ -1125,6 +1134,7 @@ TO BE CONTINUED...""",
             # Episode 3: Lexile 600L
             {
                 "title": "⏰ Time Travelers #3: Knights and Dragons",
+                "image": "/static/passages/time3.jpg",
                 "content": """Grandma sat down with Tom and Lily. She held the magic watch carefully.
 
 "I used this watch many times when I was young," Grandma said. "I've seen dinosaurs, met ancient kings, and even visited the future. But one trip was the most dangerous of all."
@@ -1184,6 +1194,7 @@ TO BE CONTINUED...""",
             # Episode 4: Lexile 650L
             {
                 "title": "🔍 Detective Amy #4: The Secret Code",
+                "image": "/static/passages/amy4.jpg",
                 "content": """Amy couldn't stop thinking about the mysterious letter. Someone was watching her, but who?
 
 Then more strange things began happening. Amy found coded messages in her locker. The first one said: "PHHW DW WKH ROG WUHH."
@@ -1239,6 +1250,7 @@ TO BE CONTINUED...""",
             # Episode 4: Lexile 700L
             {
                 "title": "⏰ Time Travelers #4: The Future City",
+                "image": "/static/passages/time4.jpg",
                 "content": """After their adventure with the knights, Tom had an idea.
 
 "Grandma, can the watch travel to the future too?"
@@ -1310,6 +1322,7 @@ TO BE CONTINUED...""",
                 content=p_data["content"],
                 lexile_level=p_data["lexile_level"],
                 difficulty=p_data["difficulty"],
+                image_url=p_data.get("image"),
                 vocabulary=p_data["vocabulary"]
             )
             db.add(passage)
