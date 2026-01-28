@@ -1333,37 +1333,55 @@ TO BE CONTINUED...""",
             }
         ]
 
+        print("Checking/Updating sample reading passages...")
+        created_count = 0
+        updated_count = 0
+
         for p_data in sample_passages:
-            passage = ReadingPassage(
-                title=p_data["title"],
-                content=p_data["content"],
-                lexile_level=p_data["lexile_level"],
-                difficulty=p_data["difficulty"],
-                image_url=p_data.get("image"),
-                vocabulary=p_data["vocabulary"]
-            )
-            db.add(passage)
-            db.commit()
-            db.refresh(passage)
+            # Check if passage already exists
+            existing_passage = db.query(ReadingPassage).filter(ReadingPassage.title == p_data["title"]).first()
 
-            # Add questions
-            for q_data in p_data["questions"]:
-                question = ReadingQuestion(
-                    passage_id=passage.id,
-                    question_type=q_data["type"],
-                    question=q_data["q"],
-                    option_a=q_data["a"],
-                    option_b=q_data["b"],
-                    option_c=q_data["c"],
-                    option_d=q_data.get("d"),
-                    correct_answer=q_data["correct"],
-                    explanation=q_data["explain"]
+            if existing_passage:
+                # Update existing passage (specifically for image_url)
+                if existing_passage.image_url != p_data.get("image"):
+                    existing_passage.image_url = p_data.get("image")
+                    # Update other fields just in case
+                    existing_passage.content = p_data["content"]
+                    existing_passage.vocabulary = p_data["vocabulary"]
+                    db.commit()
+                    updated_count += 1
+            else:
+                # Create new passage
+                passage = ReadingPassage(
+                    title=p_data["title"],
+                    content=p_data["content"],
+                    lexile_level=p_data["lexile_level"],
+                    difficulty=p_data["difficulty"],
+                    image_url=p_data.get("image"),
+                    vocabulary=p_data["vocabulary"]
                 )
-                db.add(question)
+                db.add(passage)
+                db.commit()
+                db.refresh(passage)
 
-            db.commit()
+                # Add questions
+                for q_data in p_data["questions"]:
+                    question = ReadingQuestion(
+                        passage_id=passage.id,
+                        question_type=q_data["type"],
+                        question=q_data["q"],
+                        option_a=q_data["a"],
+                        option_b=q_data["b"],
+                        option_c=q_data["c"],
+                        option_d=q_data.get("d"),
+                        correct_answer=q_data["correct"],
+                        explanation=q_data["explain"]
+                    )
+                    db.add(question)
+                db.commit()
+                created_count += 1
 
-        print(f"Created {len(sample_passages)} sample reading passages")
+        print(f"Finished initialization: Created {created_count}, Updated {updated_count} passages")
 
     finally:
         db.close()
