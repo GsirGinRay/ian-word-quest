@@ -2630,7 +2630,6 @@
         }
 
         // ========== API ==========
-        // ========== API ==========
         async function fetchPlayers() {
             try {
                 var res = await fetch("/api/users");
@@ -2678,7 +2677,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: name })
             });
-            fetchUsers();
+            fetchPlayers();
         }
 
         async function deletePlayer(user) {
@@ -2688,7 +2687,7 @@
             try {
                 var res = await fetch("/api/users/" + user.id, { method: "DELETE" });
                 if (res.ok) {
-                    fetchUsers();
+                    fetchPlayers();
                 } else {
                     alert("刪除失敗，請稍後再試");
                 }
