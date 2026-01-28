@@ -2630,7 +2630,8 @@
         }
 
         // ========== API ==========
-        async function fetchUsers() {
+        // ========== API ==========
+        async function fetchPlayers() {
             try {
                 var res = await fetch("/api/users");
                 var users = await res.json();
@@ -3829,7 +3830,7 @@
             document.getElementById("btn-reading-done").addEventListener("click", finishReading);
 
             // Init
-            fetchUsers();
+            fetchPlayers();
         });
     </script>
 </body>
