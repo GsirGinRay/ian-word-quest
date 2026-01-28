@@ -59,6 +59,20 @@ class LevelPack(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     words = relationship("Word", back_populates="pack", cascade="all, delete-orphan")
 
+class World(Base):
+    """Game Worlds (Realms) for the Adventure Mode"""
+    __tablename__ = "worlds"
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, index=True)  # academy, wilds, etc.
+    name = Column(String)
+    description = Column(Text)
+    theme_color = Column(String, default="#4CAF50")
+    min_lexile = Column(Integer, default=300)
+    max_lexile = Column(Integer, default=900)
+    order = Column(Integer, default=1)
+    passages = relationship("ReadingPassage", back_populates="world", order_by="ReadingPassage.id")
+
+
 class Word(Base):
     __tablename__ = "words"
     id = Column(Integer, primary_key=True, index=True)
@@ -99,8 +113,19 @@ class ReadingPassage(Base):
     difficulty = Column(String, default="beginner")  # beginner, intermediate, advanced
     vocabulary = Column(Text)  # JSON list of key vocabulary words
     image_url = Column(String, nullable=True)  # Path to cover image
+    
+    # Adventure Mode Fields
+    world_id = Column(Integer, ForeignKey("worlds.id"), nullable=True)
+    chapter = Column(Integer, default=1)   # 1-4 per world
+    episode = Column(Integer, default=1)   # 1-5 per chapter
+    boss_name = Column(String, nullable=True)  # Name of the enemy/challenge
+    boss_image = Column(String, nullable=True) # Image of the enemy
+    boss_hp = Column(Integer, default=100)     # Health points for battle
+    
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    world = relationship("World", back_populates="passages")
     questions = relationship("ReadingQuestion", back_populates="passage", cascade="all, delete-orphan")
 
 class ReadingQuestion(Base):
@@ -146,13 +171,32 @@ def check_and_migrate_db():
     """Check for missing columns and migrate if necessary"""
     try:
         inspector = inspect(engine)
+        
+        # 1. Check ReadingPassage columns
         if inspector.has_table("reading_passages"):
             columns = [c["name"] for c in inspector.get_columns("reading_passages")]
-            if "image_url" not in columns:
-                print("MIGRATION: Adding image_url column to reading_passages table")
-                with engine.connect() as conn:
+            with engine.connect() as conn:
+                if "image_url" not in columns:
+                    print("MIGRATION: Adding image_url to reading_passages")
                     conn.execute(text("ALTER TABLE reading_passages ADD COLUMN image_url VARCHAR"))
-                    conn.commit()
+                
+                # New 2.0 columns
+                if "world_id" not in columns:
+                    print("MIGRATION: Adding world_id to reading_passages")
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN world_id INTEGER"))
+                
+                if "chapter" not in columns:
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN chapter INTEGER DEFAULT 1"))
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN episode INTEGER DEFAULT 1"))
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN boss_name VARCHAR"))
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN boss_image VARCHAR"))
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN boss_hp INTEGER DEFAULT 100"))
+                    print("MIGRATION: Added Adventure Mode columns")
+                
+                conn.commit()
+                
+        # 2. Check if Worlds table exists (handled by create_all, but we might need to populate it)
+        
     except Exception as e:
         print(f"Migration check failed: {e}")
 
