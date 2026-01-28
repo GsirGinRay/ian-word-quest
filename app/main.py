@@ -991,9 +991,9 @@ def init_sample_passages():
     db = SessionLocal()
     try:
         existing = db.query(ReadingPassage).count()
-        # if existing > 0:
-        #    print(f"Already have {existing} reading passages, skipping init")
-        #    return
+        if existing > 0:
+            print(f"Already have {existing} reading passages, skipping init")
+            return
 
         import json
         import glob
