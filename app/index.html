@@ -2286,9 +2286,22 @@
             return a;
         }
 
-        function switchView(id) {
-            document.querySelectorAll(".view").forEach(function (v) { v.classList.remove("active"); });
-            document.getElementById(id).classList.add("active");
+        function switchView(viewId) {
+            // STOP TIMERS to prevent performance leaks
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            document.querySelectorAll(".view").forEach(function (el) {
+                el.classList.remove("active");
+                el.classList.add("hidden"); // Ensure everything is hidden
+            });
+            var target = document.getElementById(viewId);
+            if (target) {
+                target.classList.remove("hidden");
+                target.classList.add("active");
+            }
         }
 
         function flashScreen() {
@@ -2678,6 +2691,13 @@
                 body: JSON.stringify({ name: name })
             });
             fetchPlayers();
+        }
+
+        function selectPlayer(user) {
+            currentUser = user;
+            updatePlayerDisplay();
+            fetchAllWords();
+            switchView("dashboard-view");
         }
 
         async function deletePlayer(user) {
