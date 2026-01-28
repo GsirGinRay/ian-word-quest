@@ -2147,8 +2147,8 @@
                 <h2 id="passage-title" class="passage-title">The Red Ball</h2>
                 <div id="passage-content" class="passage-content">Loading...</div>
 
-                <div class="passage-tools">
-                    <button id="btn-read-aloud" class="btn btn-secondary">🔊 朗讀全文</button>
+                <div class="passage-tools" style="display:flex; gap:12px;">
+                    <button id="btn-read-aloud" class="btn btn-secondary" onclick="toggleReadAloud()">🔊 朗讀全文</button>
                     <button id="btn-show-vocab" class="btn btn-secondary">📝 查看生詞</button>
                 </div>
 
@@ -2367,17 +2367,97 @@
             }
         }
 
+        var isSpeaking = false;
+        var isPaused = false;
+        var currentUtterance = null;
+
         function speakWord(word) {
             if (!soundEnabled) return;
+            // Cancel passage reading if it's happening
+            if (isSpeaking) stopReading();
+
             if ('speechSynthesis' in window) {
-                // Cancel any ongoing speech
                 speechSynthesis.cancel();
                 var utterance = new SpeechSynthesisUtterance(word);
                 utterance.lang = 'en-US';
                 utterance.rate = 0.8;
-                utterance.pitch = 1;
                 speechSynthesis.speak(utterance);
             }
+        }
+
+        function toggleReadAloud() {
+            if (isSpeaking) {
+                if (isPaused) {
+                    resumeReading();
+                } else {
+                    pauseReading();
+                }
+            } else {
+                startReadingPassage();
+            }
+        }
+
+        function startReadingPassage() {
+            var content = document.getElementById("passage-content").textContent;
+            if (!content) return;
+
+            // Split into sentences for better natural pauses? 
+            // For now just read whole thing but try to pick a better voice.
+
+            stopReading(); // Reset any existing
+
+            currentUtterance = new SpeechSynthesisUtterance(content);
+            currentUtterance.lang = 'en-US';
+            currentUtterance.rate = 0.9; // Slightly slower is usually better for stories
+            currentUtterance.pitch = 1.0;
+
+            // Try to find a better voice
+            var voices = speechSynthesis.getVoices();
+            // Priority: Google US English > Microsoft Zira > Any English
+            var preferredVoice = voices.find(function (v) { return v.name.includes("Google US English"); }) ||
+                voices.find(function (v) { return v.name.includes("Zira"); }) ||
+                voices.find(function (v) { return v.lang.startsWith("en"); });
+
+            if (preferredVoice) currentUtterance.voice = preferredVoice;
+
+            currentUtterance.onend = function () {
+                isSpeaking = false;
+                isPaused = false;
+                updateReadButton("🔊 朗讀全文");
+            };
+
+            speechSynthesis.speak(currentUtterance);
+            isSpeaking = true;
+            isPaused = false;
+            updateReadButton("⏸️ 暫停朗讀");
+        }
+
+        function pauseReading() {
+            if (isSpeaking && !isPaused) {
+                speechSynthesis.pause();
+                isPaused = true;
+                updateReadButton("▶️ 繼續朗讀");
+            }
+        }
+
+        function resumeReading() {
+            if (isSpeaking && isPaused) {
+                speechSynthesis.resume();
+                isPaused = false;
+                updateReadButton("⏸️ 暫停朗讀");
+            }
+        }
+
+        function stopReading() {
+            speechSynthesis.cancel();
+            isSpeaking = false;
+            isPaused = false;
+            updateReadButton("🔊 朗讀全文");
+        }
+
+        function updateReadButton(text) {
+            var btn = document.getElementById("btn-read-aloud");
+            if (btn) btn.textContent = text;
         }
 
         function playSound(type) {

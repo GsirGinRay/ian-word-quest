@@ -1106,51 +1106,136 @@ Amy told the teacher. They closed the window. No more lunches disappeared after 
                     {"type": "comprehension", "q": "Who was the real thief?", "a": "A student", "b": "The teacher", "c": "A squirrel", "correct": "C", "explain": "A squirrel was coming through the window to steal food."},
                     {"type": "inference", "q": "How did they stop the thief?", "a": "They caught the squirrel", "b": "They closed the window", "c": "They called the police", "correct": "B", "explain": "They closed the window so the squirrel couldn't get in anymore."}
                 ]
-            },
-            # ===== TIME TRAVELERS SERIES =====
-            # Episode 1: Lexile 450L
+            # Episode 3: Lexile 450L (Academy World)
             {
-                "title": "⏰ Time Travelers #1: The Magic Watch",
-                "world": "ancients", "chapter": 1, "episode": 1,
-                "image": "/static/passages/time1.jpg",
-                "content": """Tom and his sister Lily found an old watch in their grandmother's attic. The watch looked very strange. It had too many buttons!
+                "title": "🔍 Detective Amy #3: The Secret Note",
+                "world": "academy", "chapter": 1, "episode": 3,
+                "image": "/static/passages/amy3.jpg",
+                "content": """One sunny morning, Amy found a crumpled piece of paper inside her desk. It was a secret note!
 
-"What does this button do?" Tom asked. He pressed it.
+It said: "Meet me at the big oak tree after schoo. Don't be late!"
 
-WHOOOOSH!
+The note was unsigned. Who could it be?
 
-Suddenly, everything around them changed. They were not in the attic anymore. They were standing in a forest. And there was a DINOSAUR right in front of them!
+Amy looked at the handwriting. It was messy. The letters were big and slanted. She looked around the classroom.
 
-"We went back in time!" Lily whispered. "This must be the age of dinosaurs!"
+Ben was writing in his notebook. His letters were small and neat. It wasn't Ben.
+Sara was drawing. She used purple ink. The note was written in black pencil. It wasn't Sara.
 
-The dinosaur was huge. It had a long neck and was eating leaves from a tall tree. Tom remembered his science class.
+Then Amy saw Tom. Tom was looking at her. He quickly looked away. He had a black pencil in his hand.
 
-"That's a Brachiosaurus," he said. "Don't worry. It only eats plants!"
+Amy smiled. She knew who wrote the note.
 
-They watched the gentle giant eat. Then Tom pressed another button on the watch.
+After school, she went to the big oak tree. Tom was there, holding two ice creams.
 
-WHOOOOSH!
+"I wanted to share these with you," Tom said shyly. "You are a great detective!"
 
-They were back in the attic. But now they knew: this watch could travel through time!
-
-"Where should we go next?" Lily asked excitedly.
-
-TO BE CONTINUED...""",
+Amy laughed. "And you need to work on your handwriting!" she teased. They ate their ice creams happily.""",
                 "lexile_level": 450,
-                "difficulty": "intermediate",
+                "difficulty": "beginner",
                 "vocabulary": json.dumps([
-                    {"word": "attic", "meaning": "閣樓"},
-                    {"word": "dinosaur", "meaning": "恐龍"},
-                    {"word": "whispered", "meaning": "低聲說"},
-                    {"word": "Brachiosaurus", "meaning": "腕龍"},
-                    {"word": "gentle", "meaning": "溫和的"},
-                    {"word": "giant", "meaning": "巨人、巨大的"},
-                    {"word": "excitedly", "meaning": "興奮地"}
+                    {"word": "crumpled", "meaning": "皺巴巴的"},
+                    {"word": "unsigned", "meaning": "未署名的"},
+                    {"word": "handwriting", "meaning": "筆跡"},
+                    {"word": "messy", "meaning": "凌亂的"},
+                    {"word": "slanted", "meaning": "傾斜的"},
+                    {"word": "shyly", "meaning": "害羞地"},
+                    {"word": "teased", "meaning": "戲弄、取笑"}
                 ]),
                 "questions": [
-                    {"type": "comprehension", "q": "Where did Tom and Lily find the watch?", "a": "In a store", "b": "In their grandmother's attic", "c": "At school", "correct": "B", "explain": "They found the watch in their grandmother's attic."},
-                    {"type": "comprehension", "q": "What happened when Tom pressed the button?", "a": "The watch broke", "b": "They traveled back in time", "c": "The lights turned off", "correct": "B", "explain": "They traveled to the age of dinosaurs."},
-                    {"type": "vocabulary", "q": "What does 'gentle' mean?", "a": "Scary and dangerous", "b": "Kind and not harmful", "c": "Very fast", "correct": "B", "explain": "Gentle means calm, kind, and not likely to hurt anyone."},
+                    {"type": "comprehension", "q": "Where did Amy find the note?", "a": "On the floor", "b": "Inside her desk", "c": "In her bag", "correct": "B", "explain": "Amy found the crumpled paper inside her desk."},
+                    {"type": "inference", "q": "Why did Amy think it was Tom?", "a": "He told her", "b": "He was holding a black pencil and looking at her", "c": "He waved at her", "correct": "B", "explain": "Amy saw Tom looking at her and holding a black pencil, which matched the note."},
+                    {"type": "vocabulary", "q": "What does 'messy' mean?", "a": "Very clean", "b": "Not neat or organized", "c": "Colorful", "correct": "B", "explain": "Messy means untidy or not neat. Tom's handwriting was messy."},
+                    {"type": "comprehension", "q": "What was the surprise?", "a": "A puppy", "b": "Ice creams", "c": "A new book", "correct": "B", "explain": "Tom was waiting with two ice creams to share."}
+                ]
+            },
+            # ===== WILDS SERIES (New) =====
+            {
+                "title": "🌲 Wilds: The Forest Guardian",
+                "world": "wilds", "chapter": 1, "episode": 1,
+                "image": "https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?q=80&w=800",
+                "content": """Deep in the Whispering Woods, there lived a bear named Koda. Koda was not an ordinary bear. He was the Guardian of the Forest.
+
+One day, Koda heard a loud noise. CRACK! BOOM!
+
+He ran towards the sound. He saw a group of men with big machines. They were cutting down the ancient trees!
+
+"Stop!" Koda roared. But the men could not understand bear language. They only heard a scary growl. They were frightened and ran away.
+
+But Koda knew they would come back. He needed a plan.
+
+He gathered all the animals: the squirrels, the owls, and the foxes. "We must protect our home," Koda said.
+
+The next day, the men returned. But this time, the forest was ready.
+The squirrels dropped nuts on their heads. The owls hooted loudly to scare them. The foxes stole their keys.
+
+The men were confused and annoyed. "This forest is haunted!" they yelled. They packed up their machines and left, never to return.
+
+The animals cheered. The Whispering Woods were safe once again, thanks to their brave Guardian.""",
+                "lexile_level": 500,
+                "difficulty": "intermediate",
+                "vocabulary": json.dumps([
+                    {"word": "guardian", "meaning": "守護者"},
+                    {"word": "ordinary", "meaning": "普通的"},
+                    {"word": "ancient", "meaning": "古老的"},
+                    {"word": "frightened", "meaning": "受驚嚇的"},
+                    {"word": "gathered", "meaning": "聚集"},
+                    {"word": "annoyed", "meaning": "惱怒的"},
+                    {"word": "haunted", "meaning": "鬧鬼的"}
+                ]),
+                "questions": [
+                    {"type": "main_idea", "q": "What is the main idea of the story?", "a": "Bears like honey", "b": "Animals working together to protect their home", "c": "Men building a house", "correct": "B", "explain": "The story is about Koda and the animals protecting the forest from being cut down."},
+                    {"type": "vocabulary", "q": "What is a 'guardian'?", "a": "Someone who destroys things", "b": "Someone who protects things", "c": "A type of tree", "correct": "B", "explain": "A guardian is a protector. Koda protected the forest."},
+                    {"type": "detail", "q": "What did the squirrels do?", "a": "Stole keys", "b": "Dropped nuts on the men's heads", "c": "Hooted loudly", "correct": "B", "explain": "The squirrels dropped nuts from the trees."},
+                    {"type": "inference", "q": "Why did the men think the forest was haunted?", "a": "They saw a ghost", "b": "Strange things were happening to them", "c": "It was dark", "correct": "B", "explain": "The animals' tricks (falling nuts, stolen keys) made the men think spirits were attacking them."}
+                ]
+            },
+            # ===== KINGDOM SERIES (New) =====
+            {
+                "title": "⚔️ Kingdom: The Brave Knight",
+                "world": "kingdom", "chapter": 1, "episode": 1,
+                "image": "https://images.unsplash.com/photo-1627768846176-59178ad80f48?q=80&w=800",
+                "content": """Sir Leo was a young knight. He wanted to be a hero, but he was afraid of dragons.
+
+"A knight must be brave!" his father told him. "You must face your fears."
+
+One day, the King's golden crown was stolen. A giant dragon had taken it to the Black Mountain.
+
+"Who will retrieve my crown?" the King asked. All the other knights were busy fighting wars. Only Leo was left.
+
+"I... I will go," Leo stammered. His knees were shaking.
+
+Leo climbed the steep mountain. At the top, he found a cave. Inside, a red dragon was sleeping on a pile of gold. The crown was right on its nose!
+
+Leo crept closer. Suddenly, the dragon opened one eye. "ROAR! Who dares to wake me?"
+
+Leo was terrified, but he stood tall. "I am Sir Leo. I came for the King's crown."
+
+The dragon looked at him. "You are very small," the dragon said. "But you are polite. Most knights just attack me."
+
+"I don't want to fight," Leo said. "I just want the crown."
+
+"Take it," the dragon yawned. "It's uncomfortable anyway."
+
+Leo grabbed the crown and ran back to the castle. He realized that being brave doesn't mean having no fear. It means doing what is right, even when you are scared.""",
+                "lexile_level": 600,
+                "difficulty": "intermediate",
+                "vocabulary": json.dumps([
+                    {"word": "knight", "meaning": "騎士"},
+                    {"word": "retrieve", "meaning": "找回、取回"},
+                    {"word": "stammered", "meaning": "結巴地說"},
+                    {"word": "steep", "meaning": "陡峭的"},
+                    {"word": "terrified", "meaning": "非常害怕的"},
+                    {"word": "polite", "meaning": "有禮貌的"},
+                    {"word": "uncomfortable", "meaning": "不舒服的"}
+                ]),
+                "questions": [
+                    {"type": "inference", "q": "Why did the dragon give back the crown?", "a": "It was scared of Leo", "b": "Leo was polite and didn't attack", "c": "The crown was too heavy", "correct": "B", "explain": "The dragon appreciated that Leo was polite and didn't try to fight him."},
+                    {"type": "vocabulary", "q": "What does 'retrieve' mean?", "a": "To throw away", "b": "To bring back", "c": "To break", "correct": "B", "explain": "The King wanted someone to bring back (retrieve) his stolen crown."},
+                    {"type": "main_idea", "q": "What lesson did Leo learn?", "a": "Dragons are friendly", "b": "Bravery is acting in spite of fear", "c": "Gold is heavy", "correct": "B", "explain": "Leo learned that being brave means doing the right thing even when you are scared."},
+                    {"type": "detail", "q": "Where was the crown?", "a": "On the dragon's nose", "b": "Under the dragon's tail", "c": "In a chest", "correct": "A", "explain": "The story says the crown was right on the sleeping dragon's nose."}
+                ]
+            },,
                     {"type": "inference", "q": "Why wasn't the Brachiosaurus dangerous?", "a": "It was sleeping", "b": "It was small", "c": "It only eats plants, not meat", "correct": "C", "explain": "Tom said it only eats plants, so it wouldn't try to eat them."},
                     {"type": "main_idea", "q": "What will probably happen next in the story?", "a": "They will throw away the watch", "b": "They will travel to another time", "c": "They will sell the watch", "correct": "B", "explain": "Lily asked 'Where should we go next?' so they will likely have more adventures."}
                 ]
