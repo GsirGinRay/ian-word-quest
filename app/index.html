@@ -3784,21 +3784,8 @@
                 document.getElementById("modal-avatar").classList.add("hidden");
             });
 
-            // ========== MODE TABS ==========
-            document.getElementById("tab-vocab").addEventListener("click", function () {
-                document.getElementById("tab-vocab").classList.add("active");
-                document.getElementById("tab-reading").classList.remove("active");
-                document.getElementById("vocab-mode-content").classList.remove("hidden");
-                document.getElementById("reading-mode-content").classList.add("hidden");
-            });
-
-            document.getElementById("tab-reading").addEventListener("click", function () {
-                document.getElementById("tab-reading").classList.add("active");
-                document.getElementById("tab-vocab").classList.remove("active");
-                document.getElementById("reading-mode-content").classList.remove("hidden");
-                document.getElementById("vocab-mode-content").classList.add("hidden");
-                fetchPassages();
-            });
+            // ========== MODE TABS (Removed) ==========
+            // Tabs replaced by Dashboard Menu Grid
 
             // ========== READING MODE ==========
             document.getElementById("btn-reading-back").addEventListener("click", function () {
