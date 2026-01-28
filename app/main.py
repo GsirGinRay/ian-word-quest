@@ -991,9 +991,9 @@ def init_sample_passages():
     db = SessionLocal()
     try:
         existing = db.query(ReadingPassage).count()
-        if existing > 0:
-            print(f"Already have {existing} reading passages, skipping init")
-            return
+        # if existing > 0:
+        #    print(f"Already have {existing} reading passages, skipping init")
+        #    return
 
         import json
         import glob
@@ -1591,6 +1591,45 @@ def init_worlds():
     finally:
         db.close()
 
+def run_migrations():
+    """Ensure all database tables and columns exist"""
+    print("Checking database schema...")
+    try:
+        # Create tables if they don't exist
+        Base.metadata.create_all(bind=engine)
+        
+        inspector = inspect(engine)
+        with engine.connect() as conn:
+            # 1. Check reading_passages columns
+            if inspector.has_table("reading_passages"):
+                columns = [c["name"] for c in inspector.get_columns("reading_passages")]
+                
+                # Image URL
+                if "image_url" not in columns:
+                    print("MIGRATION: Adding image_url to reading_passages")
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN image_url VARCHAR"))
+                
+                # Adventure Mode fields
+                if "world_id" not in columns:
+                    print("MIGRATION: Adding world_id to reading_passages")
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN world_id INTEGER"))
+                
+                if "chapter" not in columns:
+                    print("MIGRATION: Adding chapter/episode/boss columns")
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN chapter INTEGER DEFAULT 1"))
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN episode INTEGER DEFAULT 1"))
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN boss_name VARCHAR"))
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN boss_image VARCHAR"))
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN boss_hp INTEGER DEFAULT 100"))
+                
+                conn.commit()
+        print("Migration check complete.")
+    except Exception as e:
+        print(f"Migration Error: {e}")
+
+# Run migrations/checks
+run_migrations()
+
 # Initialize worlds first
 init_worlds()
 
@@ -1599,14 +1638,3 @@ try:
     init_sample_passages()
 except Exception as e:
     print(f"Error initializing passages: {e}")
-    # Try one last ditch effort to migrate if it was the specific column error
-    if "no such column: reading_passages.image_url" in str(e):
-        print("Catching missing column error, attempting forced migration...")
-        try:
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE reading_passages ADD COLUMN image_url VARCHAR"))
-                conn.commit()
-            print("Migration successful, retrying initialization...")
-            init_sample_passages()
-        except Exception as e2:
-            print(f"Forced migration failed: {e2}")
