@@ -1404,6 +1404,202 @@
             border-color: #2ed573;
         }
 
+        /* ========== REIMAGINED UI ========== */
+        /* World Map Grid */
+        .world-map-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .world-card {
+            background: linear-gradient(135deg, #2c3e50 0%, #000 100%);
+            border-radius: 24px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 4/3;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.27),
+                box-shadow 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .world-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .world-card.locked {
+            filter: grayscale(1);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .world-card-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.6;
+            transition: transform 0.8s ease;
+        }
+
+        .world-card:hover .world-card-bg {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+
+        .world-card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
+            z-index: 2;
+        }
+
+        .world-title {
+            font-size: 24px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .world-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .world-badge {
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        /* Stage Map (Path Style) */
+        .stage-select-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            gap: 32px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stage-node {
+            width: 100%;
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .stage-node:hover {
+            transform: translateX(10px);
+            background: rgba(50, 50, 50, 0.9);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .stage-node.completed {
+            border-left: 5px solid #2ecc71;
+            background: linear-gradient(90deg, rgba(46, 204, 113, 0.05), transparent);
+        }
+
+        .stage-node.boss-node {
+            border: 2px solid #e74c3c;
+            background: linear-gradient(90deg, rgba(231, 76, 60, 0.1), transparent);
+        }
+
+        .stage-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #222;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .stage-info {
+            flex: 1;
+        }
+
+        .stage-ep-num {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+
+        .stage-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .stage-status {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #333;
+            color: #aaa;
+        }
+
+        .stage-node.completed .status-badge {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .stage-play-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: 0.2s;
+        }
+
+        .stage-node:hover .stage-play-btn {
+            background: #fff;
+            color: #000;
+        }
+
         .option-btn.wrong {
             background: rgba(255, 71, 87, 0.3);
             border-color: #ff4757;
@@ -2842,29 +3038,30 @@
             var container = document.getElementById("world-map-container");
             container.innerHTML = "";
 
-            // Fallback images for worlds
+            // Fallback images for worlds (Premium look)
             var worldImages = [
-                "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600", // Academy
-                "https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?q=80&w=600", // Forest
-                "https://images.unsplash.com/photo-1627768846176-59178ad80f48?q=80&w=600", // Castle
-                "https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=600", // SciFi
-                "https://images.unsplash.com/photo-1599707367072-cd6ad66acc40?q=80&w=600"  // Ruins
+                "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=800", // Academy
+                "https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?q=80&w=800", // Forest
+                "https://images.unsplash.com/photo-1627768846176-59178ad80f48?q=80&w=800", // Castle
+                "https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=800", // SciFi
+                "https://images.unsplash.com/photo-1599707367072-cd6ad66acc40?q=80&w=800"  // Ruins
             ];
 
             worlds.forEach(function (w, index) {
                 var card = document.createElement("div");
                 card.className = "world-card";
-                card.style.backgroundImage = "url('" + (worldImages[index] || worldImages[0]) + "')";
                 card.onclick = function () { loadWorldStages(w); };
 
-                // Lock logic: For now unlock all, or check user Lexile
-                // if (userLexile < w.min_lexile) card.classList.add("locked");
+                var bgUrl = worldImages[index] || worldImages[0];
 
-                var html = '<div class="world-info">' +
+                var html =
+                    '<div class="world-card-bg" style="background-image:url(' + bgUrl + ')"></div>' +
+                    '<div class="world-card-content">' +
                     '<div class="world-title">' + w.name + '</div>' +
-                    '<div class="world-badge" style="background:' + w.theme_color + '">' + w.min_lexile + 'L - ' + w.max_lexile + 'L</div>' +
-                    '<div class="world-desc">' + w.description + '</div>' +
-                    '<button class="btn btn-primary btn-sm">進入世界 →</button>' +
+                    '<div class="world-meta">' +
+                    '<span class="world-badge" style="background:' + w.theme_color + '">' + w.min_lexile + 'L+</span>' +
+                    '<span>' + w.description + '</span>' +
+                    '</div>' +
                     '</div>';
 
                 card.innerHTML = html;
@@ -2891,41 +3088,36 @@
         function renderStages(passages) {
             var container = document.getElementById("stage-list");
             container.innerHTML = "";
+            container.className = "stage-select-box"; // Use new class
 
             if (passages.length === 0) {
-                container.innerHTML = "<div style='grid-column:1/-1;text-align:center;padding:40px;'>暫無關卡</div>";
+                container.innerHTML = "<div style='text-align:center;padding:60px;color:#aaa;'>✨ 暫無關卡，敬請期待！ <br><br> (No quests in this world yet)</div>";
                 return;
             }
 
-            var lastChapter = -1;
-
-            passages.forEach(function (p) {
-                // Group by chapter header?
-                if (p.chapter !== lastChapter) {
-                    // Insert chapter divider if we wanted
-                    lastChapter = p.chapter;
-                }
-
+            // Group by chapter if needed, but for now flat list is fine
+            passages.forEach(function (p, idx) {
                 var node = document.createElement("div");
-                node.className = "stage-node" + (p.completed ? " completed" : "") + (p.boss_name ? " boss-node" : "");
+                // Check if boss
+                var isBoss = p.boss_name ? true : false;
+
+                node.className = "stage-node" + (p.completed ? " completed" : "") + (isBoss ? " boss-node" : "");
                 node.onclick = function () { startReading(p.id); };
 
-                var imgUrl = p.image_url || "https://placehold.co/100x100?text=?";
+                var imgUrl = p.image_url || "https://placehold.co/100x100/333/999?text=QUEST";
+                var statusText = p.completed ? ("⭐ 完成 " + (p.score || "0") + "%") : "尚未完成";
 
-                var html = '';
-                if (p.boss_name) {
-                    html += '<div class="boss-badge">BOSS</div>';
-                }
-
-                html += '<img src="' + imgUrl + '" class="stage-img-thumb" alt="Stage">';
-                html += '<div style="font-weight:bold;margin-bottom:4px;">' + (p.chapter) + '-' + (p.episode) + '</div>';
-                html += '<div style="font-size:12px;line-height:1.2;height:2.4em;overflow:hidden;">' + p.title + '</div>';
-
-                if (p.completed) {
-                    html += '<div style="color:#2ecc71;font-size:12px;margin-top:4px;">⭐ 完成 (' + p.score + '%)</div>';
-                } else {
-                    html += '<div style="color:#95a5a6;font-size:12px;margin-top:4px;">未完成</div>';
-                }
+                var html =
+                    '<img src="' + imgUrl + '" class="stage-thumb" alt="Stage">' +
+                    '<div class="stage-info">' +
+                    '<div class="stage-ep-num">Chapter ' + (p.chapter || 1) + ' · Episode ' + (p.episode || (idx + 1)) + '</div>' +
+                    '<div class="stage-title">' + (isBoss ? '👹 BOSS: ' : '') + p.title + '</div>' +
+                    '<div class="stage-status">' +
+                    '<span class="status-badge">' + statusText + '</span>' +
+                    '<span style="margin-left:8px; display:flex; align-items:center;">📖 ' + p.lexile_level + 'L</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="stage-play-btn">▶</div>';
 
                 node.innerHTML = html;
                 container.appendChild(node);

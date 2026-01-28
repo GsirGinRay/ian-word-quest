@@ -991,9 +991,9 @@ def init_sample_passages():
     db = SessionLocal()
     try:
         existing = db.query(ReadingPassage).count()
-        if existing > 0:
-            print(f"Already have {existing} reading passages, skipping init")
-            return
+        # if existing > 0:
+        #    print(f"Already have {existing} reading passages, skipping init")
+        #    return
 
         import json
         import glob
@@ -1033,6 +1033,7 @@ def init_sample_passages():
             # Episode 1: Lexile 350L
             {
                 "title": "🔍 Detective Amy #1: The Missing Cookies",
+                "world": "academy", "chapter": 1, "episode": 1,
                 "image": "/static/passages/amy1.jpg",
                 "content": """Amy loves to solve mysteries. She is only 10 years old, but everyone calls her "Detective Amy."
 
@@ -1069,6 +1070,7 @@ Amy learned something new: chocolate is dangerous for dogs. She gave Max a dog t
             # Episode 2: Lexile 400L
             {
                 "title": "🔍 Detective Amy #2: The Disappearing Lunch",
+                 "world": "academy", "chapter": 1, "episode": 2,
                 "image": "/static/passages/amy2.jpg",
                 "content": """Something strange was happening at school. Every day, someone's lunch disappeared!
 
@@ -1109,6 +1111,7 @@ Amy told the teacher. They closed the window. No more lunches disappeared after 
             # Episode 1: Lexile 450L
             {
                 "title": "⏰ Time Travelers #1: The Magic Watch",
+                "world": "ancients", "chapter": 1, "episode": 1,
                 "image": "/static/passages/time1.jpg",
                 "content": """Tom and his sister Lily found an old watch in their grandmother's attic. The watch looked very strange. It had too many buttons!
 
@@ -1379,6 +1382,7 @@ TO BE CONTINUED...""",
             # Episode 4: Lexile 700L
             {
                 "title": "⏰ Time Travelers #4: The Future City",
+                 "world": "neon-city", "chapter": 1, "episode": 1,
                 "image": "/static/passages/time4.jpg",
                 "content": """After their adventure with the knights, Tom had an idea.
 
