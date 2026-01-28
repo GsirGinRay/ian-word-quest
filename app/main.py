@@ -764,10 +764,29 @@ def get_level_mastery(level_id: int, user_id: int, db: Session = Depends(get_db)
 
 # ========== READING COMPREHENSION API ==========
 
+@app.get("/api/worlds")
+def get_worlds(db: Session = Depends(get_db)):
+    """Get list of game worlds"""
+    worlds = db.query(World).order_by(World.order).all()
+    return [{
+        "id": w.id,
+        "slug": w.slug,
+        "name": w.name, 
+        "description": w.description,
+        "theme_color": w.theme_color,
+        "min_lexile": w.min_lexile,
+        "max_lexile": w.max_lexile
+    } for w in worlds]
+
 @app.get("/api/reading/passages")
-def get_passages(user_id: int = None, db: Session = Depends(get_db)):
-    """Get all reading passages with user progress"""
-    passages = db.query(ReadingPassage).filter(ReadingPassage.is_active == True).order_by(ReadingPassage.lexile_level.asc()).all()
+def get_passages(user_id: int = None, world_id: int = None, db: Session = Depends(get_db)):
+    """Get all reading passages with user progress, optionally filtered by world"""
+    query = db.query(ReadingPassage).filter(ReadingPassage.is_active == True)
+    
+    if world_id:
+        query = query.filter(ReadingPassage.world_id == world_id)
+        
+    passages = query.order_by(ReadingPassage.world_id.asc(), ReadingPassage.chapter.asc(), ReadingPassage.episode.asc()).all()
 
     # Get user progress if provided
     progress_map = {}
@@ -778,18 +797,37 @@ def get_passages(user_id: int = None, db: Session = Depends(get_db)):
         user_level = db.query(UserReadingLevel).filter(UserReadingLevel.user_id == user_id).first()
 
     result = []
+    
+    # Pre-fetch world info if we are listing all
+    worlds = {w.id: w for w in db.query(World).all()}
+
     for p in passages:
-        prog = progress_map.get(p.id)
+        u_prog = progress_map.get(p.id)
+        
+        # Get World Name
+        world_name = "Unknown"
+        if p.world_id and p.world_id in worlds:
+            world_name = worlds[p.world_id].name
+            
         result.append({
             "id": p.id,
             "title": p.title,
             "lexile_level": p.lexile_level,
             "difficulty": p.difficulty,
-            "question_count": len(p.questions),
-            "completed": prog.completed if prog else False,
-            "score": prog.score if prog else 0,
-            "unlocked": True  # For now, all passages are unlocked
+            "image_url": p.image_url,
+            "completed": u_prog.completed if u_prog else False,
+            "score": u_prog.score if u_prog else 0,
+            
+            # Adventure Mode Fields
+            "world_id": p.world_id,
+            "world_name": world_name,
+            "chapter": p.chapter,
+            "episode": p.episode,
+            "boss_name": p.boss_name,
+            "boss_image": p.boss_image,
+            "boss_hp": p.boss_hp
         })
+
 
     return {
         "passages": result,
@@ -958,9 +996,39 @@ def init_sample_passages():
             return
 
         import json
+        import glob
+        import os
+        
+        sample_passages = []
 
-        # EXCITING STORY SERIES!
-        sample_passages = [
+        # Load from JSON files in data/stories
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__)) # Assuming BASE_DIR is needed here
+        stories_dir = os.path.join(BASE_DIR, "data", "stories")
+        if not os.path.exists(stories_dir):
+            os.makedirs(stories_dir)
+            
+        json_files = glob.glob(os.path.join(stories_dir, "*.json"))
+        print(f"Found {len(json_files)} story files in {stories_dir}")
+        
+        for json_file in json_files:
+            try:
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        sample_passages.extend(data)
+                        print(f"Loaded {len(data)} stories from {os.path.basename(json_file)}")
+                    elif isinstance(data, dict):
+                        sample_passages.append(data)
+                        print(f"Loaded 1 story from {os.path.basename(json_file)}")
+            except Exception as e:
+                print(f"Error loading {json_file}: {e}")
+
+        # If no external files, fall back to default hardcoded stories (OR merge them)
+        # For now, let's keep the hardcoded ones as a fallback/starter set if nothing else exists
+        # But we want to map them to worlds if possible.
+        
+        # Hardcoded set (Legacy + Starters)
+        legacy_passages = [
             # ===== DETECTIVE AMY SERIES =====
             # Episode 1: Lexile 350L
             {
@@ -1376,6 +1444,9 @@ TO BE CONTINUED...""",
                 ]
             }
         ]
+        
+        # Combine loaded and legacy
+        sample_passages.extend(legacy_passages)
 
         print("Checking/Updating sample reading passages...")
         created_count = 0
@@ -1384,16 +1455,32 @@ TO BE CONTINUED...""",
         for p_data in sample_passages:
             # Check if passage already exists
             existing_passage = db.query(ReadingPassage).filter(ReadingPassage.title == p_data["title"]).first()
+            
+            # Resolve world_slug to world_id if present
+            world_id = None
+            if "world" in p_data:
+                world = db.query(World).filter(World.slug == p_data["world"]).first()
+                if world:
+                    world_id = world.id
 
             if existing_passage:
-                # Update existing passage (specifically for image_url)
-                if existing_passage.image_url != p_data.get("image"):
-                    existing_passage.image_url = p_data.get("image")
-                    # Update other fields just in case
-                    existing_passage.content = p_data["content"]
-                    existing_passage.vocabulary = p_data["vocabulary"]
-                    db.commit()
-                    updated_count += 1
+                # Update existing passage
+                # logic to update columns...
+                existing_passage.image_url = p_data.get("image")
+                existing_passage.content = p_data["content"]
+                existing_passage.vocabulary = p_data["vocabulary"]
+                
+                # Update 2.0 fields
+                if world_id: existing_passage.world_id = world_id
+                if "chapter" in p_data: existing_passage.chapter = p_data["chapter"]
+                if "episode" in p_data: existing_passage.episode = p_data["episode"]
+                if "boss" in p_data:
+                    existing_passage.boss_name = p_data["boss"].get("name")
+                    existing_passage.boss_hp = p_data["boss"].get("hp", 100)
+                    existing_passage.boss_image = p_data["boss"].get("image")
+                
+                db.commit()
+                updated_count += 1
             else:
                 # Create new passage
                 passage = ReadingPassage(
@@ -1402,7 +1489,13 @@ TO BE CONTINUED...""",
                     lexile_level=p_data["lexile_level"],
                     difficulty=p_data["difficulty"],
                     image_url=p_data.get("image"),
-                    vocabulary=p_data["vocabulary"]
+                    vocabulary=p_data["vocabulary"],
+                    world_id=world_id,
+                    chapter=p_data.get("chapter", 1),
+                    episode=p_data.get("episode", 1),
+                    boss_name=p_data.get("boss", {}).get("name"),
+                    boss_image=p_data.get("boss", {}).get("image"),
+                    boss_hp=p_data.get("boss", {}).get("hp", 100)
                 )
                 db.add(passage)
                 db.commit()

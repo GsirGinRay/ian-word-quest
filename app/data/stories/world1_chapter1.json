@@ -1,0 +1,110 @@
+[
+  {
+    "title": "🔍 Detective Amy #1: The Missing Cookies",
+    "world": "academy",
+    "chapter": 1,
+    "episode": 1,
+    "image": "/static/passages/amy1.jpg",
+    "content": "Amy loves to solve mysteries. She is only 10 years old, but everyone calls her \"Detective Amy.\"\n\nOne day, her mom baked chocolate cookies. She put them on the kitchen table. But when Amy came home from school, the cookies were GONE!\n\n\"Who took my cookies?\" Mom asked.\n\nAmy looked around. She saw brown crumbs on the floor. The crumbs made a trail. Amy followed the trail... to the dog's bed!\n\nThere was Max, the family dog. He had chocolate on his nose!\n\n\"I found the cookie thief!\" Amy laughed. \"It's Max!\"\n\nMom said, \"Good job, Detective Amy. But Max can't eat chocolate. It's bad for dogs!\"\n\nAmy learned something new: chocolate is dangerous for dogs. She gave Max a dog treat instead.",
+    "lexile_level": 350,
+    "difficulty": "beginner",
+    "vocabulary": "[{\"word\": \"detective\", \"meaning\": \"偵探\"}, {\"word\": \"mystery\", \"meaning\": \"謎團\"}, {\"word\": \"crumbs\", \"meaning\": \"碎屑\"}, {\"word\": \"trail\", \"meaning\": \"痕跡\"}, {\"word\": \"thief\", \"meaning\": \"小偷\"}]",
+    "boss": {
+        "name": "Hungry Max",
+        "hp": 50,
+        "image": "/static/passages/amy1.jpg"
+    },
+    "questions": [
+        {"type": "comprehension", "q": "What does everyone call Amy?", "a": "Cookie Girl", "b": "Detective Amy", "c": "Super Amy", "correct": "B", "explain": "The story says 'everyone calls her Detective Amy.'"},
+        {"type": "comprehension", "q": "What was missing?", "a": "The dog", "b": "Amy's homework", "c": "Chocolate cookies", "correct": "C", "explain": "Mom's chocolate cookies were gone from the table."},
+        {"type": "inference", "q": "How did Amy know Max took the cookies?", "a": "Max told her", "b": "She followed the crumbs to Max's bed", "c": "She saw Max eat them", "correct": "B", "explain": "Amy followed the trail of crumbs to Max's bed and saw chocolate on his nose."},
+        {"type": "main_idea", "q": "What lesson did Amy learn?", "a": "Dogs are bad pets", "b": "Cookies are yummy", "c": "Chocolate is dangerous for dogs", "correct": "C", "explain": "Mom explained that chocolate is bad for dogs."}
+    ]
+  },
+  {
+    "title": "🔍 Detective Amy #2: The Disappearing Lunch",
+    "world": "academy",
+    "chapter": 1,
+    "episode": 2,
+    "image": "/static/passages/amy2.jpg",
+    "content": "Something strange was happening at school. Every day, someone's lunch disappeared!\n\nOn Monday, Ben's sandwich was gone. On Tuesday, Sara's apple vanished. On Wednesday, even the teacher's salad disappeared!\n\n\"We need Detective Amy!\" the students said.\n\nAmy began her investigation. She asked questions. \"When did your lunch disappear?\" Everyone said the same thing: \"During morning recess.\"\n\nAmy had an idea. On Thursday, she stayed inside during recess. She hid behind the bookshelf and watched.\n\nSoon, the classroom door opened slowly. A small figure came in. It was... a squirrel!\n\nThe furry thief grabbed a banana from Tom's lunchbox. It ran out the window!\n\nAmy told the teacher. They closed the window. No more lunches disappeared after that!\n\n\"Another mystery solved!\" Amy said proudly.",
+    "lexile_level": 370,
+    "difficulty": "beginner",
+    "vocabulary": "[{\"word\": \"disappeared\", \"meaning\": \"消失了\"}, {\"word\": \"vanished\", \"meaning\": \"不見了\"}, {\"word\": \"investigation\", \"meaning\": \"調查\"}, {\"word\": \"recess\", \"meaning\": \"下課時間\"}, {\"word\": \"squirrel\", \"meaning\": \"松鼠\"}]",
+    "boss": {
+        "name": "Sneaky Squirrel",
+        "hp": 60,
+        "image": "/static/passages/amy2.jpg"
+    },
+    "questions": [
+        {"type": "comprehension", "q": "When did the lunches disappear?", "a": "After school", "b": "During morning recess", "c": "At night", "correct": "B", "explain": "Everyone said their lunch disappeared during morning recess."},
+        {"type": "comprehension", "q": "Where did Amy hide?", "a": "Under the desk", "b": "Behind the bookshelf", "c": "In the closet", "correct": "B", "explain": "Amy hid behind the bookshelf to watch."},
+        {"type": "comprehension", "q": "Who was the real thief?", "a": "A student", "b": "The teacher", "c": "A squirrel", "correct": "C", "explain": "A squirrel was coming through the window to steal food."},
+        {"type": "inference", "q": "How did they stop the thief?", "a": "They caught the squirrel", "b": "They closed the window", "c": "They called the police", "correct": "B", "explain": "They closed the window so the squirrel couldn't get in anymore."}
+    ]
+  },
+  {
+    "title": "🔍 Detective Amy #3: The Lost Homework",
+    "world": "academy",
+    "chapter": 1,
+    "episode": 3,
+    "image": "/static/passages/amy_hw.jpg",
+    "content": "It was Friday morning. Tom looked very sad. \"I can't find my math homework!\" he cried. \"I put it on my desk last night.\"\n\nDetective Amy was ready to help. \"Don't worry, Tom. I will find it.\"\n\nAmy went to Tom's house. She looked at his desk. It was very messy. There were toys, books, and papers everywhere.\n\n\"Did you open the window last night?\" Amy asked.\n\n\"Yes, it was hot,\" Tom said.\n\nAmy looked out the window. She saw a piece of paper stuck in the bush outside.\n\n\"Look!\" Amy pointed. \"The wind blew your homework out the window!\"\n\nTom ran outside and got the paper. It was his math homework!\n\n\"Thank you, Amy!\" Tom said. \"Next time, I will clean my desk!\"",
+    "lexile_level": 380,
+    "difficulty": "beginner",
+    "vocabulary": "[{\"word\": \"messy\", \"meaning\": \"凌亂的\"}, {\"word\": \"stuck\", \"meaning\": \"卡住\"}, {\"word\": \"bush\", \"meaning\": \"灌木叢\"}, {\"word\": \"wind\", \"meaning\": \"風\"}, {\"word\": \"blew\", \"meaning\": \"吹\"}]",
+    "boss": {
+        "name": "Windy Mess",
+        "hp": 70,
+        "image": "/static/passages/amy_hw.jpg"
+    },
+    "questions": [
+        {"type": "comprehension", "q": "Why was Tom sad?", "a": "He was sick", "b": "He lost his math homework", "c": "He lost his toy", "correct": "B", "explain": "Tom cried because he couldn't find his math homework."},
+        {"type": "inference", "q": "Why did the homework fly out the window?", "a": "Tom threw it", "b": "The wind blew it because the window was open", "c": "A bird took it", "correct": "B", "explain": "Amy realized the wind blew it out because the window was open."},
+        {"type": "main_idea", "q": "What lesson did Tom learn?", "a": "To close the window", "b": "To keep his desk clean", "c": "To not do homework", "correct": "B", "explain": "Tom said 'Next time, I will clean my desk!'"}
+    ]
+  },
+  {
+    "title": "🔍 Detective Amy #4: The Vanishing Chalk",
+    "world": "academy",
+    "chapter": 1,
+    "episode": 4,
+    "image": "/static/passages/amy_chalk.jpg",
+    "content": "Mr. Lee, the art teacher, was confused. \"I bought a new box of colorful chalk yesterday,\" he said. \"Now it is empty!\"\n\nAmy looked at the empty box. She saw colorful dust on the floor. It led to the playground.\n\nAmy and Mr. Lee walked to the playground. They saw three little students drawing pictures on the ground.\n\n\"Look!\" said one student. \"We made a rainbow!\"\n\nThey were using Mr. Lee's chalk!\n\n\"We didn't know it was yours,\" said the little girl. \"We found it on the table.\"\n\nMr. Lee smiled. \"The pictures are beautiful. But next time, please ask first.\"\n\nAmy smiled too. The mystery was solved, and the playground looked very colorful.",
+    "lexile_level": 390,
+    "difficulty": "beginner",
+    "vocabulary": "[{\"word\": \"confused\", \"meaning\": \"困惑的\"}, {\"word\": \"dust\", \"meaning\": \"粉末、灰塵\"}, {\"word\": \"playground\", \"meaning\": \"操場\"}, {\"word\": \"rainbow\", \"meaning\": \"彩虹\"}]",
+    "boss": {
+        "name": "Chalk Golem",
+        "hp": 80,
+        "image": "/static/passages/amy_chalk.jpg"
+    },
+    "questions": [
+        {"type": "comprehension", "q": "What was missing from the art room?", "a": "Paint", "b": "Colorful chalk", "c": "Paper", "correct": "B", "explain": "Mr. Lee said his new box of colorful chalk was empty."},
+        {"type": "comprehension", "q": "Who took the chalk?", "a": "A thief", "b": "Three little students", "c": "Amy", "correct": "B", "explain": "They found three little students using the chalk on the playground."},
+        {"type": "inference", "q": "Was Mr. Lee angry?", "a": "Yes, he yelled", "b": "No, he smiled and liked the pictures", "c": "He was sad", "correct": "B", "explain": "Mr. Lee smiled and said the pictures were beautiful, but asked them to ask permission next time."}
+    ]
+  },
+  {
+    "title": "🔍 Detective Amy #5: The Playground Thief",
+    "world": "academy",
+    "chapter": 1,
+    "episode": 5,
+    "image": "/static/passages/amy_boss1.jpg",
+    "content": "A serious crime happened at school. The soccer ball was gone! Then the basketball was gone! Finally, the jump ropes were gone!\n\n\"Who makes all the sports equipment disappear?\" the gym teacher asked.\n\nAmy looked for clues. She found footprints near the shed. They were too big for a squirrel. They looked like... boots.\n\nAmy waited by the shed after school. She saw a shadow moving.\n\n\"Stop!\" Amy shouted.\n\nThe shadow turned around. It was the new janitor, Mr. Grumpy. He was holding the balls.\n\n\"I'm sorry,\" Mr. Grumpy said as he put them back. \"The kids leave them in the rain. I was just putting them away so they don't get ruined.\"\n\nAmy felt bad. He wasn't stealing. He was helping!\n\n\"We misunderstood you,\" Amy said. \"Thank you for taking care of our things.\"",
+    "lexile_level": 400,
+    "difficulty": "beginner",
+    "vocabulary": "[{\"word\": \"serious\", \"meaning\": \"嚴重的\"}, {\"word\": \"equipment\", \"meaning\": \"器材\"}, {\"word\": \"shed\", \"meaning\": \"棚屋\"}, {\"word\": \"janitor\", \"meaning\": \"工友\"}, {\"word\": \"misunderstood\", \"meaning\": \"誤會\"}]",
+    "boss": {
+        "name": "Mr. Grumpy (Janitor)",
+        "hp": 150,
+        "image": "/static/passages/amy_boss1.jpg"
+    },
+    "questions": [
+        {"type": "comprehension", "q": "What items were missing?", "a": "Books and pencils", "b": "Soccer ball, basketball, and jump ropes", "c": "Lunch boxes", "correct": "B", "explain": "The story lists sports equipment that went missing."},
+        {"type": "inference", "q": "Why did Amy think the thief wasn't a squirrel?", "a": "The footprints were too big and looked like boots", "b": "Squirrels don't like balls", "c": "She saw a person", "correct": "A", "explain": "She found footprints that were too big for a squirrel and looked like boots."},
+        {"type": "inference", "q": "Why was Mr. Grumpy taking the balls?", "a": "He wanted to play", "b": "He was stealing them", "c": "He was protecting them from the rain", "correct": "C", "explain": "He said he was putting them away so they don't get ruined by the rain."},
+        {"type": "main_idea", "q": "What was the misunderstanding?", "a": "Amy thought he was stealing, but he was cleaning up", "b": "Amy thought he was mean", "c": "Mr. Grumpy hated kids", "correct": "A", "explain": "Amy realized he wasn't stealing; he was helping take care of the equipment."}
+    ]
+  }
+]
