@@ -1267,30 +1267,46 @@
             color: #aaa;
         }
 
-        .lexile-badge {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
+        /* Reading View - Split Pane Layout */
+        .passage-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            height: calc(100vh - 80px);
+            /* Fill remaining height */
+            overflow: hidden;
         }
 
-        .passage-container {
-            padding: 20px;
-            max-width: 700px;
-            margin: 0 auto;
+        /* Responsive: On large screens, show side-by-side */
+        @media (min-width: 900px) {
+            .passage-container.split-mode {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Passage Text Section */
+        #passage-section {
+            background: #252525;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            height: 100%;
+            transition: all 0.3s ease;
         }
 
         .passage-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 16px;
-            color: #fff;
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #ffd700;
+            border-bottom: 2px solid #444;
+            padding-bottom: 10px;
         }
 
         .passage-content {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
             border-radius: 12px;
             font-size: 18px;
             line-height: 1.8;
@@ -3120,11 +3136,11 @@
 
             // Fallback images for worlds (Premium look)
             var worldImages = [
-                "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=800", // Academy
-                "https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?q=80&w=800", // Forest
-                "https://images.unsplash.com/photo-1627768846176-59178ad80f48?q=80&w=800", // Castle
-                "https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=800", // SciFi
-                "https://images.unsplash.com/photo-1599707367072-cd6ad66acc40?q=80&w=800"  // Ruins
+                "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=60&w=600&auto=format", // Academy
+                "https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?q=60&w=600&auto=format", // Forest
+                "https://images.unsplash.com/photo-1627768846176-59178ad80f48?q=60&w=600&auto=format", // Castle
+                "https://images.unsplash.com/photo-1515630278258-407f66498911?q=60&w=600&auto=format", // SciFi
+                "https://images.unsplash.com/photo-1599707367072-cd6ad66acc40?q=60&w=600&auto=format"  // Ruins
             ];
 
             worlds.forEach(function (w, index) {
@@ -3273,11 +3289,22 @@
                     });
                 }
 
-                // Reset sections
+                // Reset View
+                document.querySelector(".passage-container").classList.remove("split-mode");
                 document.getElementById("passage-section").classList.remove("hidden");
                 document.getElementById("questions-section").classList.add("hidden");
                 document.getElementById("reading-result-section").classList.add("hidden");
+                document.getElementById("btn-start-questions").classList.remove("hidden");
                 document.getElementById("vocab-panel").classList.add("hidden");
+                document.getElementById("boss-overlay").classList.add("hidden");
+
+                // Scroll to top
+                document.getElementById("passage-section").scrollTop = 0;
+
+                // Boss Check (re-apply if boss_name is present)
+                if (currentPassage.boss_name) {
+                    document.getElementById("boss-overlay").classList.remove("hidden");
+                }
 
                 switchView("reading-view");
             } catch (e) {
@@ -3286,8 +3313,19 @@
         }
 
         function startReadingQuestions() {
-            document.getElementById("passage-section").classList.add("hidden");
+            // New logic: Don't hide passage content.
+            // Just reveal the questions interface.
+
+            // Hide the "Start Analysis" button area (vocab panel button etc)
+            // But we might want to keep vocab button available?
+            // For now, let's just show the question section.
+
+            var passageContainer = document.querySelector(".passage-container");
+            passageContainer.classList.add("split-mode"); // Activate split view
+
             document.getElementById("questions-section").classList.remove("hidden");
+            document.getElementById("btn-start-questions").classList.add("hidden");
+
             currentReadingQuestion = 0;
             renderReadingQuestion();
         }
