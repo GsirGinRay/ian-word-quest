@@ -8,7 +8,7 @@ from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boolean, DateTime, Text
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boolean, DateTime, Text, text, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 
@@ -141,6 +141,23 @@ class UserReadingLevel(Base):
     last_updated = Column(DateTime, default=datetime.utcnow)
 
 Base.metadata.create_all(bind=engine)
+
+def check_and_migrate_db():
+    """Check for missing columns and migrate if necessary"""
+    try:
+        inspector = inspect(engine)
+        if inspector.has_table("reading_passages"):
+            columns = [c["name"] for c in inspector.get_columns("reading_passages")]
+            if "image_url" not in columns:
+                print("MIGRATION: Adding image_url column to reading_passages table")
+                with engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE reading_passages ADD COLUMN image_url VARCHAR"))
+                    conn.commit()
+    except Exception as e:
+        print(f"Migration check failed: {e}")
+
+# Run migration check on startup
+check_and_migrate_db()
 
 def get_db():
     db = SessionLocal()
