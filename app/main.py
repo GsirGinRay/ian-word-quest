@@ -1431,6 +1431,76 @@ TO BE CONTINUED...""",
         db.close()
 
 # Initialize sample passages
+def init_worlds():
+    """Initialize the 5 game worlds"""
+    db = SessionLocal()
+    try:
+        if db.query(World).count() > 0:
+            return
+
+        worlds_data = [
+            {
+                "slug": "academy",
+                "name": "The Academy",
+                "description": "Where it all begins. Solve school mysteries and find the secret lab.",
+                "theme_color": "#4CAF50", # Green
+                "min_lexile": 350,
+                "max_lexile": 450,
+                "order": 1
+            },
+            {
+                "slug": "wilds",
+                "name": "The Wilds",
+                "description": "A magical forest full of talking animals and ancient ruins.",
+                "theme_color": "#FF9800", # Orange
+                "min_lexile": 450,
+                "max_lexile": 550,
+                "order": 2
+            },
+            {
+                "slug": "kingdom",
+                "name": "Kingdom's Edge",
+                "description": "Travel to the medieval past. Knights, dragons, and dark magic.",
+                "theme_color": "#9C27B0", # Purple
+                "min_lexile": 550,
+                "max_lexile": 650,
+                "order": 3
+            },
+            {
+                "slug": "neon-city",
+                "name": "Neon City",
+                "description": "A cyberpunk future. Hackers, robots, and high-tech crimes.",
+                "theme_color": "#00BCD4", # Cyan
+                "min_lexile": 650,
+                "max_lexile": 750,
+                "order": 4
+            },
+            {
+                "slug": "ancients",
+                "name": "The Ancients",
+                "description": "The realm of myths. Face the trials of Greek gods.",
+                "theme_color": "#FFC107", # Gold
+                "min_lexile": 750,
+                "max_lexile": 900,
+                "order": 5
+            }
+        ]
+
+        for w_data in worlds_data:
+            world = World(**w_data)
+            db.add(world)
+        
+        db.commit()
+        print("Initialized 5 Game Worlds")
+    
+    except Exception as e:
+        print(f"Error initializing worlds: {e}")
+    finally:
+        db.close()
+
+# Initialize worlds first
+init_worlds()
+
 # Initialize sample passages
 try:
     init_sample_passages()
