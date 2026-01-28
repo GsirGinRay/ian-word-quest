@@ -1106,6 +1106,7 @@ Amy told the teacher. They closed the window. No more lunches disappeared after 
                     {"type": "comprehension", "q": "Who was the real thief?", "a": "A student", "b": "The teacher", "c": "A squirrel", "correct": "C", "explain": "A squirrel was coming through the window to steal food."},
                     {"type": "inference", "q": "How did they stop the thief?", "a": "They caught the squirrel", "b": "They closed the window", "c": "They called the police", "correct": "B", "explain": "They closed the window so the squirrel couldn't get in anymore."}
                 ]
+            },
             # Episode 3: Lexile 450L (Academy World)
             {
                 "title": "🔍 Detective Amy #3: The Secret Note",
