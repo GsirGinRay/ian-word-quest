@@ -1235,10 +1235,6 @@ Leo grabbed the crown and ran back to the castle. He realized that being brave d
                     {"type": "main_idea", "q": "What lesson did Leo learn?", "a": "Dragons are friendly", "b": "Bravery is acting in spite of fear", "c": "Gold is heavy", "correct": "B", "explain": "Leo learned that being brave means doing the right thing even when you are scared."},
                     {"type": "detail", "q": "Where was the crown?", "a": "On the dragon's nose", "b": "Under the dragon's tail", "c": "In a chest", "correct": "A", "explain": "The story says the crown was right on the sleeping dragon's nose."}
                 ]
-            },,
-                    {"type": "inference", "q": "Why wasn't the Brachiosaurus dangerous?", "a": "It was sleeping", "b": "It was small", "c": "It only eats plants, not meat", "correct": "C", "explain": "Tom said it only eats plants, so it wouldn't try to eat them."},
-                    {"type": "main_idea", "q": "What will probably happen next in the story?", "a": "They will throw away the watch", "b": "They will travel to another time", "c": "They will sell the watch", "correct": "B", "explain": "Lily asked 'Where should we go next?' so they will likely have more adventures."}
-                ]
             },
             # ===== TIME TRAVELERS SERIES (continued) =====
             # Episode 2: Lexile 500L
