@@ -1369,4 +1369,19 @@ TO BE CONTINUED...""",
         db.close()
 
 # Initialize sample passages
-init_sample_passages()
+# Initialize sample passages
+try:
+    init_sample_passages()
+except Exception as e:
+    print(f"Error initializing passages: {e}")
+    # Try one last ditch effort to migrate if it was the specific column error
+    if "no such column: reading_passages.image_url" in str(e):
+        print("Catching missing column error, attempting forced migration...")
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE reading_passages ADD COLUMN image_url VARCHAR"))
+                conn.commit()
+            print("Migration successful, retrying initialization...")
+            init_sample_passages()
+        except Exception as e2:
+            print(f"Forced migration failed: {e2}")
