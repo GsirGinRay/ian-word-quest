@@ -1553,11 +1553,172 @@ TO BE CONTINUED...""",
                 ]),
                 "questions": [
                     {"type": "comprehension", "q": "What kind of code was used in the message?", "a": "Binary code", "b": "Caesar cipher", "c": "Morse code", "correct": "B", "explain": "Amy recognized it as a Caesar cipher and shifted each letter back by 3."},
-                    {"type": "comprehension", "q": "What did the decoded message say?", "a": "Meet at the old tree", "b": "Go to the library", "c": "Come to school early", "correct": "A", "explain": "When Amy decoded it, it said 'Meet at the old tree.'"},
-                    {"type": "inference", "q": "Why did Amy decide to go even though it might be dangerous?", "a": "Her parents made her go", "b": "Her curiosity was stronger than her fear", "c": "She didn't think it was dangerous", "correct": "B", "explain": "The story says 'Amy's curiosity was stronger than her fear.'"},
-                    {"type": "comprehension", "q": "What was the surprise waiting for Amy?", "a": "A birthday party", "b": "Three classmates who wanted to form a detective club", "c": "A treasure chest", "correct": "B", "explain": "Ben, Sara, and Tom were there wearing 'Junior Detectives' pins and wanted to learn from Amy."},
-                    {"type": "inference", "q": "Why does the story end with Amy wondering if someone else is still watching?", "a": "She is paranoid", "b": "There may be another mystery connected to the original letters", "c": "She forgot who sent them", "correct": "B", "explain": "Amy questions whether the FIRST mysterious letters were really from Ben's group, suggesting another mystery."},
-                    {"type": "vocabulary", "q": "What does 'encryption' mean?", "a": "Writing in a foreign language", "b": "Converting information into a secret code", "c": "Writing very small", "correct": "B", "explain": "Encryption means converting information into code so only certain people can read it."}
+                    {"type": "inference", "q": "How did Amy decode the message?", "a": "She used a computer", "b": "She shifted letters back by 3", "c": "She guessed", "correct": "B", "explain": "The text says 'She shifted each letter back by 3.'"},
+                    {"type": "comprehension", "q": "Who was waiting in the tree?", "a": "A cat", "b": "A teacher", "c": "Ben, Sara, and Tom", "correct": "C", "explain": "In the branches sat three kids from her class - Ben, Sara, and Tom!"},
+                    {"type": "inference", "q": "Why did the other kids create these puzzles for Amy?", "a": "To precise their detective skills", "b": "To scare her", "c": "To make fun of her", "correct": "A", "explain": "Sara asked 'Did we pass the test?' implying they wanted to prove their skills."},
+                    {"type": "vocabulary", "q": "What is 'encryption'?", "a": "Writing in a secret code", "b": "Drawing pictures", "c": "Speaking loudly", "correct": "A", "explain": "Encryption is the process of converting information into a code (cipher) to prevent unauthorized access."}
+                ]
+            },
+            # ===== NEW STORIES (V13 UPDATE) =====
+            # Wilds Ep 2
+            {
+                "title": "🌲 Wilds: The Shadow of the Cave",
+                "world": "wilds",
+                "chapter": 1,
+                "episode": 2,
+                "image": "https://images.unsplash.com/photo-1504533081197-29367d264f1d?q=60&w=600",
+                "content": """Koda the bear had always been told to stay away from the Dark Mountain. "Great danger sleeps there," his mother warned.
+                
+But a strange noise kept calling him. *Thump. Thump.* Like a giant heartbeat under the earth.
+
+Ignoring the warning, Koda climbed the rocky path. The air grew cold. The trees here were twisted and black, with no leaves.
+
+He found a small opening in the rocks - a cave. The *thumping* sound was louder here.
+
+Koda squeezed inside. It was pitch black, but his bear eyes adjusted. The walls were covered in glowing blue crystals. They pulsed with light, matching the heartbeat sound.
+
+Suddenly, a shadow on the wall moved. But it wasn't Koda's shadow.
+
+The shadow had red eyes. It detached itself from the wall and stood up. "Who dares enter my home?" the shadow hissed.
+
+Koda roared, trying to be brave, but his voice shook. "I am Koda, Guardian of the Forest."
+
+The Shadow Creature laughed. "Guardian? You are just a cub. But... you have a strong heart. I can feel it beating."
+
+The creature floated closer. "Touch the blue crystal, Koda. It will give you power. Or... leave now and never return."
+
+Koda looked at the glowing gem. He wanted to be strong. But he remembered his mother's eyes. Was this power... or a trap?
+
+TO BE CONTINUED...""",
+                "lexile_level": 580,
+                "difficulty": "intermediate",
+                "vocabulary": json.dumps([
+                    {"word": "warned", "meaning": "警告", "sentence": "His mother ______ him about the danger."},
+                    {"word": "twisted", "meaning": "扭曲的", "sentence": "The trees were ______ and black."},
+                    {"word": "adjusted", "meaning": "適應", "sentence": "His eyes ______ to the dark."},
+                    {"word": "pulsed", "meaning": "博動/閃爍", "sentence": "The crystals ______ with light."},
+                    {"word": "detached", "meaning": "分離", "sentence": "The shadow ______ itself from the wall."},
+                    {"word": "hissed", "meaning": "發出嘶嘶聲", "sentence": "The creature ______ fiercely."},
+                    {"word": "cub", "meaning": "幼獸", "sentence": "You are just a ______."},
+                    {"word": "trap", "meaning": "陷阱", "sentence": "Was this a ______?"}
+                ]),
+                "questions": [
+                    {"type": "comprehension", "q": "Where was Koda forbidden to go?", "a": "The river", "b": "The Dark Mountain", "c": "The human village", "correct": "B", "explain": "Koda had always been told to stay away from the Dark Mountain."},
+                    {"type": "inference", "q": "What made the 'thump' sound?", "a": "A drum", "b": "The glowing crystals", "c": "A real heart", "correct": "B", "explain": "The crystals pulsed with light, matching the heartbeat sound, implying they were the source."},
+                    {"type": "comprehension", "q": "What was special about the shadow?", "a": "It had red eyes and could move", "b": "It was very long", "c": "It was Koda's shadow", "correct": "A", "explain": "The shadow had red eyes. It detached itself from the wall."},
+                    {"type": "inference", "q": "Why did Koda hesitate to touch the crystal?", "a": "He was not hungry", "b": "He feared it might be a trap", "c": "It was too high", "correct": "B", "explain": "He remembered his mother... Was this power... or a trap?"}
+                ]
+            },
+            # Kingdom Ep 2
+            {
+                "title": "🏰 Kingdom: The Dragon's Egg",
+                "world": "kingdom",
+                "chapter": 1,
+                "episode": 2,
+                "image": "https://images.unsplash.com/photo-1577493340887-b7bfff95d1ea?q=60&w=600",
+                "content": """Based on the ancient map, Sir Leo rode his horse deep into the Whispering Woods. He was looking for bandits, but he found something much more precious.
+
+Hidden in a nest of burnt leaves was a stone. But it wasn't just a stone. It was large, smooth, and red like a ruby.
+
+When Leo touched it, the stone was WARM.
+
+"A dragon's egg!" Leo gasped.
+
+Dragons were enemies of the Kingdom. The King had ordered all dragon eggs to be destroyed.
+
+Leo drew his sword. He knew his duty. He was a knight of the realm.
+
+But then, the egg moved. A tiny crack appeared. A small squeak came from inside.
+
+Leo's heart softened. It was just a baby. It hadn't done anything wrong yet.
+
+If he took it back to the castle, the King would destroy it. If he left it here, the cold night would kill it.
+
+Leo looked around. No one was watching. He took off his red cape and wrapped the warm egg gently.
+
+"I will keep you safe," he whispered. "But you must promise not to burn my castle down."
+
+Suddenly, he heard horses approaching. The King's guards!
+
+Leo quickly shoved the wrapped egg into his saddlebag just as the Captain of the Guard rode into the clearing.
+
+"Find anything, Sir Leo?" the Captain asked, eyeing Leo suspiciously.
+
+TO BE CONTINUED...""",
+                "lexile_level": 620,
+                "difficulty": "intermediate",
+                "vocabulary": json.dumps([
+                    {"word": "precious", "meaning": "珍貴的", "sentence": "He found something much more ______."},
+                    {"word": "destroyed", "meaning": "摧毀", "sentence": "All dragon eggs must be ______."},
+                    {"word": "duty", "meaning": "職責", "sentence": "He knew his ______ as a knight."},
+                    {"word": "softened", "meaning": "軟化", "sentence": "Leo's heart ______."},
+                    {"word": "saddlebag", "meaning": "馬鞍袋", "sentence": "He hid it in his ______."},
+                    {"word": "suspiciously", "meaning": "懷疑地", "sentence": "The Captain looked at him ______."},
+                    {"word": "approaching", "meaning": "接近", "sentence": "He heard horses ______."}
+                ]),
+                "questions": [
+                    {"type": "comprehension", "q": "What did Sir Leo find in the woods?", "a": "A pile of gold", "b": "A bandit", "c": "A dragon's egg", "correct": "C", "explain": "He found a large, smooth, red stone that was warm - a dragon's egg."},
+                    {"type": "comprehension", "q": "What was the King's order regarding dragons?", "a": "To tame them", "b": "To destroy them", "c": "To sell them", "correct": "B", "explain": "The King had ordered all dragon eggs to be destroyed."},
+                    {"type": "inference", "q": "Why did Leo decide not to destroy the egg?", "a": "He wanted to sell it", "b": "He felt pity for the innocent baby", "c": "He was afraid of fire", "correct": "B", "explain": "His heart softened because 'It was just a baby. It hadn't done anything wrong yet.'"},
+                    {"type": "inference", "q": "What creates tension at the end of the story?", "a": "It starts raining", "b": "The King's guards arrive and the Captain is suspicious", "c": "The dragon hatches and bites him", "correct": "B", "explain": "The King's guards arrive and the Captain asks 'Find anything?' suspiciously."}
+                ]
+            },
+            # Ancients Ep 2
+            {
+                "title": "🏛️ Ancients: The Golden Touch",
+                "world": "ancients",
+                "chapter": 1,
+                "episode": 2,
+                "image": "https://images.unsplash.com/photo-1596707436329-373d15442b58?q=60&w=600",
+                "content": """King Midas was very rich. He had rooms full of gold coins, gold cups, and gold jewelry. But he always wanted more.
+
+One day, he found a strange goat-man sleeping in his garden. It was a Satyr, a servant of the god Dionysus.
+
+Instead of being angry, Midas was kind. He gave the Satyr food and a soft bed.
+
+The god Dionysus was pleased. He appeared to Midas in a cloud of purple smoke.
+
+"You have been kind to my servant," Dionysus said. "I will grant you one wish."
+
+Midas didn't hesitate. "I wish for everything I touch to turn to gold!"
+
+Dionysus frowned. "Are you sure? That is a dangerous wish."
+
+"I am sure!" Midas cried. "I want to be the richest king in the world!"
+
+"Very well," said the god. "Starting tomorrow morning, your wish is granted."
+
+The next morning, Midas woke up early. He touched his bedsheet - instantly, it turned to heavy, shining gold cloth! He touched his chair - it became solid gold!
+
+He ran through the palace, touching tables, doors, and vases. Gold, gold, gold! He laughed with joy.
+
+"This is the best gift ever!" he shouted.
+
+But soon, his stomach grumbled. He was hungry. He sat down to eat breakfast. He picked up a slice of bread. clank. The bread turned into a hard slab of gold.
+
+He tried to drink wine. The liquid turned to molten gold in his mouth. He choked and spit it out.
+
+Just then, his beloved little daughter ran into the room. "Father! Good morning!" she smiled and ran to hug him.
+
+"No! Stay back!" Midas screamed. But it was too late...
+
+TO BE CONTINUED...""",
+                "lexile_level": 600,
+                "difficulty": "intermediate",
+                "vocabulary": json.dumps([
+                    {"word": "servant", "meaning": "僕人/隨從", "sentence": "A Satyr is a ______ of Dionysus."},
+                    {"word": "hesitate", "meaning": "猶豫", "sentence": "Midas didn't ______."},
+                    {"word": "granted", "meaning": "准許/實現", "sentence": "Your wish is ______."},
+                    {"word": "instantly", "meaning": "立即地", "sentence": "______, it turned to gold."},
+                    {"word": "solid", "meaning": "固體的/實心的", "sentence": "It became ______ gold."},
+                    {"word": "molten", "meaning": "熔化的", "sentence": "The wine turned to ______ gold."},
+                    {"word": "choked", "meaning": "嗆到/窒息", "sentence": "He ______ on the gold."}
+                ]),
+                "questions": [
+                    {"type": "comprehension", "q": "Who granted Midas a wish?", "a": "Zeus", "b": "Apollo", "c": "Dionysus", "correct": "C", "explain": "The god Dionysus appeared and granted the wish."},
+                    {"type": "comprehension", "q": "What was Midas's wish?", "a": "To live forever", "b": "To have everything he touched turn to gold", "c": "To fly", "correct": "B", "explain": "He wished 'for everything I touch to turn to gold!'"},
+                    {"type": "inference", "q": "Why was the wish a problem at breakfast?", "a": "The food tasted bad", "b": "He couldn't eat because the food beat hard gold", "c": "He had no food", "correct": "B", "explain": "The bread turned into a hard slab of gold; he couldn't eat it."},
+                    {"type": "inference", "q": "What terrible thing is about to happen at the end?", "a": "He will turn his daughter into gold", "b": "He will die of hunger", "c": "The god will take the gold back", "correct": "A", "explain": "His daughter ran to hug him and he couldn't stop her in time."}
                 ]
             },
             # ===== TIME TRAVELERS SERIES (continued) =====
