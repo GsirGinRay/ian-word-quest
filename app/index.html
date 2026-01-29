@@ -2436,10 +2436,15 @@
             updateReadButton("⏳ 載入語音...");
 
             // Use our new high-quality TTS backend
-            var voice = document.getElementById("audio-voice").value || "en-US-AnaNeural";
+            var voice = document.getElementById("audio-voice").value || "en-US-JennyNeural";
             var speed = document.getElementById("audio-speed").value || "1.0";
-            var url = "/api/audio/passage/" + currentPassage.id + "?voice=" + voice + "&rate=" + speed;
+
+            // Optimization: Always request 1.0x from server to use cache
+            var url = "/api/audio/passage/" + currentPassage.id + "?voice=" + voice + "&rate=1.0";
             currentAudio = new Audio(url);
+
+            // Client-side rate adjustment for instant speed change 
+            currentAudio.playbackRate = parseFloat(speed);
 
             currentAudio.oncanplaythrough = function () {
                 currentAudio.play();
@@ -4261,6 +4266,10 @@
 
             document.getElementById("audio-speed").addEventListener("input", function () {
                 document.getElementById("speed-label").textContent = this.value + "x";
+                // Instant update if playing
+                if (currentAudio) {
+                    currentAudio.playbackRate = parseFloat(this.value);
+                }
             });
 
             // Init
@@ -4275,7 +4284,7 @@
             <div style="margin-bottom:20px;">
                 <label style="display:block; margin-bottom:8px; color:#aaa;">🗣️ 口音選擇</label>
                 <select id="audio-voice" class="input-field" style="width:100%;">
-                    <option value="en-US-AnaNeural" selected>🇺🇸 美式英語 (Ana - 女聲)</option>
+                    <option value="en-US-JennyNeural" selected>🇺🇸 美式英語 (Jenny - 成熟女聲)</option>
                     <option value="en-US-GuyNeural">🇺🇸 美式英語 (Guy - 男聲)</option>
                     <option value="en-GB-SoniaNeural">🇬🇧 英式英語 (Sonia - 女聲)</option>
                     <option value="en-GB-RyanNeural">🇬🇧 英式英語 (Ryan - 男聲)</option>
