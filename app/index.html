@@ -2429,20 +2429,47 @@
 
             // Try to find a better voice
             var voices = speechSynthesis.getVoices();
-            // Priority: Google US English > Microsoft Zira > Any English
-            var preferredVoice = voices.find(function (v) { return v.name.includes("Google US English"); }) ||
-                voices.find(function (v) { return v.name.includes("Zira"); }) ||
-                voices.find(function (v) { return v.lang.startsWith("en"); });
 
-            if (preferredVoice) currentUtterance.voice = preferredVoice;
+            // Function to select best voice
+            function selectVoice() {
+                voices = speechSynthesis.getVoices();
+                var preferredVoice = voices.find(function (v) { return v.name.includes("Google US English"); }) ||
+                    voices.find(function (v) { return v.name.includes("Microsoft Zira"); }) ||
+                    voices.find(function (v) { return v.lang === "en-US" && !v.name.includes("Microsoft David"); }) ||
+                    voices.find(function (v) { return v.lang.startsWith("en"); });
 
+                if (preferredVoice) {
+                    currentUtterance.voice = preferredVoice;
+                    console.log("Selected voice:", preferredVoice.name);
+                }
+
+                // Start speaking after voice is picked
+                speechSynthesis.speak(currentUtterance);
+            }
+
+            if (voices.length === 0) {
+                speechSynthesis.onvoiceschanged = selectVoice;
+            } else {
+                selectVoice();
+            }
+
+            // Clean up when done
             currentUtterance.onend = function () {
+                isSpeaking = false;
+                isPaused = false;
+                updateReadButton("🔊 朗讀全文");
+                // Remove the onvoiceschanged listener to prevent memory leaks or unwanted calls
+                speechSynthesis.onvoiceschanged = null;
+            };
+
+            // Error handling
+            currentUtterance.onerror = function (e) {
+                console.error("TTS Error:", e);
                 isSpeaking = false;
                 isPaused = false;
                 updateReadButton("🔊 朗讀全文");
             };
 
-            speechSynthesis.speak(currentUtterance);
             isSpeaking = true;
             isPaused = false;
             updateReadButton("⏸️ 暫停朗讀");
