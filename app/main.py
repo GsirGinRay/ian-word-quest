@@ -5,9 +5,13 @@ import shutil
 from datetime import datetime
 from typing import List, Optional
 from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+import edge_tts
+import asyncio
+import io
+import json
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boolean, DateTime, Text, text, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
@@ -985,15 +989,66 @@ def reset_reading_passages(db: Session = Depends(get_db)):
     count = db.query(ReadingPassage).count()
     return {"message": f"Reset complete! Created {count} new passages."}
 
+@app.get("/api/audio/passage/{passage_id}")
+async def get_passage_audio(passage_id: int, db: Session = Depends(get_db)):
+    passage = db.query(ReadingPassage).filter(ReadingPassage.id == passage_id).first()
+    if not passage:
+        raise HTTPException(status_code=404, detail="Passage not found")
+
+    text = passage.content
+    voice = "en-US-AnaNeural" # High quality female voice
+    
+    communicate = edge_tts.Communicate(text, voice)
+    
+    # Simple in-memory synthesis
+    audio_data = b""
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio_data += chunk["data"]
+            
+    return Response(content=audio_data, media_type="audio/mpeg")
+
+@app.get("/api/reading/passages/{passage_id}/vocab-quiz")
+def get_passage_vocab_quiz(passage_id: int, db: Session = Depends(get_db)):
+    passage = db.query(ReadingPassage).filter(ReadingPassage.id == passage_id).first()
+    if not passage:
+        raise HTTPException(status_code=404, detail="Passage not found")
+        
+    try:
+        vocab_list = json.loads(passage.vocabulary)
+        quiz_data = []
+        for v in vocab_list:
+            question = {
+                "word": v["word"],
+                "meaning": v["meaning"],
+                "sentence": v.get("sentence", f"The word '{v['word']}' means {v['meaning']}."),
+                "options": generate_vocab_options(v["word"], v["meaning"], vocab_list)
+            }
+            quiz_data.append(question)
+        return quiz_data
+    except Exception as e:
+        print(f"Error parsing vocab: {e}")
+        return []
+
+def generate_vocab_options(correct_word, correct_meaning, all_vocab):
+    distractors = [x["word"] for x in all_vocab if x["word"] != correct_word]
+    if len(distractors) < 3:
+        distractors.extend(["thing", "stuff", "action", "good", "bad"][:3-len(distractors)])
+    
+    random.shuffle(distractors)
+    choices = distractors[:3] + [correct_word]
+    random.shuffle(choices)
+    return choices
+
+
 # ========== INITIALIZE SAMPLE READING PASSAGES ==========
 def init_sample_passages():
     """Create sample reading passages if none exist"""
     db = SessionLocal()
     try:
         existing = db.query(ReadingPassage).count()
-        # if existing > 0:
-        #    print(f"Already have {existing} reading passages, skipping init")
-        #    return
+        # if existing > 0: ...
+
 
         import json
         import glob
@@ -1135,13 +1190,13 @@ Amy laughed. "And you need to work on your handwriting!" she teased. They ate th
                 "lexile_level": 450,
                 "difficulty": "beginner",
                 "vocabulary": json.dumps([
-                    {"word": "crumpled", "meaning": "皺巴巴的"},
-                    {"word": "unsigned", "meaning": "未署名的"},
-                    {"word": "handwriting", "meaning": "筆跡"},
-                    {"word": "messy", "meaning": "凌亂的"},
-                    {"word": "slanted", "meaning": "傾斜的"},
-                    {"word": "shyly", "meaning": "害羞地"},
-                    {"word": "teased", "meaning": "戲弄、取笑"}
+                    {"word": "crumpled", "meaning": "皺巴巴的", "sentence": "Amy found a ______ piece of paper inside her desk."},
+                    {"word": "unsigned", "meaning": "未署名的", "sentence": "The note was ______."},
+                    {"word": "handwriting", "meaning": "筆跡", "sentence": "Amy looked at the ______."},
+                    {"word": "messy", "meaning": "凌亂的", "sentence": "It was ______."},
+                    {"word": "slanted", "meaning": "傾斜的", "sentence": "The letters were big and ______."},
+                    {"word": "shyly", "meaning": "害羞地", "sentence": "'I wanted to share these with you,' Tom said ______."},
+                    {"word": "teased", "meaning": "戲弄、取笑", "sentence": "'And you need to work on your handwriting!' she ______."}
                 ]),
                 "questions": [
                     {"type": "comprehension", "q": "Where did Amy find the note?", "a": "On the floor", "b": "Inside her desk", "c": "In her bag", "correct": "B", "explain": "Amy found the crumpled paper inside her desk."},
@@ -1176,13 +1231,13 @@ The animals cheered. The Whispering Woods were safe once again, thanks to their 
                 "lexile_level": 500,
                 "difficulty": "intermediate",
                 "vocabulary": json.dumps([
-                    {"word": "guardian", "meaning": "守護者"},
-                    {"word": "ordinary", "meaning": "普通的"},
-                    {"word": "ancient", "meaning": "古老的"},
-                    {"word": "frightened", "meaning": "受驚嚇的"},
-                    {"word": "gathered", "meaning": "聚集"},
-                    {"word": "annoyed", "meaning": "惱怒的"},
-                    {"word": "haunted", "meaning": "鬧鬼的"}
+                    {"word": "guardian", "meaning": "守護者", "sentence": "He was the ______ of the Forest."},
+                    {"word": "ordinary", "meaning": "普通的", "sentence": "Koda was not an ______ bear."},
+                    {"word": "ancient", "meaning": "古老的", "sentence": "They were cutting down the ______ trees!"},
+                    {"word": "frightened", "meaning": "受驚嚇的", "sentence": "They were ______ and ran away."},
+                    {"word": "gathered", "meaning": "聚集", "sentence": "He ______ all the animals."},
+                    {"word": "annoyed", "meaning": "惱怒的", "sentence": "The men were confused and ______."},
+                    {"word": "haunted", "meaning": "鬧鬼的", "sentence": "'This forest is ______!' they yelled."}
                 ]),
                 "questions": [
                     {"type": "main_idea", "q": "What is the main idea of the story?", "a": "Bears like honey", "b": "Animals working together to protect their home", "c": "Men building a house", "correct": "B", "explain": "The story is about Koda and the animals protecting the forest from being cut down."},
@@ -1441,15 +1496,15 @@ TO BE CONTINUED...""",
                 "lexile_level": 650,
                 "difficulty": "advanced",
                 "vocabulary": json.dumps([
-                    {"word": "coded", "meaning": "編碼的"},
-                    {"word": "cipher", "meaning": "密碼"},
-                    {"word": "shifted", "meaning": "移動"},
-                    {"word": "curiosity", "meaning": "好奇心"},
-                    {"word": "pinned", "meaning": "釘住"},
-                    {"word": "matching", "meaning": "相配的"},
-                    {"word": "touched", "meaning": "感動的"},
-                    {"word": "encryption", "meaning": "加密"},
-                    {"word": "revealed", "meaning": "揭露"}
+                    {"word": "coded", "meaning": "編碼的", "sentence": "Amy found ______ messages in her locker."},
+                    {"word": "cipher", "meaning": "密碼", "sentence": "Amy recognized it immediately - a Caesar ______!"},
+                    {"word": "shifted", "meaning": "移動", "sentence": "She ______ each letter back by 3."},
+                    {"word": "curiosity", "meaning": "好奇心", "sentence": "Amy's ______ was stronger than her fear."},
+                    {"word": "pinned", "meaning": "釘住", "sentence": "They had pieces of paper ______ to their shirts."},
+                    {"word": "matching", "meaning": "相配的", "sentence": "They were wearing ______ 'Junior Detectives' pins."},
+                    {"word": "touched", "meaning": "感動的", "sentence": "Amy felt ______."},
+                    {"word": "encryption", "meaning": "加密", "sentence": "You used proper ______."},
+                    {"word": "revealed", "meaning": "揭露", "sentence": "You never ______ your identities."}
                 ]),
                 "questions": [
                     {"type": "comprehension", "q": "What kind of code was used in the message?", "a": "Binary code", "b": "Caesar cipher", "c": "Morse code", "correct": "B", "explain": "Amy recognized it as a Caesar cipher and shifted each letter back by 3."},

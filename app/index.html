@@ -143,9 +143,7 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
-        border-color: #f093fb;
-        background: rgba(255, 255, 255, 0.15);
-        }
+
 
         .player-card .avatar {
             font-size: 48px;
@@ -2165,12 +2163,25 @@
 
                 <div class="passage-tools" style="display:flex; gap:12px;">
                     <button id="btn-read-aloud" class="btn btn-secondary" onclick="toggleReadAloud()">🔊 朗讀全文</button>
+                    <button id="btn-vocab-challenge" class="btn btn-primary"
+                        style="background:#f39c12; border-color:#e67e22;">⚔️ 單字挑戰</button>
                     <button id="btn-show-vocab" class="btn btn-secondary">📝 查看生詞</button>
                 </div>
 
                 <div id="vocab-panel" class="vocab-panel hidden">
                     <h4>📚 本文生詞</h4>
                     <div id="vocab-list" class="vocab-list"></div>
+                </div>
+
+                <!-- Vocab Challenge Section (New) -->
+                <div id="vocab-challenge-section" class="vocab-panel hidden"
+                    style="background:#2c3e50; border:1px solid #34495e;">
+                    <h3 style="color:#f39c12; margin-top:0;">⚔️ 單字挑戰</h3>
+                    <div id="vocab-challenge-container">
+                        <div class="loading">準備挑戰題目中...</div>
+                    </div>
+                    <button id="btn-close-vocab-challenge" class="btn btn-secondary"
+                        style="margin-top:16px; width:100%">關閉挑戰</button>
                 </div>
 
                 <button id="btn-start-questions" class="btn btn-primary" style="width:100%;margin-top:16px;">開始答題
@@ -2385,18 +2396,15 @@
 
         var isSpeaking = false;
         var isPaused = false;
-        var currentUtterance = null;
+        var currentAudio = null;
 
         function speakWord(word) {
             if (!soundEnabled) return;
-            // Cancel passage reading if it's happening
             if (isSpeaking) stopReading();
-
             if ('speechSynthesis' in window) {
                 speechSynthesis.cancel();
                 var utterance = new SpeechSynthesisUtterance(word);
                 utterance.lang = 'en-US';
-                utterance.rate = 0.8;
                 speechSynthesis.speak(utterance);
             }
         }
@@ -2414,85 +2422,61 @@
         }
 
         function startReadingPassage() {
-            var content = document.getElementById("passage-content").textContent;
-            if (!content) return;
-
-            // Split into sentences for better natural pauses? 
-            // For now just read whole thing but try to pick a better voice.
-
-            stopReading(); // Reset any existing
-
-            currentUtterance = new SpeechSynthesisUtterance(content);
-            currentUtterance.lang = 'en-US';
-            currentUtterance.rate = 0.9; // Slightly slower is usually better for stories
-            currentUtterance.pitch = 1.0;
-
-            // Try to find a better voice
-            var voices = speechSynthesis.getVoices();
-
-            // Function to select best voice
-            function selectVoice() {
-                voices = speechSynthesis.getVoices();
-                var preferredVoice = voices.find(function (v) { return v.name.includes("Google US English"); }) ||
-                    voices.find(function (v) { return v.name.includes("Microsoft Zira"); }) ||
-                    voices.find(function (v) { return v.lang === "en-US" && !v.name.includes("Microsoft David"); }) ||
-                    voices.find(function (v) { return v.lang.startsWith("en"); });
-
-                if (preferredVoice) {
-                    currentUtterance.voice = preferredVoice;
-                    console.log("Selected voice:", preferredVoice.name);
-                }
-
-                // Start speaking after voice is picked
-                speechSynthesis.speak(currentUtterance);
+            if (currentAudio) {
+                stopReading();
             }
 
-            if (voices.length === 0) {
-                speechSynthesis.onvoiceschanged = selectVoice;
-            } else {
-                selectVoice();
-            }
+            updateReadButton("⏳ 載入語音...");
 
-            // Clean up when done
-            currentUtterance.onend = function () {
-                isSpeaking = false;
+            // Use our new high-quality TTS backend
+            var url = "/api/audio/passage/" + currentPassage.id;
+            currentAudio = new Audio(url);
+
+            currentAudio.oncanplaythrough = function () {
+                currentAudio.play();
+                isSpeaking = true;
                 isPaused = false;
-                updateReadButton("🔊 朗讀全文");
-                // Remove the onvoiceschanged listener to prevent memory leaks or unwanted calls
-                speechSynthesis.onvoiceschanged = null;
+                updateReadButton("⏸️ 暫停朗讀");
             };
 
-            // Error handling
-            currentUtterance.onerror = function (e) {
-                console.error("TTS Error:", e);
+            currentAudio.onended = function () {
                 isSpeaking = false;
                 isPaused = false;
+                currentAudio = null;
                 updateReadButton("🔊 朗讀全文");
             };
 
-            isSpeaking = true;
-            isPaused = false;
-            updateReadButton("⏸️ 暫停朗讀");
+            currentAudio.onerror = function () {
+                alert("無法載入語音，請稍後再試。\n(可能是網路問題或伺服器忙碌)");
+                stopReading();
+            };
         }
 
         function pauseReading() {
-            if (isSpeaking && !isPaused) {
-                speechSynthesis.pause();
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
                 isPaused = true;
                 updateReadButton("▶️ 繼續朗讀");
             }
         }
 
         function resumeReading() {
-            if (isSpeaking && isPaused) {
-                speechSynthesis.resume();
+            if (currentAudio && currentAudio.paused) {
+                currentAudio.play();
                 isPaused = false;
                 updateReadButton("⏸️ 暫停朗讀");
             }
         }
 
         function stopReading() {
-            speechSynthesis.cancel();
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+            }
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+            }
             isSpeaking = false;
             isPaused = false;
             updateReadButton("🔊 朗讀全文");
@@ -3476,6 +3460,84 @@
             }
         }
 
+        async function startVocabChallenge() {
+            var section = document.getElementById("vocab-challenge-section");
+            section.classList.remove("hidden");
+            document.getElementById("vocab-panel").classList.add("hidden"); // Hide list
+
+            // Scroll to tools
+            document.querySelector(".passage-tools").scrollIntoView({ behavior: "smooth" });
+
+            var container = document.getElementById("vocab-challenge-container");
+            container.innerHTML = '<div class="loading">載入題目中...</div>';
+
+            try {
+                var res = await fetch("/api/reading/passages/" + currentPassage.id + "/vocab-quiz");
+                var quizData = await res.json();
+
+                if (quizData.length === 0) {
+                    container.innerHTML = '<div style="padding:20px;">本文章暫無單字挑戰資料。</div>';
+                    return;
+                }
+
+                vocabChallengeData = quizData;
+                currentVocabChallengeIndex = 0;
+                renderVocabChallengeQuestion();
+            } catch (e) {
+                container.innerHTML = '<div style="color:red">載入失敗</div>';
+            }
+        }
+
+        var vocabChallengeData = [];
+        var currentVocabChallengeIndex = 0;
+
+        function renderVocabChallengeQuestion() {
+            var container = document.getElementById("vocab-challenge-container");
+            if (currentVocabChallengeIndex >= vocabChallengeData.length) {
+                container.innerHTML = '<div style="text-align:center; padding:20px;">' +
+                    '<div style="font-size:40px;">🎉</div>' +
+                    '<h3>挑戰完成！</h3>' +
+                    '<p>你已經熟悉了這篇文章的單字！</p>' +
+                    '</div>';
+                return;
+            }
+
+            var q = vocabChallengeData[currentVocabChallengeIndex];
+
+            // Create Cloze HTML: Replace ______ with a span
+            var sentenceHtml = q.sentence.replace("______", '<span style="border-bottom:2px solid #f39c12; color:#f39c12; font-weight:bold;">_______</span>');
+
+            var html = '<div class="vocab-card" style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; margin-bottom:10px;">';
+            html += '<div style="color:#ccc; font-size:14px; margin-bottom:5px;">單字填空 (' + (currentVocabChallengeIndex + 1) + '/' + vocabChallengeData.length + ')</div>';
+            html += '<div style="font-size:18px; line-height:1.5; margin-bottom:15px;">' + sentenceHtml + '</div>';
+            html += '<div class="options-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">';
+
+            q.options.forEach(function (opt) {
+                html += '<button class="btn btn-secondary vocab-opt-btn" onclick="checkVocabChallengeAnswer(\'' + opt + '\', \'' + q.word + '\', this)">' + opt + '</button>';
+            });
+
+            html += '</div></div>';
+            container.innerHTML = html;
+        }
+
+        function checkVocabChallengeAnswer(selected, correct, btn) {
+            var container = document.getElementById("vocab-challenge-container");
+            var btns = container.querySelectorAll(".vocab-opt-btn");
+
+            if (selected === correct) {
+                btn.style.background = "#2ecc71";
+                btn.style.color = "white";
+                // Play sound?
+                setTimeout(function () {
+                    currentVocabChallengeIndex++;
+                    renderVocabChallengeQuestion();
+                }, 1000);
+            } else {
+                btn.style.background = "#e74c3c";
+                btn.disabled = true;
+            }
+        }
+
         function showAnswerReview() {
             if (!window.readingResults) return;
 
@@ -4151,19 +4213,20 @@
                 }
             });
 
-            document.getElementById("btn-read-aloud").addEventListener("click", function () {
-                if (currentPassage) {
-                    var utterance = new SpeechSynthesisUtterance(currentPassage.content);
-                    utterance.lang = 'en-US';
-                    utterance.rate = 0.85;
-                    speechSynthesis.speak(utterance);
-                }
-            });
+            // Read Aloud is handled by onclick="toggleReadAloud()"
 
             document.getElementById("btn-show-vocab").addEventListener("click", function () {
                 var panel = document.getElementById("vocab-panel");
                 panel.classList.toggle("hidden");
+                // Hide challenge if showing vocab list
+                document.getElementById("vocab-challenge-section").classList.add("hidden");
                 this.textContent = panel.classList.contains("hidden") ? "📝 查看生詞" : "📝 隱藏生詞";
+            });
+
+            document.getElementById("btn-vocab-challenge").addEventListener("click", startVocabChallenge);
+
+            document.getElementById("btn-close-vocab-challenge").addEventListener("click", function () {
+                document.getElementById("vocab-challenge-section").classList.add("hidden");
             });
 
             document.getElementById("btn-start-questions").addEventListener("click", startReadingQuestions);
