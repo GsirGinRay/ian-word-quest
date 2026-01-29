@@ -12,6 +12,8 @@ import edge_tts
 import asyncio
 import io
 import json
+import hashlib
+from fastapi.responses import HTMLResponse, StreamingResponse, Response, FileResponse
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boolean, DateTime, Text, text, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
@@ -1006,15 +1008,38 @@ async def get_passage_audio(
     rate_percent = int((rate - 1.0) * 100)
     rate_str = f"{rate_percent:+d}%"
     
+    # Cache Logic
+    # 1. Create unique filename hash
+    cache_dir = os.path.join(BASE_DIR, "static", "audio_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    
+    # Filename: passageID_voice_rate.mp3
+    # Use hash of text to invalidate if text changes? 
+    # Yes, include text hash to be safe.
+    text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
+    filename = f"{passage_id}_{voice}_{rate_percent}_{text_hash}.mp3"
+    file_path = os.path.join(cache_dir, filename)
+    
+    if os.path.exists(file_path):
+        # Serve cached file
+        return FileResponse(file_path, media_type="audio/mpeg")
+    
+    # 2. Generate if not exists
     communicate = edge_tts.Communicate(text, voice, rate=rate_str)
     
-    # Simple in-memory synthesis
-    audio_data = b""
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_data += chunk["data"]
-            
-    return Response(content=audio_data, media_type="audio/mpeg")
+    try:
+        await communicate.save(file_path)
+        return FileResponse(file_path, media_type="audio/mpeg")
+    except Exception as e:
+        print(f"TTS Generation Error: {e}")
+        # Fallback if save fails (e.g. permission), try stream
+        # But for now, let's assume it works or return 500
+        # Actually, let's just return memory stream if file write fails to be robust
+        audio_data = b""
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data += chunk["data"]
+        return Response(content=audio_data, media_type="audio/mpeg")
 
 @app.get("/api/reading/passages/{passage_id}/vocab-quiz")
 def get_passage_vocab_quiz(passage_id: int, db: Session = Depends(get_db)):
