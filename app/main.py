@@ -990,15 +990,24 @@ def reset_reading_passages(db: Session = Depends(get_db)):
     return {"message": f"Reset complete! Created {count} new passages."}
 
 @app.get("/api/audio/passage/{passage_id}")
-async def get_passage_audio(passage_id: int, db: Session = Depends(get_db)):
+@app.get("/api/audio/passage/{passage_id}")
+async def get_passage_audio(
+    passage_id: int, 
+    voice: str = "en-US-AnaNeural", 
+    rate: float = 1.0,
+    db: Session = Depends(get_db)
+):
     passage = db.query(ReadingPassage).filter(ReadingPassage.id == passage_id).first()
     if not passage:
         raise HTTPException(status_code=404, detail="Passage not found")
 
     text = passage.content
-    voice = "en-US-AnaNeural" # High quality female voice
     
-    communicate = edge_tts.Communicate(text, voice)
+    # Calculate rate string for edge-tts (e.g., "+50%" or "-20%")
+    rate_percent = int((rate - 1.0) * 100)
+    rate_str = f"{rate_percent:+d}%"
+    
+    communicate = edge_tts.Communicate(text, voice, rate=rate_str)
     
     # Simple in-memory synthesis
     audio_data = b""
@@ -1018,10 +1027,22 @@ def get_passage_vocab_quiz(passage_id: int, db: Session = Depends(get_db)):
         vocab_list = json.loads(passage.vocabulary)
         quiz_data = []
         for v in vocab_list:
+            # Fallback sentence generation
+            if "sentence" in v:
+                sentence = v["sentence"]
+            else:
+                # Mask the word in the fallback sentence
+                # Fallback: "The word '_____' means ..." is still too easy if the meaning is obvious.
+                # Better fallback: Use a generic template or try to generate one? 
+                # For now, let's just use the definition prompt but mask the word thoroughly.
+                # Actually, "The word 'apple' means a red fruit" -> "The word '_____' means a red fruit."
+                # This is a valid "definiton quiz".
+                sentence = f"The word '______' means {v['meaning']}."
+            
             question = {
                 "word": v["word"],
                 "meaning": v["meaning"],
-                "sentence": v.get("sentence", f"The word '{v['word']}' means {v['meaning']}."),
+                "sentence": sentence,
                 "options": generate_vocab_options(v["word"], v["meaning"], vocab_list)
             }
             quiz_data.append(question)

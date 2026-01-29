@@ -2161,8 +2161,15 @@
                 <h2 id="passage-title" class="passage-title">The Red Ball</h2>
                 <div id="passage-content" class="passage-content">Loading...</div>
 
-                <div class="passage-tools" style="display:flex; gap:12px;">
-                    <button id="btn-read-aloud" class="btn btn-secondary" onclick="toggleReadAloud()">🔊 朗讀全文</button>
+                <div class="passage-tools" style="display:flex; gap:12px; align-items:center;">
+                    <div class="btn-group" style="display:flex; gap:0;">
+                        <button id="btn-read-aloud" class="btn btn-secondary"
+                            style="border-top-right-radius:0; border-bottom-right-radius:0;"
+                            onclick="toggleReadAloud()">🔊 朗讀全文</button>
+                        <button id="btn-audio-settings" class="btn btn-secondary"
+                            style="border-top-left-radius:0; border-bottom-left-radius:0; padding: 12px 10px; border-left:1px solid rgba(255,255,255,0.2);">⚙️</button>
+                    </div>
+
                     <button id="btn-vocab-challenge" class="btn btn-primary"
                         style="background:#f39c12; border-color:#e67e22;">⚔️ 單字挑戰</button>
                     <button id="btn-show-vocab" class="btn btn-secondary">📝 查看生詞</button>
@@ -4235,10 +4242,62 @@
             document.getElementById("btn-review-answers").addEventListener("click", showAnswerReview);
             document.getElementById("btn-reading-done").addEventListener("click", finishReading);
 
+            // Audio Settings
+            document.getElementById("btn-audio-settings").addEventListener("click", function (e) {
+                e.stopPropagation();
+                document.getElementById("modal-audio-settings").classList.remove("hidden");
+            });
+
+            document.getElementById("btn-audio-save").addEventListener("click", function () {
+                document.getElementById("modal-audio-settings").classList.add("hidden");
+                // If speaking, restart to apply settings
+                if (isSpeaking) {
+                    stopReading();
+                    toggleReadAloud(); // Will start new
+                }
+            });
+
+            document.getElementById("audio-speed").addEventListener("input", function () {
+                document.getElementById("speed-label").textContent = this.value + "x";
+            });
+
             // Init
             fetchPlayers();
         });
     </script>
+    <!-- Audio Settings Modal -->
+    <div id="modal-audio-settings" class="modal hidden">
+        <div class="modal-content" style="max-width:400px;">
+            <h2>🎧 語音設定</h2>
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:8px; color:#aaa;">🗣️ 口音選擇</label>
+                <select id="audio-voice" class="input-field" style="width:100%;">
+                    <option value="en-US-AnaNeural" selected>🇺🇸 美式英語 (Ana - 女聲)</option>
+                    <option value="en-US-GuyNeural">🇺🇸 美式英語 (Guy - 男聲)</option>
+                    <option value="en-GB-SoniaNeural">🇬🇧 英式英語 (Sonia - 女聲)</option>
+                    <option value="en-GB-RyanNeural">🇬🇧 英式英語 (Ryan - 男聲)</option>
+                    <option value="en-AU-NatashaNeural">🇦🇺 澳洲英語 (Natasha - 女聲)</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:8px; color:#aaa;">⏩ 朗讀速度: <span
+                        id="speed-label">1.0x</span></label>
+                <input type="range" id="audio-speed" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%;">
+                <div style="display:flex; justify-content:space-between; color:#666; font-size:12px;">
+                    <span>0.5x</span>
+                    <span>1.0x</span>
+                    <span>2.0x</span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button id="btn-audio-save" class="btn btn-primary" style="width:100%">確定</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
