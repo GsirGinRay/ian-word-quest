@@ -990,7 +990,6 @@ def reset_reading_passages(db: Session = Depends(get_db)):
     return {"message": f"Reset complete! Created {count} new passages."}
 
 @app.get("/api/audio/passage/{passage_id}")
-@app.get("/api/audio/passage/{passage_id}")
 async def get_passage_audio(
     passage_id: int, 
     voice: str = "en-US-AnaNeural", 

@@ -2436,7 +2436,9 @@
             updateReadButton("⏳ 載入語音...");
 
             // Use our new high-quality TTS backend
-            var url = "/api/audio/passage/" + currentPassage.id;
+            var voice = document.getElementById("audio-voice").value || "en-US-AnaNeural";
+            var speed = document.getElementById("audio-speed").value || "1.0";
+            var url = "/api/audio/passage/" + currentPassage.id + "?voice=" + voice + "&rate=" + speed;
             currentAudio = new Audio(url);
 
             currentAudio.oncanplaythrough = function () {
